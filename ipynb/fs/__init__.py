@@ -8,18 +8,29 @@ as if the cells were linearly written to be in a flat file.
 import sys
 import os
 
-from importlib.abc import MetaPathFinder, Loader
-from importlib.machinery import ModuleSpec
+from importlib.abc import MetaPathFinder
+from importlib.machinery import ModuleSpec, SourceFileLoader
 
 from ipynb.utils import get_code
 
 
-class FSLoader(MetaPathFinder, Loader):
+class NotebookLoader(SourceFileLoader):
+    def get_code(self, fullname):
+        if self.path.endswith('.ipynb'):
+            with open(self.path) as f:
+                return self.source_to_code(get_code(f.read()), self.path)
+        else:
+            return super().get_code(fullname)
+
+
+class FSFinder(MetaPathFinder):
     """
-    Finder & Loader for ipynb/py files from the filesystem.
+    Finder for ipynb/py files from the filesystem.
 
     Only tries to load modules that are under ipynb.fs.
     Tries to treat .ipynb and .py files exactly the same as much as possible.
+
+    NotebookLoader is used to do the actual loading.
     """
     def _get_paths(self, fullname):
         """
@@ -36,36 +47,22 @@ class FSLoader(MetaPathFinder, Loader):
             yield os.path.join(path, '__init__.ipynb')
             yield os.path.join(path, '__init__.py')
 
-    def get_source(self, fullname):
-        for path in self._get_paths(fullname):
-            try:
-                with open(path) as f:
-                    return get_code(f, path.endswith('.ipynb'))
-            except FileNotFoundError:
-                continue
-        # If none of our paths match, fail the import!
-        raise ImportError('Could not import {name}'.format(name=fullname))
-
-    def get_code(self, fullname):
-        return compile(self.get_source(fullname), '<string>', 'exec', dont_inherit=True)
-
-    def exec_module(self, module):
-        """
-        """
-        exec(self.get_source(module.__name__), module.__dict__)
-
     def find_spec(self, fullname, path, target=None):
         """
         Claims modules that are under ipynb.fs
         """
         if fullname.startswith(__package__):
-            subpath = fullname[len(__package__):].replace(' ', '_')
-            base_path = os.path.abspath(os.path.join(*subpath.split('.')))
-            return ModuleSpec(
-                name=fullname,
-                loader=self,
-                origin='ipynb.fs',
-                is_package=os.path.isdir(base_path)
-            )
+            for path in self._get_paths(fullname):
+                try:
+                    if os.path.exists(path):
+                        # It'll be the loader's responsibility to close file
+                        return ModuleSpec(
+                            name=fullname,
+                            loader=NotebookLoader(fullname, path),
+                            origin=path,
+                            is_package=(path.endswith('__init__.ipynb') or path.endswith('__init__.py')),
+                        )
+                except FileNotFoundError:
+                    continue
 
-sys.meta_path.append(FSLoader())
+sys.meta_path.append(FSFinder())
