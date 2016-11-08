@@ -73,11 +73,42 @@ code to be ran from with the main namespace of IPython so are unavailable.
 
 
 Import only definitions
-======
+=======================
 
 If you would like to import only class & function definitions from a notebook
 (and not the top level statements), you can use ``ipynb.fs.defs`` instead of
-``ipynb.fs.full``.
+``ipynb.fs.full``. Full uppercase variable assignment will get eveluated as well.
+
+
+Releasing a package that contains notebook files
+================================================
+
+You might have the need to release a python package with some modules written
+as ``.ipynb`` files, but you do not want to require the  ``ipynb`` package.
+
+If you are using `setuptools`, you can import `ipynb.setup.find_packages`,
+which will convert ``.ipynb`` files to python files on before building an
+source distribution or a wheel.
+
+.. code::
+    :file: setup.py
+
+    from ipynb.setup import find_packages
+    from setuptools import setup
+
+    setup(
+        name='trombulator',
+        version='4.8.15162342',
+        description='Trombulate with class using trombulator',
+        url='http://tronbula.tor/',
+        author='Rick Sanchez',
+        author_email='morty@lubalubadub.dub',
+        license='BSD',
+        packages=find_packages(),
+        python_requires='>=3.4'
+    )
+
+
 
 
 Contents:
