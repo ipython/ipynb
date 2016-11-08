@@ -9,4 +9,5 @@ setup(
     author_email='yuvipanda@gmail.com',
     license='BSD',
     packages=find_packages(),
+    python_requires='>=3.4'
 )
