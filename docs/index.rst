@@ -7,7 +7,7 @@ Welcome to ipynb's documentation!
 =================================
 
 This module allow you to import ``ipynb`` as is they were classical python
-modules. Simply prepend ``ipynb.fs.`` to the regular import.
+modules. Simply prepend ``ipynb.fs.full`` to the regular import.
 
 The `Zen of Python <https://www.python.org/dev/peps/pep-0020/>`_ say it well:
 Explicit is better than implicit. Thus wile import-hook are useful they lack
@@ -15,7 +15,7 @@ explicitness. This module is meant to fix this by allowing you to explicitly
 requiring notebook files.
 
 This module does install an import kook, though it will only try to load
-packages that explicitly start with ``ipynb.fs.``.
+packages that explicitly start with ``ipynb.fs.full``.
 
 This is still highly work in progress, any feedback and improvement welcomed.
 
@@ -35,7 +35,7 @@ command prompt:
 
     $ pip install ipynb --upgrade
 
-Make sure to use a recent version of pip !
+Make sure to use a recent version of pip!
 
 ``ipynb`` requires python 3.4 or above to work. It is technically possible to
 have it work on older python versions but might require quite some work. We
@@ -67,18 +67,15 @@ Limitation
 
 Although ``ipynb`` files are often connected to IPython kernel, ``ipynb`` does
 not (yet?) support  many of IPython syntactic features like ``!shell command``
-as well as line magics (``%magic``) and cell magics (``%%cell_magic``) While
+as well as line magics (``%magic``) and cell magics (``%%cell_magic``). While
 the former should be pretty easy to emulate, the two later one requires the
 code to be ran from with the main namespace of IPython so are unavailable.
 
 
-FSdefs
+Import only definitions
 ======
 
-
-Import using ``ipynb.fsdefs`` does not trigger side effects. 
-
-
+If you would like to import only class & function definitions from a notebook (and not the top level statements), you can use ``ipynb.fs.defs`` instead of ``ipynb.fs.full`.
 
 
 Contents:
