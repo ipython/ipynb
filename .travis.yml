@@ -4,10 +4,10 @@ python:
     - "3.6-dev"
     - 3.5
     - 3.4
-    - 3.3
 install:
     - pip install "pytest" --upgrade
     - pip install codecov --upgrade
+    - pip install . 
 script:
     - py.test
 after_success:
