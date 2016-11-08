@@ -44,5 +44,6 @@ It'll only execute and make available the following parts of the code in `server
  - `class` definitions
  - `def` function definitions
  - `import` statements
+ - Assignment statements where the variables being assigned to are ALL_CAPS. These are assumed to be constants.
 
 This skips most computational work and brings in your definitions only, making it easy to reuse functions / classes across similar analyses.
