@@ -33,10 +33,9 @@ class NotebookLoader(SourceFileLoader):
     def get_code(self, fullname):
         if self.path.endswith('.ipynb'):
             with open(self.path) as f:
-                return compile(
+                return self.source_to_code(
                     self._get_filtered_ast(get_code(f.read())),
-                    self.path,
-                    'exec'
+                    self.path
                 )
         else:
             return super().get_code(fullname)
