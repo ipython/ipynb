@@ -75,7 +75,9 @@ code to be ran from with the main namespace of IPython so are unavailable.
 Import only definitions
 ======
 
-If you would like to import only class & function definitions from a notebook (and not the top level statements), you can use ``ipynb.fs.defs`` instead of ``ipynb.fs.full`.
+If you would like to import only class & function definitions from a notebook
+(and not the top level statements), you can use ``ipynb.fs.defs`` instead of
+``ipynb.fs.full``.
 
 
 Contents:
