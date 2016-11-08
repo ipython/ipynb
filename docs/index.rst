@@ -93,7 +93,7 @@ source distribution or a wheel.
 .. code::
     :file: setup.py
 
-    from ipynb.setup import find_package
+    from ipynb.setup import find_packages
     from setuptools import setup
 
     setup(
