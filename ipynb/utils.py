@@ -1,5 +1,3 @@
-import json
-
 PREAMBLE=\
 """
 ##############################################################################
@@ -8,18 +6,24 @@ PREAMBLE=\
 ##############################################################################
 """
 
-
-def get_code(data, markdown=False):
+def validate_nb(nb):
     """
-    Execute contents of a given stream in a given module
+    Validate that given notebook JSON is importable
 
-    data is a file-like object that'll be read from for contents
-    module is the module in which to execute this code
+    - Check for nbformat == 4
+    - Check that language is python3
 
-    FIXME: If you use any IPython magics here, it'll go boom.
+    Do not re-implement nbformat here :D
     """
-    nb = json.loads(data)
+    return nb['nbformat'] == 4 and nb['metadata']['kernelspec']['name'] == 'python3'
 
+
+def get_code(nb, markdown=False):
+    """
+    Get the code for a given notebook
+
+    nb is passed in as a dictionry that's a parsed ipynb file
+    """
     code = PREAMBLE
     for cell in nb['cells']:
         if cell['cell_type'] == 'code':

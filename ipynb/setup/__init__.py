@@ -1,6 +1,7 @@
 from setuptools import PackageFinder
 import os
 import glob
+import json
 from ..utils import get_code
 
 
@@ -14,7 +15,7 @@ class IPynbPackageFinder(PackageFinder):
             ipynbs = glob.glob(os.path.join(path,'*.ipynb'))
             for ipynb in ipynbs:
                 with open(ipynb) as notebook:
-                    data = notebook.read()
+                    data = json.load(notebook)
                 with open(ipynb.replace('ipynb','py'), 'w') as pyfile:
                     pyfile.write(get_code(data, markdown=True))
 
