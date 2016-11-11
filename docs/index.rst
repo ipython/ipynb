@@ -84,11 +84,13 @@ Releasing a package that contains notebook files
 ================================================
 
 You might have the need to release a python package with some modules written
-as ``.ipynb`` files, but you do not want to require the  ``ipynb`` package.
+as ``.ipynb`` files, but you do not want to require the  ``ipynb`` package
+for your users.
 
 If you are using `setuptools`, you can import `ipynb.setup.find_packages`,
 which will convert ``.ipynb`` files to python files on before building an
-source distribution or a wheel.
+source distribution or a wheel. This allows others to use your package without
+needing to have the ``ipynb`` package installed.
 
 .. code::
     :file: setup.py
