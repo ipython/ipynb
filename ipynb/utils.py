@@ -11,11 +11,17 @@ def validate_nb(nb):
     Validate that given notebook JSON is importable
 
     - Check for nbformat == 4
-    - Check that language is python3
+    - Check that language is python
 
     Do not re-implement nbformat here :D
     """
-    return nb['nbformat'] == 4 and nb['metadata']['kernelspec']['name'] == 'python3'
+    if nb['nbformat'] != 4:
+        return False
+    
+    language_name = (nb.get('metadata', {})
+        .get('kernelspec', {})
+        .get('language', '').lower())
+    return language_name == 'python'
 
 
 def get_code(nb, markdown=False):
