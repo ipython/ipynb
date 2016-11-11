@@ -14,13 +14,13 @@ Explicit is better than implicit. Thus wile import-hook are useful they lack
 explicitness. This module is meant to fix this by allowing you to explicitly
 requiring notebook files.
 
-This module does install an import kook, though it will only try to load
-packages that explicitly start with ``ipynb.fs.full``.
+This module does install an import hook, though it will only try to load
+packages that explicitly start with ``ipynb.fs.``.
 
 This is still highly work in progress, any feedback and improvement welcomed.
 
 The source code for this package can be found
-`on GitHub <https://github.com/yuvipanda/ipynb>`_.
+`on GitHub <https://github.com/ipython/ipynb>`_.
 
 
 
@@ -77,7 +77,7 @@ Import only definitions
 
 If you would like to import only class & function definitions from a notebook
 (and not the top level statements), you can use ``ipynb.fs.defs`` instead of
-``ipynb.fs.full``. Full uppercase variable assignment will get eveluated as well.
+``ipynb.fs.full``. Full uppercase variable assignment will get evaluated as well.
 
 
 Releasing a package that contains notebook files
