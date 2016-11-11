@@ -8,7 +8,7 @@ import json
 from importlib.machinery import SourceFileLoader
 from ipynb.fs.finder import FSFinder
 
-from ipynb.utils import get_code, validate_nb
+from ipynb.utils import code_from_ipynb, validate_nb
 
 
 ALLOWED_NODES = set([
@@ -59,7 +59,7 @@ class FilteredLoader(SourceFileLoader):
                         fn=fullname
                     ))
                 return self.source_to_code(
-                    self._get_filtered_ast(get_code(nb)),
+                    self._get_filtered_ast(code_from_ipynb(nb)),
                     self.path
                 )
         else:

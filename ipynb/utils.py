@@ -1,3 +1,9 @@
+"""
+Utility functions for dealing with manipulating notebooks.
+
+Try to not put too many things here, nor to re-implement nbformat.
+"""
+
 PREAMBLE=\
 """
 ##############################################################################
@@ -17,18 +23,18 @@ def validate_nb(nb):
     """
     if nb['nbformat'] != 4:
         return False
-    
+
     language_name = (nb.get('metadata', {})
         .get('kernelspec', {})
         .get('language', '').lower())
     return language_name == 'python'
 
 
-def get_code(nb, markdown=False):
+def code_from_ipynb(nb, markdown=False):
     """
     Get the code for a given notebook
 
-    nb is passed in as a dictionry that's a parsed ipynb file
+    nb is passed in as a dictionary that's a parsed ipynb file
     """
     code = PREAMBLE
     for cell in nb['cells']:

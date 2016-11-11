@@ -9,7 +9,7 @@ import sys
 import json
 from importlib.machinery import SourceFileLoader
 
-from ipynb.utils import get_code, validate_nb
+from ipynb.utils import code_from_ipynb, validate_nb
 from ipynb.fs.finder import FSFinder
 
 
@@ -31,7 +31,7 @@ class FullLoader(SourceFileLoader):
                         path=self.path,
                         fn=fullname
                     ))
-                return self.source_to_code(get_code(nb), self.path)
+                return self.source_to_code(code_from_ipynb(nb), self.path)
         else:
             return super().get_code(fullname)
 
