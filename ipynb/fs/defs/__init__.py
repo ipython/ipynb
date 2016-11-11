@@ -19,7 +19,18 @@ ALLOWED_NODES = set([
 ])
 
 
-class NotebookLoader(SourceFileLoader):
+class FilteredLoader(SourceFileLoader):
+    """
+    A notebook loader that loads only a subset of the code in an .ipynb file
+
+    It executes and imports only the following top level items:
+     - imports
+     - function definitions
+     - class definitions
+     - top level assignments where all the targets on the LHS are all caps
+
+    If it isn't an .ipynb file, it's treated the same as a .py file.
+    """
     def _filter_ast_node(self, node):
         for an in ALLOWED_NODES:
             if isinstance(node, an):
@@ -54,4 +65,4 @@ class NotebookLoader(SourceFileLoader):
         else:
             return super().get_code(fullname)
 
-sys.meta_path.append(FSFinder(__package__, NotebookLoader))
+sys.meta_path.append(FSFinder(__package__, FilteredLoader))

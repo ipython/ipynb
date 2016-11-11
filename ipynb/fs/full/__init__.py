@@ -13,7 +13,15 @@ from ipynb.utils import get_code, validate_nb
 from ipynb.fs.finder import FSFinder
 
 
-class NotebookLoader(SourceFileLoader):
+class FullLoader(SourceFileLoader):
+    """
+    A notebook loader that loads code from a .ipynb file
+
+    It picks out all the code from a .ipynb file and executes it
+    into the module.
+
+    If it isn't an .ipnb file, it's treated the same as a .py file
+    """
     def get_code(self, fullname):
         if self.path.endswith('.ipynb'):
             with open(self.path) as f:
@@ -28,4 +36,4 @@ class NotebookLoader(SourceFileLoader):
             return super().get_code(fullname)
 
 
-sys.meta_path.append(FSFinder(__package__, NotebookLoader))
+sys.meta_path.append(FSFinder(__package__, FullLoader))
