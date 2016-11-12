@@ -1,3 +1,6 @@
+"""
+Contains the finder for use with filesystems.
+"""
 import sys
 import os
 

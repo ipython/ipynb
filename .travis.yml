@@ -1,18 +1,18 @@
 language: python
 python:
-    - "nightly"
     - "3.6-dev"
     - 3.5
     - 3.4
 install:
-    - pip install "pytest" --upgrade
+    - pip install pytest --upgrade
     - pip install codecov --upgrade
+    - pip install pylint --upgrade
     - pip install . 
 script:
     - py.test
+    - pylint ipynb
 after_success:
     - codecov
-
 matrix:
     allow_failures:
-        - python: nightly
+        - python: 3.6-dev
