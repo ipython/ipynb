@@ -42,14 +42,10 @@ class FSFinder(MetaPathFinder):
         """
         if fullname.startswith(self.package_prefix):
             for path in self._get_paths(fullname):
-                try:
-                    if os.path.exists(path):
-                        # It'll be the loader's responsibility to close file
-                        return ModuleSpec(
-                            name=fullname,
-                            loader=self.loader_class(fullname, path),
-                            origin=path,
-                            is_package=(path.endswith('__init__.ipynb') or path.endswith('__init__.py')),
-                        )
-                except FileNotFoundError:
-                    continue
+                if os.path.exists(path):
+                    return ModuleSpec(
+                        name=fullname,
+                        loader=self.loader_class(fullname, path),
+                        origin=path,
+                        is_package=(path.endswith('__init__.ipynb') or path.endswith('__init__.py')),
+                    )
