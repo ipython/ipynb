@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ipynb',
-    version='0.3',
+    version='0.4',
     description='Package / Module importer for importing code from Jupyter Notebook files (.ipynb)',
     url='http://github.com/yuvipanda/ipynb',
     author='Yuvi Panda',
