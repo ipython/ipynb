@@ -8,15 +8,8 @@ import json
 from importlib.machinery import SourceFileLoader
 from ipynb.fs.finder import FSFinder
 
-from ipynb.utils import code_from_ipynb, validate_nb
+from ipynb.utils import code_from_ipynb, validate_nb, filter_ast
 
-
-ALLOWED_NODES = set([
-    ast.ClassDef,
-    ast.FunctionDef,
-    ast.Import,
-    ast.ImportFrom
-])
 
 
 class FilteredLoader(SourceFileLoader):
@@ -31,24 +24,6 @@ class FilteredLoader(SourceFileLoader):
 
     If it isn't an .ipynb file, it's treated the same as a .py file.
     """
-    def _filter_ast_node(self, node):
-        for an in ALLOWED_NODES:
-            if isinstance(node, an):
-                return True
-
-        if isinstance(node, ast.Assign):
-            return all([t.id.isupper() for t in node.targets])
-
-        return False
-
-    def _get_filtered_ast(self, source):
-        """
-        Returns an AST from source filtered to contain only our whitelist
-        """
-        tree = ast.parse(source)
-        tree.body = [n for n in tree.body if self._filter_ast_node(n)]
-        return tree
-
     def get_code(self, fullname):
         if self.path.endswith('.ipynb'):
             with open(self.path) as f:
@@ -59,7 +34,7 @@ class FilteredLoader(SourceFileLoader):
                         fn=fullname
                     ))
                 return self.source_to_code(
-                    self._get_filtered_ast(code_from_ipynb(nb)),
+                    filter_ast(ast.parse(code_from_ipynb(nb))),
                     self.path
                 )
         else:

@@ -8,6 +8,8 @@ def test_a():
 def test_foo():
     assert foo.foo() == 'foo'
 
+def test_execute():
+    assert foo.bar == 'hi'
 
-
-
+def test_allcaps_execute():
+    assert foo.WAT == 'boo'

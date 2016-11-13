@@ -3,6 +3,8 @@ Utility functions for dealing with manipulating notebooks.
 
 Try to not put too many things here, nor to re-implement nbformat.
 """
+import ast
+
 
 PREAMBLE=\
 """
@@ -11,6 +13,14 @@ PREAMBLE=\
 # Please modify the origin file                                              #
 ##############################################################################
 """
+
+ALLOWED_NODES = set([
+    ast.ClassDef,
+    ast.FunctionDef,
+    ast.Import,
+    ast.ImportFrom
+])
+
 
 def validate_nb(nb):
     """
@@ -29,6 +39,32 @@ def validate_nb(nb):
         .get('language', '').lower())
     return language_name == 'python'
 
+
+def filter_ast(module_ast):
+    """
+    Filters a given module ast, removing non-whitelisted nodes
+
+    It allows only the following top level items:
+     - imports
+     - function definitions
+     - class definitions
+     - top level assignments where all the targets on the LHS are all caps
+    """
+    def node_predicate(node):
+        """
+        Return true if given node is whitelisted
+        """
+        for an in ALLOWED_NODES:
+            if isinstance(node, an):
+                return True
+
+        if isinstance(node, ast.Assign):
+            return all([t.id.isupper() for t in node.targets])
+
+        return False
+
+    module_ast.body = [n for n in module_ast.body if node_predicate(n)]
+    return module_ast
 
 def code_from_ipynb(nb, markdown=False):
     """
