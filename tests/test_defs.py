@@ -37,3 +37,7 @@ def test_allcaps_execute(foo):
 def test_all(init):
     r = init.RAWR()
     assert r.rawr() == 'rawr'
+
+def test_bogus_ipynb():
+    with pytest.raises(ImportError):
+        import ipynb.fs.defs.bogus_ipynb as bogus_ipynb

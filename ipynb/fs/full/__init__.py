@@ -25,9 +25,18 @@ class FullLoader(SourceFileLoader):
     def get_code(self, fullname):
         if self.path.endswith('.ipynb'):
             with open(self.path) as f:
-                nb = json.load(f)
-                if not validate_nb(nb):
+                try:
+                    nb = json.load(f)
+                except json.JSONDecodeError:
+                    # This is when it isn't a valid json file
                     raise ImportError('Could not import {path} for {fn}: not a valid ipynb file'.format(
+                        path=self.path,
+                        fn=fullname
+                    ))
+                if not validate_nb(nb):
+                    # This is when it isn't the appropriate
+                    # nbformet version or language
+                    raise ImportError('Could not import {path} for {fn}: incorrect version or language'.format(
                         path=self.path,
                         fn=fullname
                     ))
