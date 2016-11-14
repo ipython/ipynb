@@ -4,12 +4,12 @@ python:
     - 3.5
     - 3.4
 install:
-    - pip install pytest --upgrade
+    - pip install pytest pytest-cov --upgrade
     - pip install codecov --upgrade
     - pip install pylint --upgrade
     - pip install . 
 script:
-    - py.test
+    - py.test --cov ipynb
     - pylint ipynb
 after_success:
     - codecov
