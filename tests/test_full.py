@@ -38,6 +38,10 @@ def test_bogus_ipynb():
     with pytest.raises(ImportError):
         import ipynb.fs.full.bogus_ipynb as bogus_ipynb
 
-def test_r_notebook_ipynb():
+def test_r_notebook():
     with pytest.raises(ImportError):
         import ipynb.fs.full.r_notebook
+
+def test_nbformat_2():
+    with pytest.raises(ImportError):
+        import ipynb.fs.full.older_nbformat
