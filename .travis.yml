@@ -7,7 +7,7 @@ install:
     - pip install pytest pytest-cov --upgrade
     - pip install codecov --upgrade
     - pip install pylint --upgrade
-    - pip install . 
+    - pip install -e . 
 script:
     - py.test --cov=./
     - pylint ipynb
