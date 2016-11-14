@@ -1,5 +1,5 @@
-import ipynb.fs.full.a as a
-import ipynb.fs.full.a.foo as foo
+import ipynb.fs.full.pure_ipynb as a
+import ipynb.fs.full.pure_ipynb.foo as foo
 
 
 def test_a():

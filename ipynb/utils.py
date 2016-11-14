@@ -76,8 +76,10 @@ def code_from_ipynb(nb, markdown=False):
     for cell in nb['cells']:
         if cell['cell_type'] == 'code':
             # transform the input to executable Python
-            code += '\n'.join(cell['source'])
-            code += '\n'
+            code += ''.join(cell['source'])
         if cell['cell_type'] == 'markdown':
-            code += '\n' +'\n# '.join(cell['source'])
+            code += '\n# ' + '# '.join(cell['source'])
+        # We want a blank newline after each cell's output.
+        # And the last line of source doesn't have a newline usually.
+        code += '\n\n'
     return code
