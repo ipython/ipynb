@@ -9,7 +9,7 @@ install:
     - pip install pylint --upgrade
     - pip install . 
 script:
-    - py.test --cov ipynb
+    - py.test --cov=./
     - pylint ipynb
 after_success:
     - codecov
