@@ -47,3 +47,21 @@ It'll only execute and make available the following parts of the code in `server
  - Assignment statements where the variables being assigned to are ALL_CAPS. These are assumed to be constants.
 
 This skips most computational work and brings in your definitions only, making it easy to reuse functions / classes across similar analyses.
+
+### Relative Imports ###
+
+You can also easily do relative imports, both for full notebooks or for definitions only. This works inside notebooks too.
+
+If you have a notebook called `notebook1.ipynb` in the same dir as your current notebook, you can import it with:
+
+```python
+import ipynb.fs  # Boilerplate required
+
+# Do a full import
+from .full.notebook1 import foo
+
+# Do a definitions-only import
+from .defs.notebook1 import bar
+```
+
+This works transitively nicely - other code can import your notebook that's using relative imports and it'll all work well.
