@@ -27,7 +27,7 @@ class FullLoader(SourceFileLoader):
             with open(self.path) as f:
                 try:
                     nb = json.load(f)
-                except json.JSONDecodeError:
+                except ValueError:
                     # This is when it isn't a valid json file
                     raise ImportError('Could not import {path} for {fn}: not a valid ipynb file'.format(
                         path=self.path,
