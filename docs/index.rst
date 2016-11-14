@@ -79,6 +79,21 @@ If you would like to import only class & function definitions from a notebook
 (and not the top level statements), you can use ``ipynb.fs.defs`` instead of
 ``ipynb.fs.full``. Full uppercase variable assignment will get evaluated as well.
 
+Relative imports
+================
+
+If you want to import notebooks from other notebooks relatively, you can easily
+do that with the following:
+
+```
+import ipynb.fs
+from .full.notebook1 import foo
+from .defs.notebook2 import bar
+```
+
+This will do the imports from other notebooks relative to the path of the notebook
+in which the importing is happening. The `import ipynb.fs` is boilerplate that is
+required for this feature to work properly.
 
 Releasing a package that contains notebook files
 ================================================
