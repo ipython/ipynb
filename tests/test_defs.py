@@ -41,3 +41,7 @@ def test_all(init):
 def test_bogus_ipynb():
     with pytest.raises(ImportError):
         import ipynb.fs.defs.bogus_ipynb as bogus_ipynb
+
+def test_r_notebook_ipynb():
+    with pytest.raises(ImportError):
+        import ipynb.fs.defs.r_notebook
