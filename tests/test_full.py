@@ -10,6 +10,7 @@ def test_foo():
 
 def test_execute():
     assert foo.bar == 'hi'
+    assert foo.r.rawr() == 'rawr'
 
 def test_allcaps_execute():
     assert foo.WAT == 'boo'
