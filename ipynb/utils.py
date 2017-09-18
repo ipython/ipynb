@@ -59,7 +59,8 @@ def filter_ast(module_ast):
                 return True
 
         if isinstance(node, ast.Assign):
-            return all([t.id.isupper() for t in node.targets])
+            return all([t.id.isupper() for t in node.targets if hasattr(t, 'id')]) \
+                and all([[e.id.isupper() for e in t.elts] for t in node.targets if hasattr(t, 'elts')])
 
         return False
 
