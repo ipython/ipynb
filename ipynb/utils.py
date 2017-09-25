@@ -58,9 +58,11 @@ def filter_ast(module_ast):
             if isinstance(node, an):
                 return True
 
+        # Recurse through Assign node LHS targets when an id is not specified,
+        # otherwise check that the id is uppercase
         if isinstance(node, ast.Assign):
-            return all([t.id.isupper() for t in node.targets if hasattr(t, 'id')]) \
-                and all([[e.id.isupper() for e in t.elts] for t in node.targets if hasattr(t, 'elts')])
+            return all([node_predicate(t) for t in node.targets if not hasattr(t, 'id')]) \
+                and all([t.id.isupper() for t in node.targets if hasattr(t, 'id')])
 
         return False
 
