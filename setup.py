@@ -4,7 +4,7 @@ __import__('setuptools').setup(
     author="deathbeds", author_email="tony.fast@gmail.com",
     description="Import notebook in the system path.", 
     license="BSD-3-Clause",
-    install_requires=[],
+    install_requires=['dataclasses', 'nbconvert'],
     include_package_data=True,
     packages=__import__('setuptools').find_packages(),
 )
