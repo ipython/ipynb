@@ -1,0 +1,3 @@
+dataclasses
+ipython
+nbconvert
