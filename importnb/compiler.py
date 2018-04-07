@@ -1,10 +1,6 @@
 
 # coding: utf-8
 
-# # by *convention* Notebooks __import__
-# 
-# __rites.rites__ makes all notebooks __import__able as Python source.
-
 # # Decoding
 # 
 # If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `rites` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported.
@@ -137,7 +133,7 @@ class AST(Code):
         ), []))))
 
 
-# In[7]:
+# In[6]:
 
 
 class Compile(AST):
@@ -148,7 +144,7 @@ class Compile(AST):
         return Compile.compile(super().from_notebook_node(nb, resources, **dict))
 
 
-# In[21]:
+# In[7]:
 
 
 if __name__ ==  '__main__':
