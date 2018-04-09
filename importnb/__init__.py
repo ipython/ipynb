@@ -32,23 +32,7 @@ from importlib.machinery import SourceFileLoader
 # In[3]:
 
 
-class Partial(SourceFileLoader):    
-    """A SourceFileLoader that will not raise an ImportError because it catches output and error.
-    """
-    def exec_module(Module, module):
-        from IPython.utils.capture import capture_output
-        with capture_output(stdout=False, stderr=False) as output:
-            super().exec_module(module)
-            try: module.__complete__ = True
-            except BaseException as Exception: module.__complete__ = Exception
-            finally: module.__output__ = output
-        return module
-
-
-# In[4]:
-
-
-class Notebook(Partial):
+class Notebook(SourceFileLoader):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = '.ipynb',
     def source_to_code(Notebook, data, path):
@@ -60,13 +44,13 @@ class Notebook(Partial):
 # 
 # Create a [path_hook](https://docs.python.org/3/reference/import.html#import-hooks) rather than a `meta_path` so any module containing notebooks is accessible.
 
-# In[5]:
+# In[4]:
 
 
 import sys
 
 
-# In[6]:
+# In[5]:
 
 
 _NATIVE_HOOK = sys.path_hooks
@@ -88,7 +72,7 @@ def update_hooks(loader=None):
 
 # # IPython Extensions
 
-# In[7]:
+# In[6]:
 
 
 def load_ipython_extension(ip=None): update_hooks(Notebook)
