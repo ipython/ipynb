@@ -24,17 +24,21 @@ except:
 from importlib.machinery import SourceFileLoader
 
 
-# ## Partial Loading
-# 
-# A notebook may be a complete, or yet to be complete concept.  Unlike normal source code, notebooks are comprised of cells or miniature programs that may interact with other cells.  It is plausible that some code may evaluate before other code fails.  `rites` allows notebooks to partially evaluate.  Each module contains `module.__complete__` to identify the loading
-# state of the notebook.
-
 # In[3]:
 
 
 class Notebook(SourceFileLoader):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = '.ipynb',
+    def exec_module(Loader, module):
+        from IPython.utils.capture import capture_output    
+        with capture_output(stdout=False, stderr=False) as output: 
+            try: 
+                super().exec_module(module)
+            except type('pass', (BaseException,), {}): ...
+            finally: module.__output__ = output
+        return module
+
     def source_to_code(Notebook, data, path):
         with __import__('io').BytesIO(data) as stream:
             return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
@@ -110,7 +114,7 @@ class Test(__import__('unittest').TestCase):
 
 
 if __name__ ==  '__main__':
-    __import__('doctest').testmod(verbose=2)
+#         __import__('doctest').testmod(verbose=2)
     __import__('unittest').TextTestRunner().run(Test())
     get_ipython().system('jupyter nbconvert --to script __init__.ipynb')
 
