@@ -9,9 +9,9 @@
 
 
 try:
-    from .compiler import Compile
+    from .compiler import Compile, AST
 except:
-    from compiler import Compile
+    from compiler import Compile, AST
 
 
 # # The [Import Loader](https://docs.python.org/3/reference/import.html#loaders)
@@ -22,13 +22,6 @@ except:
 
 
 from importlib.machinery import SourceFileLoader
-class NotebookLoader(SourceFileLoader):
-    """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
-    EXTENSION_SUFFIXES = '.ipynb',
-    def exec_module(Loader, module): return super().exec_module(module)
-    def source_to_code(Loader, data, path):
-        with __import__('io').BytesIO(data) as stream:
-            return Compile().from_file(stream, filename=Loader.path, name=Loader.name)
 
 
 # ## Partial Loading
@@ -39,30 +32,41 @@ class NotebookLoader(SourceFileLoader):
 # In[3]:
 
 
-class Partial(NotebookLoader):    
+class Partial(SourceFileLoader):    
     """A SourceFileLoader that will not raise an ImportError because it catches output and error.
     """
     def exec_module(Module, module):
         from IPython.utils.capture import capture_output
         with capture_output(stdout=False, stderr=False) as output:
-            super(type(Module), Module).exec_module(module)
+            super().exec_module(module)
             try: module.__complete__ = True
             except BaseException as Exception: module.__complete__ = Exception
             finally: module.__output__ = output
         return module
 
 
+# In[4]:
+
+
+class Notebook(Partial):
+    """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
+    EXTENSION_SUFFIXES = '.ipynb',
+    def source_to_code(Notebook, data, path):
+        with __import__('io').BytesIO(data) as stream:
+            return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
+
+
 # ## Path Hook
 # 
 # Create a [path_hook](https://docs.python.org/3/reference/import.html#import-hooks) rather than a `meta_path` so any module containing notebooks is accessible.
 
-# In[4]:
+# In[5]:
 
 
 import sys
 
 
-# In[5]:
+# In[6]:
 
 
 _NATIVE_HOOK = sys.path_hooks
@@ -87,13 +91,13 @@ def update_hooks(loader=None):
 # In[7]:
 
 
-def load_ipython_extension(ip=None): update_hooks(Partial)
+def load_ipython_extension(ip=None): update_hooks(Notebook)
 def unload_ipython_extension(ip=None): update_hooks()
 
 
 # ### Force the docstring for rites itself.
 
-# In[8]:
+# In[ ]:
 
 
 class Test(__import__('unittest').TestCase): 
@@ -118,7 +122,7 @@ class Test(__import__('unittest').TestCase):
 
 # # Developer
 
-# In[9]:
+# In[ ]:
 
 
 if __name__ ==  '__main__':
