@@ -1,9 +1,9 @@
 
 # coding: utf-8
 
-# # by *convention* Notebooks __import__
+# # The [Import Loader](https://docs.python.org/3/reference/import.html#loaders)
 # 
-# __rites.rites__ makes all notebooks __import__able as Python source.
+# `rites` uses as much of the Python import system as it can.
 
 # In[1]:
 
@@ -12,24 +12,57 @@ try:
     from .compiler import Compile, AST
 except:
     from compiler import Compile, AST
+import inspect, sys, warnings
+from importlib.machinery import SourceFileLoader
+from importlib._bootstrap_external import FileFinder
+from traceback import format_exception_only
 
-
-# # The [Import Loader](https://docs.python.org/3/reference/import.html#loaders)
-# 
-# `rites` uses as much of the Python import system as it can.
 
 # In[2]:
 
 
-from importlib.machinery import SourceFileLoader
+def update_path_hooks(id, *loaders):
+    sys.path_hooks.pop(id)
+    sys.path_hooks.insert(id, (FileFinder.path_hook(*tuple(loaders))))
 
 
 # In[3]:
 
 
-class Notebook(SourceFileLoader):
+class ContextManager:
+    def __enter__(self):
+        for i, hook in enumerate(sys.path_hooks):
+            cls = type(self)
+            try:
+                closure = inspect.getclosurevars(hook).nonlocals
+                if issubclass(closure['cls'], FileFinder):
+                    update_path_hooks(i, (cls, (list(self.EXTENSION_SUFFIXES))), *(
+                        (cls, ext) for cls, ext in closure['loader_details'] if not issubclass(cls, Notebook)))
+            except TypeError: ...
+        sys.path_importer_cache.clear()
+                
+                
+    def __exit__(self, exception_type=None, exception_value=None, traceback=None):
+        for i, hook in enumerate(sys.path_hooks):
+            try:
+                closure = inspect.getclosurevars(hook).nonlocals
+                if issubclass(closure['cls'], FileFinder):
+                    update_path_hooks(i, *(
+                        (cls, ext) for cls, ext in closure['loader_details'] if not issubclass(cls, type(self))
+                    ))
+            except TypeError: ...
+        sys.path_importer_cache.clear()
+        
+
+
+# In[4]:
+
+
+class Notebook(SourceFileLoader, ContextManager):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = '.ipynb',
+    def __init__(self, fullname=None, path=None):
+        super().__init__(fullname, path)
     def exec_module(Loader, module):
         from IPython.utils.capture import capture_output    
         with capture_output(stdout=False, stderr=False) as output: 
@@ -44,48 +77,38 @@ class Notebook(SourceFileLoader):
             return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
 
 
-# ## Path Hook
-# 
-# Create a [path_hook](https://docs.python.org/3/reference/import.html#import-hooks) rather than a `meta_path` so any module containing notebooks is accessible.
-
-# In[4]:
-
-
-import sys
-
-
 # In[5]:
 
 
-_NATIVE_HOOK = sys.path_hooks
-def update_hooks(loader=None):
-    """Update the sys.meta_paths with the PartialLoader.
-    
-    """
-    global _NATIVE_HOOK
-    from importlib.machinery import FileFinder
-    if loader:
-        for i, hook in enumerate(sys.path_hooks):
-            closure = getattr(hook, '__closure__', None)
-            if closure and closure[0].cell_contents is FileFinder:
-                sys.path_hooks[i] = FileFinder.path_hook(
-                    (loader, list(loader.EXTENSION_SUFFIXES)), *closure[1].cell_contents)
-    else: sys.path_hooks = _NATIVE_HOOK
-    sys.path_importer_cache.clear()
+from traceback import print_exc
+
+
+# In[11]:
+
+
+class Partial(Notebook):
+    def exec_module(loader, module):
+        try: super().exec_module(module)
+        except BaseException as exception:
+            try: raise ImportWarning(f"""{module.__name__} from {module.__file__} failed to load completely.""")
+            except ImportWarning as error:
+                print_exc()
+                module.__exception__ = exception
+        return module
 
 
 # # IPython Extensions
 
-# In[6]:
+# In[7]:
 
 
-def load_ipython_extension(ip=None): update_hooks(Notebook)
-def unload_ipython_extension(ip=None): update_hooks()
+def load_ipython_extension(ip=None): Notebook().__enter__()
+def unload_ipython_extension(ip=None): Notebook().__exit__()
 
 
 # ### Force the docstring for rites itself.
 
-# In[ ]:
+# In[8]:
 
 
 class Test(__import__('unittest').TestCase): 
@@ -104,17 +127,25 @@ class Test(__import__('unittest').TestCase):
         assert isinstance(test_loader, __import__('types').ModuleType)
         
     def tearDown(Test):
-        get_ipython().run_line_magic('rm', 'test_loader.ipynb')
+#             %rm test_loader.ipynb
         unload_ipython_extension()
 
 
 # # Developer
 
-# In[ ]:
+# In[9]:
 
 
 if __name__ ==  '__main__':
 #         __import__('doctest').testmod(verbose=2)
     __import__('unittest').TextTestRunner().run(Test())
     get_ipython().system('jupyter nbconvert --to script __init__.ipynb')
+
+
+# In[10]:
+
+
+if __name__ ==  '__main__':
+    with Partial():
+        import test_loader, test_failure
 
