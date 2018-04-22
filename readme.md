@@ -10,6 +10,7 @@ Load the __importnb__ to import notebooks.
     if __name__ == '__main__':
         %reload_ext importnb
         import readme
+        assert readme.foo is 42
         assert readme.__file__.endswith('.ipynb')
     else: 
         foo = 42
@@ -47,5 +48,5 @@ Notebooks maybe reloaded with the standard Python Import machinery.
 ```
 
     [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 1092 bytes to readme.md
+    [NbConvertApp] Writing 1091 bytes to readme.md
 
