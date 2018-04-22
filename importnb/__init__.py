@@ -2,8 +2,6 @@
 # coding: utf-8
 
 # # The [Import Loader](https://docs.python.org/3/reference/import.html#loaders)
-# 
-# `rites` uses as much of the Python import system as it can.
 
 # In[1]:
 
@@ -22,47 +20,39 @@ from importlib import reload
 # In[2]:
 
 
-def update_path_hooks(id, *loaders):
-    sys.path_hooks.pop(id)
-    sys.path_hooks.insert(id, (FileFinder.path_hook(*tuple(loaders))))
+def update_path_hooks(loader: SourceFileLoader, extensions: tuple=None, lazy=False):
+    """Update the FileFinder loader in sys.path_hooks to accomodate a {loader} with the {extensions}"""
+    from importlib.util import LazyLoader
+    for id, hook in enumerate(sys.path_hooks):
+        try:
+            closure = inspect.getclosurevars(hook).nonlocals
+        except TypeError: continue
+        if issubclass(closure['cls'], FileFinder):
+            sys.path_hooks.pop(id)
+            sys.path_hooks.insert(id, FileFinder.path_hook(*(
+                ((lazy and LazyLoader.factory(loader) or loader, extensions),) 
+                if (loader and extensions) 
+                else tuple()
+            ) + tuple(
+                (cls, ext) 
+                for cls, ext in closure['loader_details'] 
+                if not issubclass(cls, loader) # Need to add logic for lazy loaders before they may be introduced.
+            )))
+    else: sys.path_importer_cache.clear()
 
 
 # In[3]:
 
 
-from importlib.util import LazyLoader
-
-
-# In[4]:
-
-
 class ImportContext:
-    def __enter__(self):
-        for i, hook in enumerate(sys.path_hooks):
-            cls = type(self)
-            try:
-                closure = inspect.getclosurevars(hook).nonlocals
-                if issubclass(closure['cls'], FileFinder):
-                    update_path_hooks(i, (cls, (list(self.EXTENSION_SUFFIXES))), *(
-                        (cls, ext) for cls, ext in closure['loader_details'] if not issubclass(cls, Notebook)))
-            except TypeError: ...
-        sys.path_importer_cache.clear()
-                
+    def __enter__(self):  update_path_hooks(type(self), self.EXTENSION_SUFFIXES)
                 
     def __exit__(self, exception_type=None, exception_value=None, traceback=None):
-        for i, hook in enumerate(sys.path_hooks):
-            try:
-                closure = inspect.getclosurevars(hook).nonlocals
-                if issubclass(closure['cls'], FileFinder):
-                    update_path_hooks(i, *(
-                        (cls, ext) for cls, ext in closure['loader_details'] if not issubclass(cls, type(self))
-                    ))
-            except TypeError: ...
-        sys.path_importer_cache.clear()
+        update_path_hooks(type(self), None)
         
 
 
-# In[5]:
+# In[4]:
 
 
 class Notebook(SourceFileLoader, ImportContext):
@@ -83,7 +73,7 @@ class Notebook(SourceFileLoader, ImportContext):
             return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
 
 
-# In[6]:
+# In[5]:
 
 
 class Partial(Notebook):
@@ -99,7 +89,7 @@ class Partial(Notebook):
 
 # # IPython Extensions
 
-# In[7]:
+# In[6]:
 
 
 def load_ipython_extension(ip=None): Notebook().__enter__()
@@ -108,7 +98,7 @@ def unload_ipython_extension(ip=None): Notebook().__exit__()
 
 # ### Force the docstring for rites itself.
 
-# In[ ]:
+# In[7]:
 
 
 class Test(__import__('unittest').TestCase): 
@@ -133,7 +123,7 @@ class Test(__import__('unittest').TestCase):
 
 # # Developer
 
-# In[ ]:
+# In[8]:
 
 
 if __name__ ==  '__main__':
