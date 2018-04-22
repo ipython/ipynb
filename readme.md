@@ -9,22 +9,33 @@ Load the __importnb__ to import notebooks.
 ```python
     if __name__ == '__main__':
         %reload_ext importnb
+        import readme
+        assert readme.__file__.endswith('.ipynb')
     else: 
         foo = 42
         
-    import readme
-    assert readme.__file__.endswith('.ipynb')
+```
+
+Notebooks maybe reloaded with the standard Python Import machinery.
+
+
+```python
+    if __name__ == '__main__':
+        from importnb import Notebook, reload
+        reload(readme)
+        %unload_ext importnb
 ```
 
 ## Context Manager
 
 
 ```python
-    from importnb import Notebook, reload
-
-    try:  reload(readme)
-    except AttributeError: 
-        with Notebook(): reload(readme)
+    if __name__ == '__main__':
+        try:  
+            reload(readme)
+            assert None, """Reloading should not work when the extension is unloaded"""
+        except AttributeError: 
+            with Notebook(): reload(readme)
 ```
 
 ## Developer
@@ -34,3 +45,7 @@ Load the __importnb__ to import notebooks.
     if __name__ == '__main__':
         !jupyter nbconvert --to markdown readme.ipynb
 ```
+
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 1092 bytes to readme.md
+
