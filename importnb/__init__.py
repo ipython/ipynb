@@ -15,7 +15,7 @@ except:
 import inspect, sys, warnings
 from importlib.machinery import SourceFileLoader
 from importlib._bootstrap_external import FileFinder
-from traceback import format_exception_only
+from traceback import print_exc
 
 
 # In[2]:
@@ -55,7 +55,7 @@ class ContextManager:
         
 
 
-# In[4]:
+# In[5]:
 
 
 class Notebook(SourceFileLoader, ContextManager):
@@ -77,13 +77,7 @@ class Notebook(SourceFileLoader, ContextManager):
             return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
 
 
-# In[5]:
-
-
-from traceback import print_exc
-
-
-# In[11]:
+# In[ ]:
 
 
 class Partial(Notebook):
@@ -99,7 +93,7 @@ class Partial(Notebook):
 
 # # IPython Extensions
 
-# In[7]:
+# In[ ]:
 
 
 def load_ipython_extension(ip=None): Notebook().__enter__()
@@ -108,7 +102,7 @@ def unload_ipython_extension(ip=None): Notebook().__exit__()
 
 # ### Force the docstring for rites itself.
 
-# In[8]:
+# In[ ]:
 
 
 class Test(__import__('unittest').TestCase): 
@@ -133,19 +127,11 @@ class Test(__import__('unittest').TestCase):
 
 # # Developer
 
-# In[9]:
+# In[ ]:
 
 
 if __name__ ==  '__main__':
 #         __import__('doctest').testmod(verbose=2)
     __import__('unittest').TextTestRunner().run(Test())
     get_ipython().system('jupyter nbconvert --to script __init__.ipynb')
-
-
-# In[10]:
-
-
-if __name__ ==  '__main__':
-    with Partial():
-        import test_loader, test_failure
 

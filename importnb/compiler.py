@@ -26,8 +26,10 @@ class LineNoDecoder(JSONDecoder):
     ) -> (NotebookNode, int):
         object, next = JSONObject(s_and_end, strict, scan_once, object_hook, object_pairs_hook, memo=memo, _w=_w, _ws=_ws)
 
-        if 'cell_type' in object: object['metadata'].update(
-            {'lineno':  len(s_and_end[0][:next].rsplit('"source":', 1)[0].splitlines())})
+        if 'cell_type' in object: 
+            object['metadata'].update({
+                'lineno':  len(s_and_end[0][:next].rsplit('"source":', 1)[0].splitlines())
+            })
             
         for key in ('source', 'text'): 
             if key in object: object[key] = ''.join(object[key])
@@ -74,7 +76,6 @@ class Compiler(CachingCompiler):
         return ast.increment_lineno(super().ast_parse(source, Compiler.filename, 'exec'), lineno)
 
 
-
 # In[3]:
 
 
@@ -93,7 +94,7 @@ from nbconvert.exporters.notebook import NotebookExporter
 class Code(NotebookExporter, Compiler):
     """An exporter than returns transforms a NotebookNode through the InputSplitter.
     
-    >>> assert type(Code().from_filename('rites.ipynb')) is NotebookNode"""
+    >>> assert type(Code().from_filename('compiler.ipynb')) is NotebookNode"""
     filename: str = '<module exporter>'
     name: str = '__main__'
     decoder: type = LineNoDecoder
@@ -115,7 +116,8 @@ class Code(NotebookExporter, Compiler):
                 cell.source = Code.from_code_cell(cell, **dict)
         return nb
     
-    def from_code_cell(Code, cell, **dict):  return Code.transform(cell['source'])
+    def from_code_cell(Code, cell, **dict):  
+        return Code.transform(cell['source'])
 
 
 # In[5]:
@@ -124,7 +126,7 @@ class Code(NotebookExporter, Compiler):
 class AST(Code):
     """An exporter than returns parsed ast.
     
-    >>> assert type(AST().from_filename('rites.ipynb')) is ast.Module"""
+    >>> assert type(AST().from_filename('compiler.ipynb')) is ast.Module"""
     def from_notebook_node(AST, nb: NotebookNode, resource: dict=None, **dict):         
         return AST.ast_transform(ast.fix_missing_locations(ast.Module(body=sum((
             AST.ast_parse(
@@ -137,9 +139,9 @@ class AST(Code):
 
 
 class Compile(AST):
-    """An exporter that returns compiled bytecode that may be cached.
+    """An exporter that returns compiled and cached bytecode.
     
-    >>> assert Compile().from_filename('rites.ipynb')"""        
+    >>> assert Compile().from_filename('compiler.ipynb')"""        
     def from_notebook_node(Compile, nb, resources: dict=None, **dict):
         return Compile.compile(super().from_notebook_node(nb, resources, **dict))
 
@@ -149,4 +151,5 @@ class Compile(AST):
 
 if __name__ ==  '__main__':
     get_ipython().system('jupyter nbconvert --to script compiler.ipynb')
+    __import__('doctest').testmod()
 
