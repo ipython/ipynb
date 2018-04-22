@@ -9,13 +9,22 @@ Load the __importnb__ to import notebooks.
         %reload_ext importnb
     else: 
         foo = 42
+        
+    import readme
 ```
 
 
 ```python
-    import readme
-    assert readme.__file__.endswith('ipynb')
-    assert readme.foo is 42
+    from importnb import Notebook, reload
+```
+
+
+```python
+    try: 
+        reload(readme)
+    except AttributeError: 
+        with Notebook():
+            reload(readme)
 ```
 
 
@@ -23,3 +32,7 @@ Load the __importnb__ to import notebooks.
     if __name__ == '__main__':
         !jupyter nbconvert --to markdown readme.ipynb
 ```
+
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 699 bytes to readme.md
+
