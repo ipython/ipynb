@@ -74,7 +74,7 @@ class Notebook(SourceFileLoader, ImportContext):
         from IPython.utils.capture import capture_output    
         with capture_output(stdout=False, stderr=False) as output: 
             try: super().exec_module(module)
-            except type('pass', (BaseException,), {}): ...
+            except: ...
             finally: module.__output__ = output
         return module
 
