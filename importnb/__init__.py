@@ -16,6 +16,7 @@ import inspect, sys, warnings
 from importlib.machinery import SourceFileLoader
 from importlib._bootstrap_external import FileFinder
 from traceback import print_exc
+from importlib import reload
 
 
 # In[2]:
@@ -29,7 +30,13 @@ def update_path_hooks(id, *loaders):
 # In[3]:
 
 
-class ContextManager:
+from importlib.util import LazyLoader
+
+
+# In[4]:
+
+
+class ImportContext:
     def __enter__(self):
         for i, hook in enumerate(sys.path_hooks):
             cls = type(self)
@@ -58,16 +65,15 @@ class ContextManager:
 # In[5]:
 
 
-class Notebook(SourceFileLoader, ContextManager):
+class Notebook(SourceFileLoader, ImportContext):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = '.ipynb',
-    def __init__(self, fullname=None, path=None):
+    def __init__(self, fullname=None, path=None, lazy=False):
         super().__init__(fullname, path)
     def exec_module(Loader, module):
         from IPython.utils.capture import capture_output    
         with capture_output(stdout=False, stderr=False) as output: 
-            try: 
-                super().exec_module(module)
+            try: super().exec_module(module)
             except type('pass', (BaseException,), {}): ...
             finally: module.__output__ = output
         return module
@@ -77,7 +83,7 @@ class Notebook(SourceFileLoader, ContextManager):
             return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
 
 
-# In[ ]:
+# In[6]:
 
 
 class Partial(Notebook):
@@ -93,7 +99,7 @@ class Partial(Notebook):
 
 # # IPython Extensions
 
-# In[ ]:
+# In[7]:
 
 
 def load_ipython_extension(ip=None): Notebook().__enter__()
@@ -111,7 +117,7 @@ class Test(__import__('unittest').TestCase):
         load_ipython_extension()
         with open('test_loader.ipynb', 'w') as file:
             write(v4.new_notebook(cells=[
-                v4.new_code_cell("test = 42")
+                v4.new_code_cell("""__import__("time").sleep(1);test = 42""")
             ]), file)
             
     def runTest(Test):
