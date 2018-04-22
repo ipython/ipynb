@@ -8,13 +8,13 @@
 
 try:
     from .compiler import Compile, AST
-except:
+except ModuleNotFoundError:
     from compiler import Compile, AST
-import inspect, sys, warnings
+import inspect, sys
 from importlib.machinery import SourceFileLoader
 from importlib._bootstrap_external import FileFinder
-from traceback import print_exc
 from importlib import reload
+from traceback import print_exc
 
 
 # In[2]:
@@ -38,7 +38,7 @@ def update_path_hooks(loader: SourceFileLoader, extensions: tuple=None, lazy=Fal
                 for cls, ext in closure['loader_details'] 
                 if not issubclass(cls, loader) # Need to add logic for lazy loaders before they may be introduced.
             )))
-    else: sys.path_importer_cache.clear()
+    sys.path_importer_cache.clear()
 
 
 # In[3]:
@@ -46,9 +46,7 @@ def update_path_hooks(loader: SourceFileLoader, extensions: tuple=None, lazy=Fal
 
 class ImportContext:
     def __enter__(self):  update_path_hooks(type(self), self.EXTENSION_SUFFIXES)
-                
-    def __exit__(self, exception_type=None, exception_value=None, traceback=None):
-        update_path_hooks(type(self), None)
+    def __exit__(self, exception_type=None, exception_value=None, traceback=None): update_path_hooks(type(self))
         
 
 
@@ -58,8 +56,7 @@ class ImportContext:
 class Notebook(SourceFileLoader, ImportContext):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = '.ipynb',
-    def __init__(self, fullname=None, path=None, lazy=False):
-        super().__init__(fullname, path)
+    def __init__(self, fullname=None, path=None, lazy=False): super().__init__(fullname, path)
     def exec_module(Loader, module):
         from IPython.utils.capture import capture_output    
         with capture_output(stdout=False, stderr=False) as output: 
