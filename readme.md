@@ -1,7 +1,7 @@
 
 Load the __importnb__ to import notebooks.
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?filepath=readme.ipynb)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?filepath=readme.ipynb)[![Build Status](https://travis-ci.org/deathbeds/importnb.svg?branch=master)](https://travis-ci.org/deathbeds/importnb)
 
 ## Jupyter Extension
 
@@ -36,7 +36,13 @@ Notebooks maybe reloaded with the standard Python Import machinery.
             reload(readme)
             assert None, """Reloading should not work when the extension is unloaded"""
         except AttributeError: 
-            with Notebook(): reload(readme)
+            with Notebook(): 
+                reload(readme)
+```
+
+
+```python
+    
 ```
 
 ## Developer
@@ -48,5 +54,5 @@ Notebooks maybe reloaded with the standard Python Import machinery.
 ```
 
     [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 1091 bytes to readme.md
+    [NbConvertApp] Writing 1123 bytes to readme.md
 
