@@ -1,4 +1,6 @@
-recursive-include importnb *.ipynb LICENSE
+include LICENSE readme.md changelog.md
+
+recursive-include importnb *.ipynb
 
 global-exclude __pycache__/*
 global-exclude *.pyc

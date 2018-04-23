@@ -5,7 +5,9 @@ name = "importnb"
 
 __version__ = None
 
-exec((Path(__file__).parent / name / "_version.py").read_text())
+here = Path(__file__).parent
+
+exec((here / name / "_version.py").read_text())
 
 setup_args = dict(
     name=name,
@@ -14,8 +16,8 @@ setup_args = dict(
     author_email="tony.fast@gmail.com",
     description="Import .ipynb files as modules in the system path.", 
     long_description=(
-        Path("readme.md").read_text() + "\n\n" +
-        Path("changelog.md").read_text()
+        (here / "readme.md").read_text() + "\n\n" +
+        (here / "changelog.md").read_text()
     ),
     url="https://github.com/deathbeds/importnb",
     python_requires=">=3.6",

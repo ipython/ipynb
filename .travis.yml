@@ -1,13 +1,22 @@
 language: python
 python:
-  - "3.6"
-  - "3.6-dev"
-  - "3.7-dev"
-
+- '3.6'
+- 3.6-dev
+- 3.7-dev
 install:
-  - pip install -r requirements.txt
-  - pip install -r requirements-test.txt
-  - python -m pip install . --ignore-installed --no-deps
-
+- python setup.py sdist
+- python setup.py bdist_wheel
+- pip install -r requirements.txt
+- python -m pip install dist/importnb-*.tar.gz --ignore-installed --no-deps
+- pip install -r requirements-test.txt
 script:
-  - python -m unittest importnb/__init__.py
+- python -m unittest importnb/__init__.py
+deploy:
+  provider: pypi
+  user: docfast
+  password:
+    secure: MiGME8sBAUFqbnCCsrjuR0Dtp0Zfg4J/DSTjWiQ9kjYhpO6Xs5scbJvJ6wVvkxIo/bZHKeCVVlTgbKGZgqX+1YCrmlJ8D35qUKYBpAwDV4M1eUGx2GpZbxp6+BQyjfsUd/wsPGptIOyomqLRPeVV6npyOp5TOBfkdjJ+6egux8UGuBJWj0kS0kS7tOaE4/TmUo3d8s+rXdoSK7LnZaaa4IvbZpCJ88dMXlGvAq0A84SraGuKlVoIo81umZrTzmJT1rkQwm1YK1oDvAKYmwWwM1VOvfODUlgKn/likzWFNIO/QiCmQUqbHdPfC8M0WJCGeCElonUhya0dmdZ4psyjqegzGTqB6ftMMjER3k6O1m9nDruZs6bcbY14hwcwlH+L3JaIU+paZlaEc33fdT7lj6s448ZLb0yLi0+/+njV/JbGRZQpPEQyZx5JmgTYrAGRBWz2VXDVEUDU3xH2nEa+W8pucgBLwIyfNNOBTFGr0T2fl0NTccWPSR0Jz6yy5tTUmbfwcqG/AJJs/Qysg+xSZTO3F3YGoa/LCJ3Gab76gEsKeCTnApLTfOttvGI5jzOvy21CRPRgMg85AL3ai0NUnRb/e6u58j2L7y9jtnlN579bKxsWPBdW1HDDv5Ua5qinIif9wkBP1XPg2AHgBspIQKLmHjkmyuC0Wvg4Pa1oHiI=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    repo: deathbeds/importnb
