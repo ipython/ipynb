@@ -40,19 +40,15 @@ Notebooks maybe reloaded with the standard Python Import machinery.
                 reload(readme)
 ```
 
-
-```python
-    
-```
-
 ## Developer
 
 
 ```python
     if __name__ == '__main__':
         !jupyter nbconvert --to markdown readme.ipynb
+        !jupyter nbconvert --to rst readme.ipynb
 ```
 
     [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 1123 bytes to readme.md
+    [NbConvertApp] Writing 1280 bytes to readme.md
 
