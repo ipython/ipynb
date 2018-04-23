@@ -44,19 +44,20 @@ def update_path_hooks(loader: SourceFileLoader, extensions: tuple=None, lazy=Fal
 # In[3]:
 
 
-class ImportContext:
+class ImportContextMixin:
     def __enter__(self):  update_path_hooks(type(self), self.EXTENSION_SUFFIXES)
     def __exit__(self, exception_type=None, exception_value=None, traceback=None): update_path_hooks(type(self))
-        
 
 
 # In[4]:
 
 
-class Notebook(SourceFileLoader, ImportContext):
+class Notebook(SourceFileLoader, ImportContextMixin):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = '.ipynb',
-    def __init__(self, fullname=None, path=None, lazy=False): super().__init__(fullname, path)
+    
+    def __init__(self, fullname=None, path=None): super().__init__(fullname, path)
+    
     def exec_module(Loader, module):
         from IPython.utils.capture import capture_output    
         with capture_output(stdout=False, stderr=False) as output: 
@@ -77,7 +78,9 @@ class Partial(Notebook):
     def exec_module(loader, module):
         try: super().exec_module(module)
         except BaseException as exception:
-            try: raise ImportWarning(f"""{module.__name__} from {module.__file__} failed to load completely.""")
+            try: raise ImportWarning("""{name} from {file} failed to load completely.""".format(
+                name=module.__name__, file=module.__file__
+            ))
             except ImportWarning as error:
                 print_exc()
                 module.__exception__ = exception
@@ -92,8 +95,6 @@ class Partial(Notebook):
 def load_ipython_extension(ip=None): Notebook().__enter__()
 def unload_ipython_extension(ip=None): Notebook().__exit__()
 
-
-# ### Force the docstring for rites itself.
 
 # In[7]:
 
@@ -125,6 +126,8 @@ class Test(__import__('unittest').TestCase):
 
 if __name__ ==  '__main__':
 #         __import__('doctest').testmod(verbose=2)
-    __import__('unittest').TextTestRunner().run(Test())
-    get_ipython().system('jupyter nbconvert --to script __init__.ipynb')
+#         __import__('unittest').TextTestRunner().run(Test())
+    get_ipython().system('jupyter nbconvert --to script --TemplateExporter.exclude_input_prompt=True __init__.ipynb')
+    with Notebook():
+        import test_failure
 

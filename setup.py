@@ -1,10 +1,43 @@
-__import__('setuptools').setup(
-    name="importnb",
-    version="0.0.1",
-    author="deathbeds", author_email="tony.fast@gmail.com",
-    description="Import notebook in the system path.", 
+from pathlib import Path
+import setuptools
+
+name = "importnb"
+
+__version__ = None
+
+exec((Path(__file__).parent / name / "_version.py").read_text())
+
+setup_args = dict(
+    name=name,
+    version=__version__,
+    author="deathbeds", 
+    author_email="tony.fast@gmail.com",
+    description="Import .ipynb files as modules in the system path.", 
+    long_description=(
+        Path("readme.md").read_text() + "\n\n" +
+        Path("changelog.md").read_text()
+    ),
+    url="https://github.com/deathbeds/importnb",
+    python_requires=">=3.6",
     license="BSD-3-Clause",
-    install_requires=['dataclasses', 'nbconvert'],
+    install_requires=[
+        "dataclasses",
+        "nbconvert",
+    ],
     include_package_data=True,
-    packages=__import__('setuptools').find_packages(),
+    packages=setuptools.find_packages(),
+    classifiers=(
+        "Development Status :: 4 - Beta",
+        "Framework :: IPython",
+        "Framework :: Jupyter",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "License :: OSI Approved :: BSD License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.6",
+    ),
+    zip_safe=False,
 )
+
+if __name__ == "__main__":
+    setuptools.setup(**setup_args)

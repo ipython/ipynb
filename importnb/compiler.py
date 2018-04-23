@@ -3,7 +3,7 @@
 
 # # Decoding
 # 
-# If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `rites` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported.
+# If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `importnb` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported.
 
 # In[1]:
 
