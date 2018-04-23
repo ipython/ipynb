@@ -1,4 +1,4 @@
-include LICENSE readme.rst changelog.rst
+include LICENSE readme.md changelog.md
 
 recursive-include importnb *.ipynb
 
