@@ -1,7 +1,9 @@
 
-Load the __importnb__ to import notebooks.
+__importnb__ supports the ability to use Jupyter notebooks as python source.
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?filepath=readme.ipynb)[![Build Status](https://travis-ci.org/deathbeds/importnb.svg?branch=master)](https://travis-ci.org/deathbeds/importnb)
+
+    pip install importnb
 
 ## Jupyter Extension
 
@@ -47,3 +49,7 @@ Notebooks maybe reloaded with the standard Python Import machinery.
     if __name__ == '__main__':
         !jupyter nbconvert --to markdown readme.ipynb
 ```
+
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 1285 bytes to readme.md
+
