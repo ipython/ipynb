@@ -1,7 +1,7 @@
 
 ## CHANGELOG
 
-### 0.1.3
+### 0.1.4
 - Pypi supports markdown long_description with the proper mimetype in long_description_content_type.
 
 ### 0.1.3
@@ -21,6 +21,6 @@
 !jupyter nbconvert --to markdown changelog.ipynb
 ```
 
-    [NbConvertApp] Converting notebook changelog.ipynb to rst
-    [NbConvertApp] Writing 444 bytes to changelog.rst
+    [NbConvertApp] Converting notebook changelog.ipynb to markdown
+    [NbConvertApp] Writing 523 bytes to changelog.md
 
