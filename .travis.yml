@@ -11,6 +11,7 @@ install:
 - pip install -r requirements-test.txt
 script:
 - ipython -m unittest discover
+- python -m unittest discover
 deploy:
   provider: pypi
   user: docfast
