@@ -10,9 +10,9 @@ install:
 - python -m pip install dist/importnb-*.tar.gz --ignore-installed --no-deps
 - pip install -r requirements-test.txt
 script:
-- python -m unittest importnb/__init__.py
+- ipython -m unittest discover
 deploy:
-  provider: pypi
+- provider: pypi
   user: docfast
   password:
     secure: ry7gJ1HGGEXEzIPAMtWKt1XnoAZ5C642J7/TVFaqEVFT1zukF3wmGL1rqI4h4taq/QhPKznx2NBueySJZZN3vK1wJnfM3pEjroOMQAtrU+W9Y2EKXR4uNFxWSUtqBiuFWkq6IGMC12rPgAjv4U2cDU/HTrezSYKcl5PGZax36wikG7rmEw+UAyPtggWOt4Gcg7vWv6YKzDFW1JIC5qEBEbSxVssmT1uuEKhFSsvl50jmdNukkT+jbFkhjQ0f2cpFwM+Tt+w+eGHAFUxsUQRASwOUDMZK0l43M7eFqqmHZa0XcPQMSrT2lnRcp7yLa9m0WTDHbTnJIEGdw0hBlXXO8GQYcM46cTICFspbtlFFxCnW6+f9mI+y+ONAP/2Gd7/7W1WzfxypcdlnR6XqDgjdd9DzDM+wuTp9IDuSrc6CNGcChs9at0yl83UNZ7t6ikqnw3jc0fKSf7wXP3sHNfDCpCIiEQCgphrOkHa5rHRX+ic9XhzHEoMpTwR71yJHzoFrB6RJZo/8aqifbdqw/VWGt5ESNs6oYUeRjf7oYDPWR86kzY8XlwV5jrr0qZF6eBGe/Bm/pJF3AnHrZkTJVAv84V985g+Mh9XroGksNYG2vKOkGFmCxeqQaZWUHnAYIFtRPamkW7nk+2LUk2hDAGoe5N77BpBVCqUrFR+i+dHbUyM=
@@ -22,3 +22,9 @@ deploy:
     distributions: sdist bdist_wheel
     repo: deathbeds/importnb
     python: '3.6'
+- provider: pages
+  skip-cleanup: true
+  target-branch: gh-pages
+  github-token: $GITHUB_TOKEN  # Set in travis-ci.org dashboard, marked secure
+  on:
+    branch: master
