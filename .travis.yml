@@ -10,7 +10,7 @@ install:
 - python -m pip install dist/importnb-*.tar.gz --ignore-installed --no-deps
 - pip install -r requirements-test.txt
 script:
-- python -m unittest discover
+- ipython -m unittest discover
 deploy:
   provider: pypi
   user: docfast
