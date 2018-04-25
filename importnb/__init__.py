@@ -58,6 +58,13 @@ class Notebook(SourceFileLoader, ImportContextMixin):
         super().__init__(fullname, path)
 
     def exec_module(Loader, module):
+        try:
+            from IPython import get_ipython
+
+            module.get_ipython = get_ipython
+        except:
+            ...
+
         module.__output__ = None
         if Loader.capture:
             return Loader.exec_module_capture(module)
