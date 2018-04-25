@@ -76,6 +76,7 @@ class Compiler(CachingCompiler):
         return ast.increment_lineno(super().ast_parse(source, Compiler.filename, 'exec'), lineno)
 
 
+
 # In[3]:
 
 
@@ -85,6 +86,12 @@ from nbformat import NotebookNode, read, reads
 from pathlib import Path
 from nbconvert.exporters.markdown import MarkdownExporter
 from nbconvert.exporters.notebook import NotebookExporter
+
+
+# In[ ]:
+
+
+
 
 
 # In[4]:
@@ -113,7 +120,7 @@ class Code(NotebookExporter, Compiler):
     def from_notebook_node(Code, nb, resources=None, **dict): 
         for cell in nb['cells']:
             if cell['cell_type'] == 'code':
-                cell.source = Code.from_code_cell(cell, **dict)
+                cell['source'] = Code.from_code_cell(cell, **dict)
         return nb
     
     def from_code_cell(Code, cell, **dict):  
@@ -131,7 +138,7 @@ class AST(Code):
         return AST.ast_transform(ast.fix_missing_locations(ast.Module(body=sum((
             AST.ast_parse(
                 AST.from_code_cell(cell, **dict), lineno=cell['metadata'].get('lineno', 1)
-            ).body for cell in nb.cells if cell['cell_type']=='code'
+            ).body for cell in nb['cells'] if cell['cell_type']=='code'
         ), []))))
 
 
@@ -150,6 +157,8 @@ class Compile(AST):
 
 
 if __name__ ==  '__main__':
-    get_ipython().system('jupyter nbconvert --to script compiler.ipynb')
+    from pathlib import Path
+    from nbconvert.exporters.script import ScriptExporter
+    Path('compiler.py').write_text(ScriptExporter().from_filename('compiler.ipynb')[0])
     __import__('doctest').testmod()
 
