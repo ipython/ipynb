@@ -14,6 +14,9 @@ script:
 - ipython -m unittest discover
 - echo "Run Python tests\n"
 - python -m unittest discover
+# Make the PythonDataScienceHandbook structure
+- mkdir -p tests/PythonDataScienceHandbook/notebooks
+- wget https://raw.githubusercontent.com/jakevdp/PythonDataScienceHandbook/master/notebooks/02.02-The-Basics-Of-NumPy-Arrays.ipynb -P tests/PythonDataScienceHandbook/notebooks
 deploy:
   provider: pypi
   user: docfast

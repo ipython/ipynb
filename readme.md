@@ -38,8 +38,7 @@ Notebooks maybe reloaded with the standard Python Import machinery.
             reload(readme)
             assert None, """Reloading should not work when the extension is unloaded"""
         except AttributeError: 
-            with Notebook(): 
-                reload(readme)
+            with Notebook(): reload(readme)
 ```
 
 ## Developer
@@ -48,7 +47,7 @@ Notebooks maybe reloaded with the standard Python Import machinery.
 ```python
     if __name__ == '__main__':
         from pathlib import Path
-        import black, subprocess
+        import black, subprocess, warnings
         from nbconvert.exporters.markdown import MarkdownExporter
         from importnb.compiler_python import ScriptExporter
         for path in Path('importnb').glob('*.ipynb'):
@@ -58,9 +57,14 @@ Notebooks maybe reloaded with the standard Python Import machinery.
         __import__('unittest').main(module='tests', argv="discover".split(), exit=False)
 ```
 
-    ..xx..
+    ..xx...
     ----------------------------------------------------------------------
-    Ran 6 tests in 2.019s
+    Ran 7 tests in 2.078s
     
     OK (expected failures=2)
 
+
+
+```python
+    
+```
