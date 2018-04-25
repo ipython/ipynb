@@ -63,10 +63,10 @@ class Notebook(SourceFileLoader, ImportContextMixin):
 
             module.get_ipython = get_ipython
         except:
-            ...
+            get_ipython = None
 
         module.__output__ = None
-        if Loader.capture:
+        if get_ipython and Loader.capture:
             return Loader.exec_module_capture(module)
         else:
             return super().exec_module(module)
