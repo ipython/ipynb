@@ -52,14 +52,15 @@ Notebooks maybe reloaded with the standard Python Import machinery.
         from importnb.compiler_python import ScriptExporter
         for path in Path('importnb').glob('*.ipynb'):
             path.with_suffix('.py').write_text(
-                black.format_str(ScriptExporter().from_filename(str(path))[0], 100))
-        Path('readme.md').write_text(MarkdownExporter().from_filename('readme.ipynb')[0])
+                black.format_str(ScriptExporter().from_filename(path)[0], 100))
+        for path in map(Path, ('readme.ipynb', 'changelog.ipynb')):
+            path.with_suffix('.md').write_text(MarkdownExporter().from_filename(path)[0])
         __import__('unittest').main(module='tests', argv="discover".split(), exit=False)
 ```
 
     ..xx....
     ----------------------------------------------------------------------
-    Ran 8 tests in 2.087s
+    Ran 8 tests in 2.071s
     
     OK (expected failures=2)
 

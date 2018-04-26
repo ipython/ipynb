@@ -26,12 +26,3 @@
 
 ### 0.0.2
 - Initial Testing Release
-
-
-```python
-!jupyter nbconvert --to markdown changelog.ipynb
-```
-
-    [NbConvertApp] Converting notebook changelog.ipynb to markdown
-    [NbConvertApp] Writing 838 bytes to changelog.md
-
