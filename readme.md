@@ -57,14 +57,9 @@ Notebooks maybe reloaded with the standard Python Import machinery.
         __import__('unittest').main(module='tests', argv="discover".split(), exit=False)
 ```
 
-    ..xx...
+    ..xx....
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.078s
+    Ran 8 tests in 2.087s
     
     OK (expected failures=2)
 
-
-
-```python
-    
-```
