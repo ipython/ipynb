@@ -1,6 +1,17 @@
 
 ## CHANGELOG
 
+# 0.2.1
+
+* `importnb` supports notebook inputs from pure python environments.  Two compatible compiler were created from IPython and Python
+* `importnb.Partial` works appropriately by improving exceptions.
+* All of the IPython magic syntaxes were removed to support Pure Python.
+* The generated Python files are formatted with black.
+* Tests were added to:
+
+    * Validate the line number in tracebacks
+    * Test someone elses notebooks
+
 ### 0.1.4
 - Pypi supports markdown long_description with the proper mimetype in long_description_content_type.
 
@@ -22,5 +33,5 @@
 ```
 
     [NbConvertApp] Converting notebook changelog.ipynb to markdown
-    [NbConvertApp] Writing 523 bytes to changelog.md
+    [NbConvertApp] Writing 838 bytes to changelog.md
 
