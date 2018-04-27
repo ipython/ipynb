@@ -1,7 +1,7 @@
 
 __importnb__ supports the ability to use Jupyter notebooks as python source.
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?url_path=lab)[![Build Status](https://travis-ci.org/deathbeds/importnb.svg?branch=master)](https://travis-ci.org/deathbeds/importnb)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?urlpath=lab/tree/readme.ipynb)[![Build Status](https://travis-ci.org/deathbeds/importnb.svg?branch=master)](https://travis-ci.org/deathbeds/importnb)
 
     pip install importnb
 
@@ -60,7 +60,7 @@ Notebooks maybe reloaded with the standard Python Import machinery.
 
     ..xx....
     ----------------------------------------------------------------------
-    Ran 8 tests in 2.082s
+    Ran 8 tests in 2.074s
     
     OK (expected failures=2)
 
