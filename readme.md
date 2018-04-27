@@ -25,7 +25,12 @@ Notebooks maybe reloaded with the standard Python Import machinery.
     if __name__ == '__main__':
         %reload_ext importnb
         reload(readme)
-        %unload_ext importnb
+```
+
+
+```python
+    %%capture
+    %unload_ext importnb
 ```
 
 ## Context Manager
@@ -34,6 +39,7 @@ Notebooks maybe reloaded with the standard Python Import machinery.
 ```python
     try:  
         reload(readme)
+        assert False, """Reload will not work without the extension."""
     except: ...
     with Notebook(): 
         reload(readme)
@@ -58,7 +64,7 @@ Notebooks maybe reloaded with the standard Python Import machinery.
 
     ..xx....
     ----------------------------------------------------------------------
-    Ran 8 tests in 2.085s
+    Ran 8 tests in 2.071s
     
     OK (expected failures=2)
 
