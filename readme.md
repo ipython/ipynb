@@ -47,7 +47,7 @@ Notebooks maybe reloaded with the standard Python Import machinery.
 ```python
     if __name__ == '__main__':
         from pathlib import Path
-        import black, subprocess, warnings
+        import black
         from nbconvert.exporters.markdown import MarkdownExporter
         from importnb.compiler_python import ScriptExporter
         for path in Path('importnb').glob('*.ipynb'):
@@ -60,7 +60,7 @@ Notebooks maybe reloaded with the standard Python Import machinery.
 
     ..xx....
     ----------------------------------------------------------------------
-    Ran 8 tests in 2.071s
+    Ran 8 tests in 2.076s
     
     OK (expected failures=2)
 
