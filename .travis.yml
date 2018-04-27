@@ -16,6 +16,7 @@ install:
 script:
 - echo "Run IPython tests\n"
 - ipython -m unittest discover
+- jupyter nbconvert --to markdown --execute --ExecutePreprocessor.kernel_name=python readme.ipynb
 # Make the PythonDataScienceHandbook structure
 deploy:
   provider: pypi
