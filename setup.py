@@ -42,6 +42,11 @@ setup_args = dict(
         "Programming Language :: Python :: 3.6",
     ),
     zip_safe=False,
+    entry_points = {
+        'pytest11': [
+            'pytest-importnb = importnb.test',
+        ]
+    },
 )
 
 if __name__ == "__main__":

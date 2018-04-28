@@ -1,6 +1,6 @@
 try:
     from .exporter import Compile, AST
-except ModuleNotFoundError:
+except:
     from exporter import Compile, AST
 import inspect, sys
 from importlib.machinery import SourceFileLoader
