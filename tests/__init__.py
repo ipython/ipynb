@@ -1,5 +1,5 @@
 with __import__('importnb').Notebook():
     try:
-        from .test import *
+        from .test_ import *
     except:
-        from test import *
+        from test_ import *
