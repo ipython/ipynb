@@ -8,15 +8,10 @@ install:
 - python setup.py bdist_wheel
 - pip install -r requirements.txt
 - python -m pip install dist/importnb-*.tar.gz --ignore-installed --no-deps
-- echo "Run Python tests\n"
-- python -m pytest --verbose --cov=importnb --doctest-modules
-- pip install -r requirements-test.txt
-- mkdir -p tests/PythonDataScienceHandbook/notebooks
-- wget https://raw.githubusercontent.com/jakevdp/PythonDataScienceHandbook/master/notebooks/02.02-The-Basics-Of-NumPy-Arrays.ipynb -O tests/PythonDataScienceHandbook/notebooks/_02_The_Basics_Of_NumPy_Arrays.ipynb
+
 script:
-- echo "Run IPython tests\n"
-- ipython -m pytest -- --doctest-modules --verbose --cov=importnb
-# Make the PythonDataScienceHandbook structure
+- tox
+
 deploy:
   provider: pypi
   user: docfast

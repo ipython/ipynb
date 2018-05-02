@@ -8,6 +8,16 @@ from importlib._bootstrap_external import FileFinder
 from importlib import reload
 from traceback import print_exc
 
+__IPYTHON__ = False
+try:
+    from IPython import get_ipython
+
+    if not get_ipython():
+        raise ValueError("""There is no interactive IPython shell""")
+    __IPYTHON__ = True
+except:
+    ...
+
 
 def update_path_hooks(loader: SourceFileLoader, extensions: tuple = None, lazy=False):
     """Update the FileFinder loader in sys.path_hooks to accomodate a {loader} with the {extensions}"""
@@ -58,15 +68,15 @@ class Notebook(SourceFileLoader, ImportContextMixin):
         super().__init__(fullname, path)
 
     def exec_module(Loader, module):
+        module.__output__ = None
         try:
             from IPython import get_ipython
 
-            module.get_ipython = get_ipython
+            module.__dict__["get_ipython"] = get_ipython
         except:
-            get_ipython = None
+            ...
 
-        module.__output__ = None
-        if get_ipython and Loader.capture:
+        if __IPYTHON__ and Loader.capture:
             return Loader.exec_module_capture(module)
         else:
             return super().exec_module(module)

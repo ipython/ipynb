@@ -3,7 +3,9 @@ import pytest
 try:
     from .loader import Notebook
 except:
-    from loader import Notebook
+    from importnb.loader import Notebook
+
+loader = Notebook
 
 
 def pytest_collect_file(parent, path):
@@ -20,7 +22,8 @@ def pytest_collect_file(parent, path):
 class Module(pytest.Module):
 
     def collect(self):
-        with Notebook():
+        global loader
+        with loader():
             return super().collect()
 
 
@@ -28,7 +31,9 @@ if __name__ == "__main__":
     try:
         from .compiler_python import ScriptExporter
     except:
-        from compiler_python import ScriptExporter
+        from importnb.compiler_python import ScriptExporter
     from pathlib import Path
 
-    Path("pytest_plugin.py").write_text(ScriptExporter().from_filename("pytest_plugin.ipynb")[0])
+    Path("../../importnb/utils/pytest_plugin.py").write_text(
+        ScriptExporter().from_filename("pytest_plugin.ipynb")[0]
+    )
