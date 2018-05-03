@@ -104,9 +104,9 @@ The default settings may be discarded temporarily with
 
 ```
 
-    ..xu...s
+    ..xx...s
     ----------------------------------------------------------------------
-    Ran 8 tests in 1.015s
+    Ran 8 tests in 2.023s
     
-    FAILED (skipped=1, expected failures=1, unexpected successes=1)
+    OK (skipped=1, expected failures=2)
 
