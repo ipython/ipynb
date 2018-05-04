@@ -3,3 +3,4 @@ black
 pytest
 pytest-cov
 tox
+importnb
