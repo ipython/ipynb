@@ -47,7 +47,7 @@ Notebooks maybe reloaded with the standard Python Import machinery.
 
 `importnb` may allow notebooks to import by default with 
 
-    %load_ext importnb.utils.ipython
+    ipython -c "__import__('importnb').utils.ipython.install()"
     
 This extension will install a script into the default IPython profile startup that is called each time an IPython session is created.  
 

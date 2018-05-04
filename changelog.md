@@ -1,6 +1,15 @@
 
 ## CHANGELOG
 
+# 0.2.4
+
+* Use `tox` for testing
+* Use a source directory folder structure for pytest and tox testing.
+* Create a pytest plugin that discovers notebooks as tests.  With `importnb` notebooks can be used as fixtures in pytest.
+* Install `importnb` as an IPython extension.
+* Support running notebooks as modules from the `ipython` command line
+* Create a `setuptools` command to allow notebooks as packages. 
+
 # 0.2.1
 
 * `importnb` supports notebook inputs from pure python environments.  Two compatible compiler were created from IPython and Python
