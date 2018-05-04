@@ -1,4 +1,4 @@
-from .loader import Notebook, Partial, load_ipython_extension, unload_ipython_extension, reload
+__all__ = 'Notebook', 'Partial', 'reload', 'load_ipython_extension', 'unload_ipython_extension'
 
-def main():
-    ...
+from .loader import Notebook, Partial, load_ipython_extension, unload_ipython_extension, reload
+from . import utils

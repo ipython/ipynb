@@ -7,9 +7,10 @@ __importnb__ supports the ability to use Jupyter notebooks as python source.
 
 ## Jupyter Extension
 
+    %load_ext importnb    
+
 
 ```python
-    %reload_ext importnb
     foo = 42
     import readme
     assert readme.foo is 42
@@ -21,27 +22,19 @@ Notebooks maybe reloaded with the standard Python Import machinery.
 
 ```python
     from importnb import Notebook, reload
-    
-    if __name__ == '__main__':
-        %reload_ext importnb
-        reload(readme)
+    reload(readme);
 ```
 
+## Unload the extension
 
-```python
-    %%capture
     %unload_ext importnb
-```
 
 ## Context Manager
 
 
 ```python
-    try:  
-        reload(readme)
-        assert False, """Reload will not work without the extension."""
-    except: ...
     with Notebook(): 
+        import readme
         reload(readme)
 ```
 
@@ -94,19 +87,28 @@ The default settings may be discarded temporarily with
         import black
         from nbconvert.exporters.markdown import MarkdownExporter
         from importnb.compiler_python import ScriptExporter
-        for path in Path('src/notebooks/').rglob("*-[!'checkpoint'].ipynb"):
-            (Path('src/importnb') / path.with_suffix('.py')).write_text(
+        for path in Path('src/notebooks/').rglob("""*.ipynb"""):
+            
+            'checkpoint' not in str(path) and (Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks')).write_text(
                 black.format_str(ScriptExporter().from_filename(path)[0], 100))
         for path in map(Path, ('readme.ipynb', 'changelog.ipynb')):
             path.with_suffix('.md').write_text(MarkdownExporter().from_filename(path)[0])
 
-        __import__('unittest').main(module='tests', argv="discover".split(), exit=False)
+        __import__('unittest').main(module='tests', argv="discover --verbose".split(), exit=False)
 
 ```
 
-    ..xx...s
-    ----------------------------------------------------------------------
-    Ran 8 tests in 2.023s
+    test_import (tests.test_.TestContext) ... ok
+    test_reload_with_context (tests.test_.TestContext) ... ok
+    test_reload_without_context (tests.test_.TestContext) ... skipped 'importnb is probably installed'
+    test_failure (tests.test_.TestExtension) ... expected failure
+    test_import (tests.test_.TestExtension) ... ok
+    test_exception (tests.test_.TestPartial) ... ok
+    test_traceback (tests.test_.TestPartial) ... ok
+    test_imports (tests.test_.TestRemote) ... skipped 'requires IP'
     
-    OK (skipped=1, expected failures=2)
+    ----------------------------------------------------------------------
+    Ran 8 tests in 2.021s
+    
+    OK (skipped=2, expected failures=1)
 
