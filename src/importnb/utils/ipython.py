@@ -45,7 +45,9 @@ def uninstall(ip=None):
     config, location = load_config()
 
     config["InteractiveShellApp"]["extensions"] = [
-        ext for ext in config["InteractiveShellApp"]["extensions"] if ext != "importnb"
+        ext
+        for ext in config["InteractiveShellApp"]["extensions"]
+        if ext != "importnb.utils.ipython"
     ]
 
     with open(location, "w") as file:
