@@ -1,0 +1,6 @@
+tricks:
+- watchdog.tricks.ShellCommandTrick:
+    patterns:
+    - ./tests/test_*.ipynb
+    shell_command: |
+        pytest tests/test_importnb.ipynb --verbose --capture=no

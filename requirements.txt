@@ -4,3 +4,5 @@ pytest
 pytest-cov
 tox
 importnb
+git+https://github.com/yaml/pyyaml.git
+watchdog
