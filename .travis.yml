@@ -1,4 +1,5 @@
 language: python
+cache: pip
 python:
 - '3.6'
 - 3.6-dev
@@ -7,13 +8,19 @@ install:
 - python setup.py sdist
 - python setup.py bdist_wheel
 - pip install -r requirements.txt
+- pip uninstall importnb -y
 - python -m pip install dist/importnb-*.tar.gz --ignore-installed --no-deps
 
 script:
 - tox
 
+before_deploy:
+- pip install ipython
+- importnb-install
+- ipython -m readme
+
 deploy:
-  provider: pypi
+- provider: pypi
   user: docfast
   password:
     secure: ry7gJ1HGGEXEzIPAMtWKt1XnoAZ5C642J7/TVFaqEVFT1zukF3wmGL1rqI4h4taq/QhPKznx2NBueySJZZN3vK1wJnfM3pEjroOMQAtrU+W9Y2EKXR4uNFxWSUtqBiuFWkq6IGMC12rPgAjv4U2cDU/HTrezSYKcl5PGZax36wikG7rmEw+UAyPtggWOt4Gcg7vWv6YKzDFW1JIC5qEBEbSxVssmT1uuEKhFSsvl50jmdNukkT+jbFkhjQ0f2cpFwM+Tt+w+eGHAFUxsUQRASwOUDMZK0l43M7eFqqmHZa0XcPQMSrT2lnRcp7yLa9m0WTDHbTnJIEGdw0hBlXXO8GQYcM46cTICFspbtlFFxCnW6+f9mI+y+ONAP/2Gd7/7W1WzfxypcdlnR6XqDgjdd9DzDM+wuTp9IDuSrc6CNGcChs9at0yl83UNZ7t6ikqnw3jc0fKSf7wXP3sHNfDCpCIiEQCgphrOkHa5rHRX+ic9XhzHEoMpTwR71yJHzoFrB6RJZo/8aqifbdqw/VWGt5ESNs6oYUeRjf7oYDPWR86kzY8XlwV5jrr0qZF6eBGe/Bm/pJF3AnHrZkTJVAv84V985g+Mh9XroGksNYG2vKOkGFmCxeqQaZWUHnAYIFtRPamkW7nk+2LUk2hDAGoe5N77BpBVCqUrFR+i+dHbUyM=
@@ -22,4 +29,12 @@ deploy:
     tags: true
     distributions: sdist bdist_wheel
     repo: deathbeds/importnb
+    python: '3.6'
+
+- provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+  local-dir: docs
+  on:
+    branch: $TRAVIS_BRANCH
     python: '3.6'
