@@ -15,24 +15,20 @@ setup_args = dict(
     author="deathbeds",
     author_email="tony.fast@gmail.com",
     description="Import .ipynb files as modules in the system path.",
-
     long_description=(
         (here / "readme.md").read_text() + "\n\n" +
         (here / "changelog.md").read_text()
     ),
-
     long_description_content_type='text/markdown',
-    setup_requires=[
-        'pytest-runner',
-        'setuptools>=38.6.0',
-        'twine>=1.11.0',
-        'wheel>=0.31.0'
-    ],
-
     url="https://github.com/deathbeds/importnb",
     python_requires=">=3.6",
     license="BSD-3-Clause",
-
+    setup_requires=[
+        'pytest-runner',
+        'wheel>=0.31.0',
+        'twine>=1.11.0',
+        'setuptools>=38.6.',
+    ],
     tests_require=['pytest'],
     install_requires=[
         "dataclasses",
@@ -52,7 +48,11 @@ setup_args = dict(
         "Programming Language :: Python :: 3.6",),
     zip_safe=False,
     entry_points = {
-        'pytest11': ['pytest-importnb = importnb.utils.pytest_plugin',]
+        'pytest11': ['pytest-importnb = importnb.utils.pytest_plugin',],
+        'console_scripts': [
+            'importnb-install = importnb.utils.ipython:install',
+            'importnb-uninstall = importnb.utils.ipython:uninstall'
+        ]
     },
 )
 
