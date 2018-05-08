@@ -1,20 +1,12 @@
 try:
     from .decoder import LineNoDecoder
+    from .utils import __IPYTHON__
 except:
     from decoder import LineNoDecoder
+    from utils import __IPYTHON__
 
 __file__ = globals().get("__file__", "exporter.ipynb")
 __nb__ = __file__.replace("src/importnb", "src/notebooks")
-
-__IPYTHON__ = False
-try:
-    from IPython import get_ipython
-
-    if not get_ipython():
-        raise ValueError("""There is no interactive IPython shell""")
-    __IPYTHON__ = True
-except:
-    ...
 
 if __IPYTHON__:
     try:

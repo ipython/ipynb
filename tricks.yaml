@@ -1,6 +1,14 @@
 tricks:
-- watchdog.tricks.ShellCommandTrick:
+- importnb.utils.watch.ModuleTrick:
     patterns:
-    - ./tests/test_*.ipynb
+    - '*test_*.ipynb'
     shell_command: |
-        pytest tests/test_importnb.ipynb --verbose --capture=no
+        pytest ${watch_src_path} --verbose --capture=no
+
+- importnb.utils.watch.ModuleTrick:
+    patterns: 
+    - '*.ipynb'
+    ignore_patterns:
+    - '*test_*.ipynb'
+    shell_command: |
+        echo ${watch_src_path} ${watch_dest_path} && ipython -m ${watch_dest_path}

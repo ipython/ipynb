@@ -1,7 +1,9 @@
 try:
     from .exporter import Compile, AST
+    from .utils import __IPYTHON__, export
 except:
     from exporter import Compile, AST
+    from utils import __IPYTHON__, export
 import inspect, sys
 from importlib.machinery import SourceFileLoader
 from importlib._bootstrap_external import FileFinder
@@ -9,19 +11,16 @@ from importlib import reload
 from traceback import print_exc
 from contextlib import contextmanager
 
-__IPYTHON__ = False
-try:
-    from IPython import get_ipython
-
-    if not get_ipython():
-        raise ValueError("""There is no interactive IPython shell""")
-    __IPYTHON__ = True
-except:
-    ...
+__all__ = "Notebook", "Partial", "reload",
 
 
 @contextmanager
 def modify_file_finder_details():
+    """yield the FileFinder in the sys.path_hooks that loads Python files and assure
+    the import cache is cleared afterwards.  
+
+    Everything goes to shit if the import cache is not cleared."""
+
     for id, hook in enumerate(sys.path_hooks):
         try:
             closure = inspect.getclosurevars(hook).nonlocals
@@ -51,7 +50,9 @@ def remove_one_path_hook(loader):
                 break
 
 
-class ImportContextMixin:
+class ImportContextManagerMixin:
+    """A context maanager to add and remove loader_details from the path_hooks.
+    """
 
     def __enter__(self, position=0):
         add_path_hooks(type(self), self.EXTENSION_SUFFIXES, position=position)
@@ -60,7 +61,7 @@ class ImportContextMixin:
         remove_one_path_hook(type(self))
 
 
-class Notebook(SourceFileLoader, ImportContextMixin):
+class Notebook(SourceFileLoader, ImportContextManagerMixin):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = ".ipynb",
 
@@ -121,11 +122,5 @@ def unload_ipython_extension(ip=None):
 
 
 if __name__ == "__main__":
-    try:
-        from .compiler_python import ScriptExporter
-    except:
-        from compiler_python import ScriptExporter
-    from pathlib import Path
-
-    Path("../importnb/loader.py").write_text(ScriptExporter().from_filename("loader.ipynb")[0])
+    export("loader.ipynb", "../importnb/loader.py")
     __import__("doctest").testmod()

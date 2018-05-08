@@ -1,13 +1,32 @@
 
-__importnb__ supports the ability to use Jupyter notebooks as python source.
+__importnb__ imports notebooks as modules & packages.
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?urlpath=lab/tree/readme.ipynb)[![Build Status](https://travis-ci.org/deathbeds/importnb.svg?branch=master)](https://travis-ci.org/deathbeds/importnb)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?urlpath=lab/tree/readme.ipynb)[![Build Status](https://travis-ci.org/deathbeds/importnb.svg?branch=master)](https://travis-ci.org/deathbeds/importnb)[![PyPI version](https://badge.fury.io/py/importnb.svg)](https://badge.fury.io/py/importnb)![PyPI - Python Version](https://img.shields.io/pypi/pyversions/importnb.svg)![PyPI - Format](https://img.shields.io/pypi/format/importnb.svg)![PyPI - Format](https://img.shields.io/pypi/l/importnb.svg)
+
+
 
     pip install importnb
 
-## Jupyter Extension
+# `importnb` works in Python and IPython
 
-    %load_ext importnb    
+Use the `Notebook` context manager.
+
+### For brevity
+
+
+```python
+    with __import__('importnb').Notebook(): 
+        import readme
+```
+
+#### or explicity 
+
+
+```python
+    from importnb import Notebook
+    with Notebook(): 
+        import readme
+```
 
 
 ```python
@@ -17,52 +36,47 @@ __importnb__ supports the ability to use Jupyter notebooks as python source.
     assert readme.__file__.endswith('.ipynb')
 ```
 
-Notebooks maybe reloaded with the standard Python Import machinery.
+### Modules may be reloaded 
+
+The context manager is required to `reload` a module.
 
 
 ```python
-    from importnb import Notebook, reload
-    reload(readme);
-```
-
-## Unload the extension
-
-    %unload_ext importnb
-
-## Context Manager
-
-
-```python
-    with Notebook(): 
-        import readme
+    from importlib import reload
+    with Notebook():
         reload(readme)
 ```
 
 ## Integrations
 
-`importnb` integrates with IPython, py.test, and setuptools.
-
 
 ### IPython
 
+#### Extension
+
+Avoid the use of the context manager using loading importnb as IPython extension.
+
+    %load_ext importnb
+    
+`%unload_ext importnb` will unload the extension.
+
+#### Default Extension
+
 `importnb` may allow notebooks to import by default with 
 
-    ipython -c "__import__('importnb').utils.ipython.install()"
+    importnb-install
     
 This extension will install a script into the default IPython profile startup that is called each time an IPython session is created.  
 
-#### Command
+Uninstall the extension with `importnb-install`.
 
-After the `importnb` extension is created notebooks can be execute from the command line.
+##### Run a notebook as a module
+
+When the default extension is loaded any notebook can be run from the command line. After the `importnb` extension is created notebooks can be execute from the command line.
 
     ipython -m readme
-
-### Unloading the Extension
-
-The default settings may be discarded temporarily with
-
-    %unload_ext importnb
     
+> See the [deploy step in the travis build](https://github.com/deathbeds/importnb/blob/docs/.travis.yml#L19).
 
 ### py.test
 
@@ -78,37 +92,97 @@ The default settings may be discarded temporarily with
         cmdclass=dict(build_py=build_ipynb)
         ...,)
 
+### [Watchdog](https://github.com/gorakhargosh/watchdog/tree/master/src/watchdog/tricks)
+
+`importnb` exports a watchdog trick to watch files and apply command like operations on their module path.
+
+#### Tricks File
+
+For example, create a file called `tricks.yaml` containing
+
+    tricks:
+    - importnb.utils.watch.ModuleTrick:
+          patterns: ['*.ipynb']
+          shell_command: ipython -m ${watch_dest_path}
+      
+#### Run the watcher in a terminal
+
+    watchmedo tricks tricks.yaml
+      
+> [`tricks.yaml`](tricks.yaml) is a concrete implementation of `tricks.yaml`
+
 ## Developer
+
+* [Tests](tests/test_importnb.ipynb)
+* [Source Notebooks](src/notebooks/)
+* [Transpiled Python Source](src/importnb/)
+
+### Format and test the Source Code
 
 
 ```python
     if __name__ == '__main__':
         from pathlib import Path
         import black
-        from nbconvert.exporters.markdown import MarkdownExporter
         from importnb.compiler_python import ScriptExporter
         for path in Path('src/notebooks/').rglob("""*.ipynb"""):
-            
-            'checkpoint' not in str(path) and (Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks')).write_text(
+            if 'checkpoint' not in str(path):
+                print(path)
+                (Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks')).write_text(
                 black.format_str(ScriptExporter().from_filename(path)[0], 100))
-        for path in map(Path, ('readme.ipynb', 'changelog.ipynb')):
-            path.with_suffix('.md').write_text(MarkdownExporter().from_filename(path)[0])
-
-        __import__('unittest').main(module='tests', argv="discover --verbose".split(), exit=False)
+            
+        __import__('unittest').main(module='tests', argv="discover --verbose".split(), exit=False) 
 
 ```
 
-    test_import (tests.test_.TestContext) ... ok
-    test_reload_with_context (tests.test_.TestContext) ... ok
-    test_reload_without_context (tests.test_.TestContext) ... skipped 'importnb is probably installed'
-    test_failure (tests.test_.TestExtension) ... expected failure
-    test_import (tests.test_.TestExtension) ... ok
-    test_exception (tests.test_.TestPartial) ... ok
-    test_traceback (tests.test_.TestPartial) ... ok
-    test_imports (tests.test_.TestRemote) ... skipped 'requires IP'
+    src/notebooks/compiler_ipython.ipynb
+    src/notebooks/compiler_python.ipynb
+    src/notebooks/decoder.ipynb
+    src/notebooks/exporter.ipynb
+    src/notebooks/loader.ipynb
+    src/notebooks/utils/__init__.ipynb
+    src/notebooks/utils/ipython.ipynb
+    src/notebooks/utils/pytest_plugin.ipynb
+    src/notebooks/utils/setup.ipynb
+    src/notebooks/utils/watch.ipynb
+
+
+    test_import (tests.test_unittests.TestContext) ... ok
+    test_reload_with_context (tests.test_unittests.TestContext) ... ok
+    test_reload_without_context (tests.test_unittests.TestContext) ... skipped 'importnb is probably installed'
+    test_failure (tests.test_unittests.TestExtension) ... unexpected success
+    test_import (tests.test_unittests.TestExtension) ... ok
+    test_exception (tests.test_unittests.TestPartial) ... ok
+    test_traceback (tests.test_unittests.TestPartial) ... ok
+    test_imports (tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 8 tests in 2.021s
+    Ran 8 tests in 1.013s
     
-    OK (skipped=2, expected failures=1)
+    FAILED (skipped=2, unexpected successes=1)
 
+
+### Format the Github markdown files
+
+
+```python
+    if __name__ == '__main__':
+        from nbconvert.exporters.markdown import MarkdownExporter
+        for path in map(Path, ('readme.ipynb', 'changelog.ipynb')):
+            path.with_suffix('.md').write_text(MarkdownExporter().from_filename(path)[0])
+```
+
+### Format the Github Pages documentation
+
+We use `/docs` as the `local_dir`.
+
+
+```python
+    if __name__ == '__main__':
+        from nbconvert.exporters.markdown import MarkdownExporter
+        files = 'readme.ipynb', 'changelog.ipynb', 'tests/test_importnb.ipynb'
+        for doc in map(Path, files):
+            to = ('docs' / doc.with_suffix('.md'))
+            to.parent.mkdir(exist_ok=True)
+            to.write_text(MarkdownExporter().from_filename(doc)[0])
+```

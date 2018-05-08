@@ -33,6 +33,7 @@ setup_args = dict(
     install_requires=[
         "dataclasses",
         "nbconvert",
+        "watchdog",
     ],
     include_package_data=True,
     packages=setuptools.find_packages(where="src"),
