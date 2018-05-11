@@ -1,4 +1,4 @@
-try:
+try: 
     from .. import exporter
 except:
     import importnb.exporter
@@ -8,20 +8,35 @@ import sys, os
 from pathlib import Path
 import importlib
 
-
 class build_ipynb(build_py):
-
     def get_module_outfile(self, build_dir, package, module):
         module_mapper = {module[1]: module[2] for module in self.find_all_modules()}
         outfile_path = [build_dir] + list(package) + [module_mapper[module]]
         return os.path.join(*outfile_path)
 
+    def find_package_modules(self, package, package_dir):
+        from glob import glob
+        import os
+        self.check_package(package, package_dir)
+        module_files = glob(os.path.join(package_dir, "*.py"))
+        modules = []
+        setup_script = os.path.abspath(self.distribution.script_name)
+
+        for f in module_files + glob(os.path.join(package_dir, "*.ipynb")):
+            abs_f = os.path.abspath(f)
+            if abs_f != setup_script:
+                module = os.path.splitext(os.path.basename(f))[0]
+                modules.append((package, module, f))
+            else:
+                self.debug_print("excluding %s" % setup_script)
+        return modules
+
     def find_modules(self):
         packages, modules = {}, []
 
         for module in self.py_modules:
-            path = module.split(".")
-            package = ".".join(path[0:-1])
+            path = module.split('.')
+            package = '.'.join(path[0:-1])
             module_base = path[-1]
 
             try:
@@ -41,21 +56,18 @@ class build_ipynb(build_py):
             if Path(module_file).exists():
                 modules.append((package, module_base, str(module_file)))
             else:
-                module_file = str(Path(module_file).with_suffix(".py"))
+                module_file = str(Path(module_file).with_suffix('.py'))
                 if self.check_module(module, module_file):
-                    modules.append((package, module_base, str(module_file)))
+                    modules.append((package, module_base, str(module_file)))            
 
-        return modules
+        return modules        
 
-
-if __name__ == "__main__":
+if __name__ ==  '__main__':
     from pathlib import Path
-
     try:
         from ..compiler_python import ScriptExporter
     except:
         from importnb.compiler_python import ScriptExporter
 
-    Path("../../importnb/utils/setup.py").write_text(
-        ScriptExporter().from_filename("setup.ipynb")[0]
-    )
+    Path('../../importnb/utils/setup.py').write_text(ScriptExporter().from_filename('setup.ipynb')[0])
+
