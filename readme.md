@@ -131,7 +131,7 @@ For example, create a file called `tricks.yaml` containing
                 (Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks')).write_text(
                 black.format_str(ScriptExporter().from_filename(path)[0], 100))
             
-        __import__('unittest').main(module='tests', argv="discover --verbose".split(), exit=False) 
+        __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False) 
 
 ```
 
@@ -147,17 +147,17 @@ For example, create a file called `tricks.yaml` containing
     src/notebooks/utils/watch.ipynb
 
 
-    test_import (tests.test_unittests.TestContext) ... ok
-    test_reload_with_context (tests.test_unittests.TestContext) ... ok
-    test_reload_without_context (tests.test_unittests.TestContext) ... skipped 'importnb is probably installed'
-    test_failure (tests.test_unittests.TestExtension) ... unexpected success
-    test_import (tests.test_unittests.TestExtension) ... ok
-    test_exception (tests.test_unittests.TestPartial) ... ok
-    test_traceback (tests.test_unittests.TestPartial) ... ok
-    test_imports (tests.test_unittests.TestRemote) ... skipped 'requires IP'
+    test_import (src.importnb.tests.test_unittests.TestContext) ... ok
+    test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
+    test_reload_without_context (src.importnb.tests.test_unittests.TestContext) ... skipped 'importnb is probably installed'
+    test_failure (src.importnb.tests.test_unittests.TestExtension) ... unexpected success
+    test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
+    test_exception (src.importnb.tests.test_unittests.TestPartial) ... ok
+    test_traceback (src.importnb.tests.test_unittests.TestPartial) ... ok
+    test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 8 tests in 1.013s
+    Ran 8 tests in 1.014s
     
     FAILED (skipped=2, unexpected successes=1)
 
@@ -180,7 +180,7 @@ We use `/docs` as the `local_dir`.
 ```python
     if __name__ == '__main__':
         from nbconvert.exporters.markdown import MarkdownExporter
-        files = 'readme.ipynb', 'changelog.ipynb', 'tests/test_importnb.ipynb'
+        files = 'readme.ipynb', 'changelog.ipynb'
         for doc in map(Path, files):
             to = ('docs' / doc.with_suffix('.md'))
             to.parent.mkdir(exist_ok=True)

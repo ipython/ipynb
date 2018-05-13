@@ -2,14 +2,11 @@ import ast, sys
 from json import load, loads
 from pathlib import Path
 from textwrap import dedent
-
 from codeop import Compile
-from dataclasses import dataclass, field
 
 
 class Compiler(Compile):
     """{Shell} provides the IPython machinery to objects."""
-    filename: str = "<Shell>"
 
     def ast_transform(Compiler, node):
         return node
@@ -56,7 +53,7 @@ NotebookNode = dict
 if __name__ == "__main__":
     from pathlib import Path
 
-    Path("compiler_python.py").write_text(
+    Path("../importnb/compiler_python.py").write_text(
         ScriptExporter().from_filename("compiler_python.ipynb")[0]
     )
     __import__("doctest").testmod()

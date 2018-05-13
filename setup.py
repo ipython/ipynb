@@ -7,7 +7,18 @@ __version__ = None
 
 here = Path(__file__).parent
 
-exec((here / 'src' / name / "_version.py").read_text())
+# This should be replaced with proper pathlib business
+
+with (here/ 'src' / 'importnb'/ '_version.py').open('r') as file:
+    exec(file.read())
+
+description =""""""
+for info in ("readme.md", "changelog.md"):
+    with (here/info).open('r') as file:
+        description += file.read()
+        description += "\n\n"
+
+import sys
 
 setup_args = dict(
     name=name,
@@ -15,24 +26,18 @@ setup_args = dict(
     author="deathbeds",
     author_email="tony.fast@gmail.com",
     description="Import .ipynb files as modules in the system path.",
-    long_description=(
-        (here / "readme.md").read_text() + "\n\n" +
-        (here / "changelog.md").read_text()
-    ),
+    long_description=description,
     long_description_content_type='text/markdown',
     url="https://github.com/deathbeds/importnb",
-    python_requires=">=3.6",
+    python_requires=">=3.4",
     license="BSD-3-Clause",
     setup_requires=[
         'pytest-runner',
-        'wheel>=0.31.0',
         'twine>=1.11.0',
         'setuptools>=38.6.',
-    ],
-    tests_require=['pytest'],
+    ] + ([] if sys.version_info.minor == 4 else ['wheel>=0.31.0']),
+    tests_require=['pytest', 'nbformat'],
     install_requires=[
-        "dataclasses",
-        "nbconvert",
         "watchdog",
     ],
     include_package_data=True,

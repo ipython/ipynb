@@ -1,13 +1,11 @@
 from nbconvert.exporters.notebook import NotebookExporter
 from IPython.core.compilerop import CachingCompiler
-from dataclasses import dataclass, field
 from nbformat import NotebookNode
 import ast
 
 
 class Compiler(CachingCompiler):
     """{Shell} provides the IPython machinery to objects."""
-    filename: str = "<Shell>"
 
     @property
     def ip(Compiler):
@@ -44,7 +42,7 @@ if __name__ == "__main__":
     except:
         from compiler_python import ScriptExporter
 
-    Path("compiler_ipython.py").write_text(
+    Path("../importnb/compiler_ipython.py").write_text(
         ScriptExporter().from_filename("compiler_ipython.ipynb")[0]
     )
     __import__("doctest").testmod()

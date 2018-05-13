@@ -1,6 +1,8 @@
 language: python
 cache: pip
 python:
+- '3.4'
+- '3.5'
 - '3.6'
 - 3.6-dev
 - 3.7-dev
@@ -8,7 +10,6 @@ install:
 - python setup.py sdist
 - python setup.py bdist_wheel
 - pip install -r requirements.txt
-- pip uninstall importnb -y
 - python -m pip install dist/importnb-*.tar.gz --ignore-installed --no-deps
 
 script:
@@ -29,12 +30,15 @@ deploy:
     tags: true
     distributions: sdist bdist_wheel
     repo: deathbeds/importnb
-    python: '3.6'
+    python:
+    - '3.4'
+    - '3.5'
+    - '3.6'
 
-- provider: pages
-  skip-cleanup: true
-  github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
-  local-dir: docs
-  on:
-    branch: $TRAVIS_BRANCH
-    python: '3.6'
+# - provider: pages
+#   skip-cleanup: true
+#   github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+#   local-dir: docs
+#   on:
+#     branch: $TRAVIS_BRANCH
+#     python: '3.6'

@@ -23,26 +23,28 @@ else:
 import ast, sys
 from json import load, loads
 from pathlib import Path
-from dataclasses import dataclass
 
 
-@dataclass
 class Code(NotebookExporter, Compiler):
     """An exporter than returns transforms a NotebookNode through the InputSplitter.
 
     >>> assert type(Code().from_filename(Path(__nb__).with_suffix('.ipynb'))) is NotebookNode"""
-    filename: str = "<module exporter>"
-    name: str = "__main__"
-    decoder: type = LineNoDecoder
 
-    def __post_init__(self):
-        NotebookExporter.__init__(self) or Compiler.__init__(self)
+    def __init__(self, filename="<module exporter>", name="__main__", decoder=LineNoDecoder):
+        NotebookExporter.__init__(self)
+        Compiler.__init__(self)
+        self.filename = filename
+        self.name = name
+        self.decoder = decoder
 
     def from_file(Code, file_stream, resources=None, **dict):
         for str in ("name", "filename"):
             setattr(Code, str, dict.pop(str, getattr(Code, str)))
+        file_stream = file_stream.read()
+        if isinstance(file_stream, bytes):
+            file_stream = file_stream.decode("utf-8")
         return Code.from_notebook_node(
-            NotebookNode(**load(file_stream, cls=Code.decoder)), resources, **dict
+            NotebookNode(**loads(file_stream, cls=Code.decoder)), resources, **dict
         )
 
     def from_filename(Code, filename, resources=None, **dict):
