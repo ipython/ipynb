@@ -30,11 +30,8 @@ deploy:
     tags: true
     distributions: sdist bdist_wheel
     repo: deathbeds/importnb
-    python:
-    - '3.4'
-    - '3.5'
-    - '3.6'
-    
+    python: '3.6'
+
 # - provider: pages
 #   skip-cleanup: true
 #   github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable

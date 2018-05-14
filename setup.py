@@ -50,8 +50,11 @@ setup_args = dict(
         "Intended Audience :: Developers",
         "Natural Language :: English",
         "License :: OSI Approved :: BSD License",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3.6",),
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3 :: Only',),
     zip_safe=False,
     entry_points = {
         'pytest11': ['pytest-importnb = importnb.utils.pytest_plugin',],
