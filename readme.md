@@ -47,6 +47,24 @@ The context manager is required to `reload` a module.
         reload(readme)
 ```
 
+### Lazy imports
+
+
+```python
+    with Notebook(lazy=True):
+        import readme
+```
+
+## Capture Outputs
+
+`importnb` can capture the `stdout`, `stderr`, and `display` in the context manager.
+
+
+```python
+    with Notebook(stdout=True, stderr=True, display=True):
+        import readme
+```
+
 ## Integrations
 
 
@@ -123,13 +141,17 @@ For example, create a file called `tricks.yaml` containing
 ```python
     if __name__ == '__main__':
         from pathlib import Path
-        import black
         from importnb.compiler_python import ScriptExporter
-        for path in Path('src/notebooks/').rglob("""*.ipynb"""):
+        for path in Path('src/notebooks/').rglob("""*.ipynb"""):                
             if 'checkpoint' not in str(path):
+                src = ScriptExporter().from_filename(path)[0]
+                try:
+                    import black
+                    src = black.format_str(src, 100)
+                except: ...
+
                 print(path)
-                (Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks')).write_text(
-                black.format_str(ScriptExporter().from_filename(path)[0], 100))
+                (Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks')).write_text(src)
             
         __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False) 
 
@@ -150,16 +172,16 @@ For example, create a file called `tricks.yaml` containing
     test_import (src.importnb.tests.test_unittests.TestContext) ... ok
     test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
     test_reload_without_context (src.importnb.tests.test_unittests.TestContext) ... skipped 'importnb is probably installed'
-    test_failure (src.importnb.tests.test_unittests.TestExtension) ... unexpected success
+    test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
     test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
     test_exception (src.importnb.tests.test_unittests.TestPartial) ... ok
     test_traceback (src.importnb.tests.test_unittests.TestPartial) ... ok
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 8 tests in 1.014s
+    Ran 8 tests in 2.030s
     
-    FAILED (skipped=2, unexpected successes=1)
+    OK (skipped=2, expected failures=1)
 
 
 ### Format the Github markdown files
