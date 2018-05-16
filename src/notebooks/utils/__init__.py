@@ -4,11 +4,12 @@ try:
         from . import ipython
     except:
         import ipython
-    if not ipython.get_ipython():
-        raise ValueError("""There is no interactive IPython shell""")
-    __IPYTHON__ = True
-except: ...
-
+        if not ipython.get_ipython():
+            ...
+        else:
+            __IPYTHON__ = True
+except:
+    ...
 from pathlib import Path
 
 try:
