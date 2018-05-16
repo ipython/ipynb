@@ -37,9 +37,7 @@ setup_args = dict(
         'setuptools>=38.6.',
     ] + ([] if sys.version_info.minor == 4 else ['wheel>=0.31.0']),
     tests_require=['pytest', 'nbformat'],
-    install_requires=[
-        "watchdog",
-    ],
+    install_requires=[],
     include_package_data=True,
     packages=setuptools.find_packages(where="src"),
     package_dir={"": "src"},
