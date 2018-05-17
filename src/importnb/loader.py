@@ -64,12 +64,14 @@ def lazy_loader_cls(loader):
         return inspect.getclosurevars(loader).nonlocals.get('cls', loader)
     return loader
 
+e = ExitStack()
+
 class Notebook(SourceFileLoader, ExitStack):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = '.ipynb',
 
     def __init__(
-        self, fullname=None, path=None, *, stdout=False, stderr=False, display=True, lazy=False
+        self, fullname=None, path=None, *, stdout=False, stderr=False, display=False, lazy=False
     ): 
         SourceFileLoader.__init__(self, fullname, path)
         ExitStack.__init__(self)
@@ -78,14 +80,18 @@ class Notebook(SourceFileLoader, ExitStack):
 
     def __enter__(self, position=0):  
         add_path_hooks(type(self), self.EXTENSION_SUFFIXES, position=position, lazy=self._lazy)
-        stack = super().__enter__()
-        return stack.enter_context(capture_output(
-            stdout=self._stdout, stderr=self._stderr, display=self._display
-        ))
+        if self._capture:
+            stack = super().__enter__()
+            return stack.enter_context(capture_output(
+                stdout=self._stdout, stderr=self._stderr, display=self._display
+            ))
 
-    def __exit__(self, *excepts):  remove_one_path_hook(type(self))
+    @property
+    def _capture(self): return any((self._stdout, self._stderr, self._display))
+    def __exit__(self, *excepts):  
+        remove_one_path_hook(type(self))
 
-    def exec_module(self, module): super().exec_module(module)                
+        if self._capture: super().__exit__(*excepts)
 
     def source_to_code(Notebook, data, path):
         with __import__('io').BytesIO(data) as stream:
@@ -112,3 +118,4 @@ def unload_ipython_extension(ip=None):
 if __name__ ==  '__main__':
     export('loader.ipynb', '../importnb/loader.py')
     __import__('doctest').testmod()
+

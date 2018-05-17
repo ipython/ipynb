@@ -1,9 +1,10 @@
 try:
-    from .utils import __IPYTHON__, export
+    from .utils import export, __IPYTHON__
 except:
-    from utils import __IPYTHON__, export
+    from utils import export, __IPYTHON__
+__all__ = 'capture_output',
 
-if False and __IPYTHON__:
+if __IPYTHON__:
     from IPython.utils.capture import capture_output
 else:
     from contextlib import redirect_stdout, ExitStack
@@ -61,3 +62,4 @@ else:
 if __name__ ==  '__main__':
     export('capture.ipynb', '../importnb/capture.py')
     __import__('doctest').testmod()
+
