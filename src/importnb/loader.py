@@ -1,9 +1,11 @@
 try:
     from .exporter import Compile, AST
     from .utils import __IPYTHON__, export
+    from .capture import capture_output
 except:
     from exporter import Compile, AST
     from utils import __IPYTHON__, export
+    from capture import capture_output
 import inspect, sys
 from importlib.machinery import SourceFileLoader
 try: 
@@ -62,43 +64,30 @@ def lazy_loader_cls(loader):
         return inspect.getclosurevars(loader).nonlocals.get('cls', loader)
     return loader
 
-class ImportContextManagerMixin:
-    """A context maanager to add and remove loader_details from the path_hooks.
-    """
-    def __enter__(self, position=0):  
-        add_path_hooks(type(self), self.EXTENSION_SUFFIXES, position=position, lazy=self._lazy)
-    def __exit__(self, exception_type=None, exception_value=None, traceback=None): remove_one_path_hook(type(self))
+from contextlib import ExitStack
 
-class Notebook(SourceFileLoader, ImportContextManagerMixin):
+class Notebook(SourceFileLoader, ExitStack):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = '.ipynb',
 
     def __init__(
         self, fullname=None, path=None, *, stdout=False, stderr=False, display=True, lazy=False
     ): 
+        SourceFileLoader.__init__(self, fullname, path)
+        ExitStack.__init__(self)
+        self._stdout, self._stderr, self._display = stdout, stderr, display
         self._lazy = lazy
-        self._stdout = stdout
-        self._stderr = stderr
-        self._display = display
-        super().__init__(fullname, path)
 
+    def __enter__(self, position=0):  
+        add_path_hooks(type(self), self.EXTENSION_SUFFIXES, position=position, lazy=self._lazy)
+        stack = super().__enter__()
+        return stack.enter_context(capture_output(
+            stdout=self._stdout, stderr=self._stderr, display=self._display
+        ))
 
-    @property
-    def _capture(self):
-        return any((self._stdout, self._stderr, self._display))
-    def exec_module(self, module):
-        module.__output__ = None
-        if __IPYTHON__ and self._capture: 
-            return self.exec_module_capture(module)
-        else: 
-            return super().exec_module(module)
+    def __exit__(self, *excepts):  remove_one_path_hook(type(self))
 
-    def exec_module_capture(self, module):
-        from IPython.utils.capture import capture_output    
-        with capture_output(stdout=self._stdout, stderr=self._stderr, display=self._display) as output: 
-            module.__output__= output
-            super().exec_module(module)
-        return module
+    def exec_module(self, module): super().exec_module(module)                
 
     def source_to_code(Notebook, data, path):
         with __import__('io').BytesIO(data) as stream:
@@ -113,14 +102,15 @@ class Partial(Notebook):
                     name=module.__name__, file=module.__file__
                 ))
             except ImportWarning as error:
-                if not loader._capture: print_exc()
+                if not loader._stderr: print_exc()
                 module.__exception__ = exception
         return module
 
-def load_ipython_extension(ip=None): Notebook().__enter__(position=0)
-def unload_ipython_extension(ip=None): Notebook().__exit__()
+def load_ipython_extension(ip=None): 
+    add_path_hooks(Notebook, Notebook.EXTENSION_SUFFIXES)
+def unload_ipython_extension(ip=None): 
+    remove_one_path_hook(Notebook)
 
 if __name__ ==  '__main__':
     export('loader.ipynb', '../importnb/loader.py')
     __import__('doctest').testmod()
-
