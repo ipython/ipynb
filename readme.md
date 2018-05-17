@@ -61,7 +61,7 @@ The context manager is required to `reload` a module.
 
 
 ```python
-    with Notebook(stdout=True, stderr=True, display=True):
+    with Notebook(stdout=True, stderr=True, display=True) as output:
         import readme
 ```
 
@@ -112,6 +112,8 @@ When the default extension is loaded any notebook can be run from the command li
 
 ### [Watchdog](https://github.com/gorakhargosh/watchdog/tree/master/src/watchdog/tricks)
 
+    pip install importnb[watch]
+
 `importnb` exports a watchdog trick to watch files and apply command like operations on their module path.
 
 #### Tricks File
@@ -131,7 +133,7 @@ For example, create a file called `tricks.yaml` containing
 
 ## Developer
 
-* [Tests](tests/test_importnb.ipynb)
+* [Tests](src/importnb/tests/test_importnb.ipynb)
 * [Source Notebooks](src/notebooks/)
 * [Transpiled Python Source](src/importnb/)
 
@@ -156,33 +158,6 @@ For example, create a file called `tricks.yaml` containing
         __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False) 
 
 ```
-
-    src/notebooks/compiler_ipython.ipynb
-    src/notebooks/compiler_python.ipynb
-    src/notebooks/decoder.ipynb
-    src/notebooks/exporter.ipynb
-    src/notebooks/loader.ipynb
-    src/notebooks/utils/__init__.ipynb
-    src/notebooks/utils/ipython.ipynb
-    src/notebooks/utils/pytest_plugin.ipynb
-    src/notebooks/utils/setup.ipynb
-    src/notebooks/utils/watch.ipynb
-
-
-    test_import (src.importnb.tests.test_unittests.TestContext) ... ok
-    test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
-    test_reload_without_context (src.importnb.tests.test_unittests.TestContext) ... skipped 'importnb is probably installed'
-    test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
-    test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
-    test_exception (src.importnb.tests.test_unittests.TestPartial) ... ok
-    test_traceback (src.importnb.tests.test_unittests.TestPartial) ... ok
-    test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
-    
-    ----------------------------------------------------------------------
-    Ran 8 tests in 2.030s
-    
-    OK (skipped=2, expected failures=1)
-
 
 ### Format the Github markdown files
 
