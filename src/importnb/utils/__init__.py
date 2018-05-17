@@ -1,15 +1,11 @@
 __IPYTHON__ = False
+
 try:
-    try:
-        from . import ipython
-    except:
-        import ipython
-        if not ipython.get_ipython():
-            ...
-        else:
-            __IPYTHON__ = True
-except:
-    ...
+    from IPython import get_ipython
+    if not get_ipython(): ...
+    else: __IPYTHON__ = True
+except: ...
+
 from pathlib import Path
 
 try:
