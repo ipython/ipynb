@@ -16,7 +16,6 @@ except:
     from importlib.machinery import FileFinder
 from functools import partialmethod
 from importlib import reload
-from importlib.util import spec_from_file_location, module_from_spec
 from traceback import print_exc, format_exc
 from warnings import warn
 from contextlib import contextmanager, ExitStack
@@ -80,9 +79,6 @@ class ImportNbException(BaseException):
     """ImportNbException allows all exceptions to be raised, a null except statement always passes."""
 
 
-from importlib import util
-
-
 class Notebook(SourceFileLoader, capture_output):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = ".ipynb",
@@ -134,18 +130,31 @@ class Notebook(SourceFileLoader, capture_output):
         with __import__("io").BytesIO(data) as stream:
             return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
 
-    @classmethod
-    def from_filename(cls, location, *, main=False):
-        """Load a notebook from a file location.
 
-        from_filename is not reloadable because it is not in the sys.modules.
-        """
-        name = (main and "__main__") or Path(location).stem
-        loader = cls(name, location)
-        spec = spec_from_file_location(name, location, loader=loader)
-        module = module_from_spec(spec)
-        module.__loader__.exec_module(module)
-        return module
+from importlib.util import spec_from_loader
+
+try:
+    from importlib.util import module_from_spec
+except:
+    # Python 3.4 compatability
+    from importlib._bootstrap import _SpecMethods
+
+    module_from_spec = _SpecMethods.create
+
+
+def from_filename(loader, location, *, main=False):
+    """Load a notebook from a file location.
+
+    from_filename is not reloadable because it is not in the sys.modules.
+    """
+    loader = loader((main and "__main__") or Path(location).stem, location)
+    spec = spec_from_loader(loader.name, loader)
+    module = module_from_spec(spec)
+    module.__loader__.exec_module(module)
+    return module
+
+
+Notebook.from_filename = classmethod(from_filename)
 
 
 class Partial(Notebook):
