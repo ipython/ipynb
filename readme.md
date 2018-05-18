@@ -65,6 +65,37 @@ The context manager is required to `reload` a module.
         import readme
 ```
 
+# Parameterize Notebooks
+
+Literal ast statements are converted to notebooks parameters.
+
+In `readme`, `foo` is a parameter because it may be evaluated with ast.literal_val
+
+
+```python
+    from importnb import Parameterize
+    f = Parameterize(readme)
+    
+```
+
+The parameterized module is a callable that evaluates with different literal statements.
+
+
+```python
+    assert callable(f)
+    f.__signature__
+```
+
+
+
+
+    <Signature (*, foo=42)>
+
+
+
+    assert f().foo == 42
+    assert f(foo='importnb').foo == 'importnb'
+
 ## Integrations
 
 
@@ -100,15 +131,9 @@ When the default extension is loaded any notebook can be run from the command li
 
 `importnb` installs a pytest plugin when it is setup.  Any notebook obeying the py.test discovery conventions can be used in to pytest.  _This is great because notebooks are generally your first test._
 
-### Setuptools
+### Setup
 
-`importnb` provides a setuptool command that will place notebooks in a source distribution.  In setuptools, update the command classs with
-
-    from importnb.utils.setup import build_ipynb
-    setup(
-        ...,
-        cmdclass=dict(build_py=build_ipynb)
-        ...,)
+To package notebooks add `recursive-include package_name *.ipynb`
 
 ### [Watchdog](https://github.com/gorakhargosh/watchdog/tree/master/src/watchdog/tricks)
 
@@ -158,6 +183,38 @@ For example, create a file called `tricks.yaml` containing
         __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False) 
 
 ```
+
+    src/notebooks/capture.ipynb
+    src/notebooks/compiler_ipython.ipynb
+    src/notebooks/compiler_python.ipynb
+    src/notebooks/decoder.ipynb
+    src/notebooks/exporter.ipynb
+    src/notebooks/loader.ipynb
+    src/notebooks/parameterize.ipynb
+    src/notebooks/utils/__init__.ipynb
+    src/notebooks/utils/ipython.ipynb
+    src/notebooks/utils/pytest_plugin.ipynb
+
+    test_import (src.importnb.tests.test_unittests.TestContext) ... 
+
+    
+    src/notebooks/utils/setup.ipynb
+    src/notebooks/utils/watch.ipynb
+
+
+    ok
+    test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
+    test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
+    test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
+    test_exception (src.importnb.tests.test_unittests.TestPartial) ... ok
+    test_traceback (src.importnb.tests.test_unittests.TestPartial) ... ok
+    test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
+    
+    ----------------------------------------------------------------------
+    Ran 7 tests in 2.025s
+    
+    OK (skipped=1, expected failures=1)
+
 
 ### Format the Github markdown files
 

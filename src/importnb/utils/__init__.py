@@ -18,8 +18,12 @@ except:
     from importnb.compiler_python import ScriptExporter
 
 
-def export(src, dst):
-    Path(dst).write_text(ScriptExporter().from_filename(src)[0])
+def export(src, dst, columns=100):
+    try:
+        from black import format_str
+    except:
+        format_str = lambda str, int: str
+    Path(dst).write_text(format_str(ScriptExporter().from_filename(src)[0], columns))
 
 
 if __name__ == "__main__":
