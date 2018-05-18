@@ -139,7 +139,8 @@ except:
     # Python 3.4 compatability
     from importlib._bootstrap import _SpecMethods
 
-    module_from_spec = _SpecMethods.create
+    def module_from_spec(spec):
+        return _SpecMethods(spec).create()
 
 
 def from_filename(loader, location, *, main=False):
