@@ -92,12 +92,13 @@ class Notebook(SourceFileLoader, capture_output):
         stderr=False,
         display=False,
         lazy=False,
-        exceptions=ImportNbException
+        exceptions=None
     ):
+        path = str(path)
         SourceFileLoader.__init__(self, fullname, path)
         capture_output.__init__(self, stdout=stdout, stderr=stderr, display=display)
         self._lazy = lazy
-        self._exceptions = exceptions
+        self._exceptions = exceptions or ImportNbException
 
     def __enter__(self, position=0):
         add_path_hooks(type(self), self.EXTENSION_SUFFIXES, position=position, lazy=self._lazy)
@@ -139,11 +140,13 @@ class Notebook(SourceFileLoader, capture_output):
         stderr=False,
         display=False,
         lazy=False,
-        exceptions=ImportNbException,
+        exceptions=None,
     ):
         """Load a notebook from a file location.
 
         from_filename is not reloadable because it is not in the sys.modules.
+
+        This still needs some work for packages.
         """
         from importlib.util import spec_from_loader
 
@@ -171,10 +174,6 @@ class Notebook(SourceFileLoader, capture_output):
         return module
 
 
-if __name__ == "__main__":
-    mod = Notebook.from_filename("loader.ipynb")
-
-
 class Partial(Notebook):
     """A partial import tool for notebooks.
 
@@ -189,7 +188,7 @@ class Partial(Notebook):
 
     Partial is useful in logging specific debugging approaches to the exception.
     """
-    __init__ = partialmethod(Notebook.__init__, exceptions=(BaseException,))
+    __init__ = partialmethod(Notebook.__init__, exceptions=BaseException)
 
 
 class Lazy(Notebook):
