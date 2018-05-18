@@ -16,6 +16,7 @@ except:
     from importlib.machinery import FileFinder
 from functools import partialmethod
 from importlib import reload
+from importlib.util import spec_from_file_location, module_from_spec
 from traceback import print_exc, format_exc
 from warnings import warn
 from contextlib import contextmanager, ExitStack
@@ -141,8 +142,8 @@ class Notebook(SourceFileLoader, capture_output):
         """
         name = (main and "__main__") or Path(location).stem
         loader = cls(name, location)
-        spec = util.spec_from_file_location(name, location, loader=loader)
-        module = util.module_from_spec(spec)
+        spec = spec_from_file_location(name, location, loader=loader)
+        module = module_from_spec(spec)
         module.__loader__.exec_module(module)
         return module
 
