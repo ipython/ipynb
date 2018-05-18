@@ -1,7 +1,8 @@
 
 __importnb__ imports notebooks as modules & packages.
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?urlpath=lab/tree/readme.ipynb)[![Build Status](https://travis-ci.org/deathbeds/importnb.svg?branch=master)](https://travis-ci.org/deathbeds/importnb)[![PyPI version](https://badge.fury.io/py/importnb.svg)](https://badge.fury.io/py/importnb)![PyPI - Python Version](https://img.shields.io/pypi/pyversions/importnb.svg)![PyPI - Format](https://img.shields.io/pypi/format/importnb.svg)![PyPI - Format](https://img.shields.io/pypi/l/importnb.svg)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?urlpath=lab/tree/readme.ipynb)[![Build Status](https://travis-ci.org/deathbeds/importnb.svg?branch=master)](https://travis-ci.org/deathbeds/importnb)[![PyPI version](https://badge.fury.io/py/importnb.svg)](https://badge.fury.io/py/importnb)![PyPI - Python Version](https://img.shields.io/pypi/pyversions/importnb.svg)![PyPI - Format](https://img.shields.io/pypi/format/importnb.svg)![PyPI - Format](https://img.shields.io/pypi/l/importnb.svg)[
+![Conda](https://img.shields.io/conda/pn/conda-forge/importnb.svg)](https://anaconda.org/conda-forge/importnb)
 
 
 
@@ -203,11 +204,11 @@ For example, create a file called `tricks.yaml` containing
     src/notebooks/parameterize.ipynb
     src/notebooks/utils/__init__.ipynb
     src/notebooks/utils/ipython.ipynb
+    src/notebooks/utils/pytest_plugin.ipynb
 
 
     test_import (src.importnb.tests.test_unittests.TestContext) ... 
 
-    src/notebooks/utils/pytest_plugin.ipynb
     src/notebooks/utils/setup.ipynb
     src/notebooks/utils/watch.ipynb
 
@@ -221,7 +222,7 @@ For example, create a file called `tricks.yaml` containing
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.020s
+    Ran 7 tests in 2.022s
     
     OK (skipped=1, expected failures=1)
 
