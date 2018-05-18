@@ -65,6 +65,16 @@ The context manager is required to `reload` a module.
         import readme
 ```
 
+# Import notebooks from files
+
+Notebook names may not be valid Python paths.  In this case, use `Notebook.from_filename`.
+
+       Notebook.from_filename('readme.ipynb')
+       
+Import under the `__main__` context.
+       
+       Notebook.from_filename('readme.ipynb', main=True)
+
 # Parameterize Notebooks
 
 Literal ast statements are converted to notebooks parameters.
@@ -193,11 +203,11 @@ For example, create a file called `tricks.yaml` containing
     src/notebooks/parameterize.ipynb
     src/notebooks/utils/__init__.ipynb
     src/notebooks/utils/ipython.ipynb
-    src/notebooks/utils/pytest_plugin.ipynb
+
 
     test_import (src.importnb.tests.test_unittests.TestContext) ... 
 
-    
+    src/notebooks/utils/pytest_plugin.ipynb
     src/notebooks/utils/setup.ipynb
     src/notebooks/utils/watch.ipynb
 
@@ -211,7 +221,7 @@ For example, create a file called `tricks.yaml` containing
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.025s
+    Ran 7 tests in 2.020s
     
     OK (skipped=1, expected failures=1)
 
