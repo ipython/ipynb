@@ -14,7 +14,7 @@ try:
 except:
     # python 3.4
     from importlib.machinery import FileFinder
-from functools import partialmethod
+from functools import partialmethod, partial
 from importlib import reload
 from traceback import print_exc, format_exc
 from warnings import warn
@@ -92,7 +92,7 @@ class Notebook(SourceFileLoader, capture_output):
         stderr=False,
         display=False,
         lazy=False,
-        exceptions=(ImportNbException,)
+        exceptions=ImportNbException
     ):
         SourceFileLoader.__init__(self, fullname, path)
         capture_output.__init__(self, stdout=stdout, stderr=stderr, display=display)
@@ -130,32 +130,49 @@ class Notebook(SourceFileLoader, capture_output):
         with __import__("io").BytesIO(data) as stream:
             return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
 
+    @classmethod
+    def from_filename(
+        loader,
+        location,
+        main=False,
+        stdout=False,
+        stderr=False,
+        display=False,
+        lazy=False,
+        exceptions=ImportNbException,
+    ):
+        """Load a notebook from a file location.
 
-from importlib.util import spec_from_loader
+        from_filename is not reloadable because it is not in the sys.modules.
+        """
+        from importlib.util import spec_from_loader
 
-try:
-    from importlib.util import module_from_spec
-except:
-    # Python 3.4 compatability
-    from importlib._bootstrap import _SpecMethods
+        try:
+            from importlib.util import module_from_spec
+        except:
+            # Python 3.4 compatability
+            from importlib._bootstrap import _SpecMethods
 
-    def module_from_spec(spec):
-        return _SpecMethods(spec).create()
+            def module_from_spec(spec):
+                return _SpecMethods(spec).create()
+
+        name = (main and "__main__") or Path(location).stem
+
+        loader = loader(
+            name, location, stdout=stdout, stderr=stderr, display=display, exceptions=exceptions
+        )
+
+        with loader as captured:
+            spec = spec_from_loader(name, loader)
+            module = module_from_spec(spec)
+            module.__loader__.exec_module(module)
+
+        module.__output__ = captured
+        return module
 
 
-def from_filename(loader, location, *, main=False):
-    """Load a notebook from a file location.
-
-    from_filename is not reloadable because it is not in the sys.modules.
-    """
-    loader = loader((main and "__main__") or Path(location).stem, location)
-    spec = spec_from_loader(loader.name, loader)
-    module = module_from_spec(spec)
-    module.__loader__.exec_module(module)
-    return module
-
-
-Notebook.from_filename = classmethod(from_filename)
+if __name__ == "__main__":
+    mod = Notebook.from_filename("loader.ipynb")
 
 
 class Partial(Notebook):
