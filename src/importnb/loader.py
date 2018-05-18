@@ -19,6 +19,7 @@ from importlib import reload
 from traceback import print_exc, format_exc
 from warnings import warn
 from contextlib import contextmanager, ExitStack
+from pathlib import Path
 
 __all__ = "Notebook", "Partial", "reload", "Lazy"
 
@@ -78,6 +79,9 @@ class ImportNbException(BaseException):
     """ImportNbException allows all exceptions to be raised, a null except statement always passes."""
 
 
+from importlib import util
+
+
 class Notebook(SourceFileLoader, capture_output):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = ".ipynb",
@@ -128,6 +132,19 @@ class Notebook(SourceFileLoader, capture_output):
     def source_to_code(Notebook, data, path):
         with __import__("io").BytesIO(data) as stream:
             return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
+
+    @classmethod
+    def from_filename(cls, location, *, main=False):
+        """Load a notebook from a file location.
+
+        from_filename is not reloadable because it is not in the sys.modules.
+        """
+        name = (main and "__main__") or Path(location).stem
+        loader = cls(name, location)
+        spec = util.spec_from_file_location(name, location, loader=loader)
+        module = util.module_from_spec(spec)
+        module.__loader__.exec_module(module)
+        return module
 
 
 class Partial(Notebook):
