@@ -205,15 +205,11 @@ For example, create a file called `tricks.yaml` containing
     src/notebooks/utils/__init__.ipynb
     src/notebooks/utils/ipython.ipynb
     src/notebooks/utils/pytest_plugin.ipynb
-
-
-    test_import (src.importnb.tests.test_unittests.TestContext) ... 
-
     src/notebooks/utils/setup.ipynb
     src/notebooks/utils/watch.ipynb
 
 
-    ok
+    test_import (src.importnb.tests.test_unittests.TestContext) ... ok
     test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
     test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
     test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
@@ -222,7 +218,7 @@ For example, create a file called `tricks.yaml` containing
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.022s
+    Ran 7 tests in 2.017s
     
     OK (skipped=1, expected failures=1)
 
@@ -246,8 +242,12 @@ We use `/docs` as the `local_dir`.
     if __name__ == '__main__':
         from nbconvert.exporters.markdown import MarkdownExporter
         files = 'readme.ipynb', 'changelog.ipynb'
-        for doc in map(Path, files):
-            to = ('docs' / doc.with_suffix('.md'))
-            to.parent.mkdir(exist_ok=True)
-            to.write_text(MarkdownExporter().from_filename(doc)[0])
+        for doc in Path().rglob('*.ipynb'): #map(Path, files):
+            try:
+                to = ('docs' / doc.with_suffix('.md'))
+                to.parent.parent.parent.mkdir(exist_ok=True)
+                to.parent.parent.mkdir(exist_ok=True)
+                to.parent.mkdir(exist_ok=True)
+                to.write_text(MarkdownExporter().from_filename(doc)[0])
+            except: ...
 ```
