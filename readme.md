@@ -2,7 +2,8 @@
 __importnb__ imports notebooks as modules & packages.
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?urlpath=lab/tree/readme.ipynb)[![Build Status](https://travis-ci.org/deathbeds/importnb.svg?branch=master)](https://travis-ci.org/deathbeds/importnb)[![PyPI version](https://badge.fury.io/py/importnb.svg)](https://badge.fury.io/py/importnb)![PyPI - Python Version](https://img.shields.io/pypi/pyversions/importnb.svg)![PyPI - Format](https://img.shields.io/pypi/format/importnb.svg)![PyPI - Format](https://img.shields.io/pypi/l/importnb.svg)[
-![Conda](https://img.shields.io/conda/pn/conda-forge/importnb.svg)](https://anaconda.org/conda-forge/importnb)
+![Conda](https://img.shields.io/conda/pn/conda-forge/importnb.svg)](https://anaconda.org/conda-forge/importnb)[
+![GitHub tag](https://img.shields.io/github/tag/deathbeds/importnb.svg)](https://github.com/deathbeds/importnb/tree/master/src/importnb)
 
 
 
@@ -13,6 +14,8 @@ __importnb__ imports notebooks as modules & packages.
 Use the `Notebook` context manager.
 
 ### For brevity
+
+[`importnb.loader`](src/notebooks/loader.ipynb) will find notebooks avaiable anywhere along the [`sys.path`](https://docs.python.org/2/library/sys.html#sys.path).
 
 
 ```python
@@ -48,7 +51,20 @@ The context manager is required to `reload` a module.
         reload(readme)
 ```
 
+### Partial loading
+
+The [`importnb.loader.Partial`](src/notebooks/loader.ipynb#Partial-Loader) will __import__ a notebook even if there is an exception.  The __exception__ is found on `module.__exception`.
+
+
+```python
+    from importnb import Partial
+    with Partial():
+        import readme
+```
+
 ### Lazy imports
+
+The [`importnb.loader.Lazy`](src/notebooks/loader.ipynb#Lazy-Loader) will delay the evaluation of a module until one of its attributes are accessed the first time.
 
 
 ```python
@@ -112,7 +128,7 @@ The parameterized module is a callable that evaluates with different literal sta
 
 ### IPython
 
-#### Extension
+#### [IPython Extension](src/notebooks/loader.ipynb#IPython-Extensions)
 
 Avoid the use of the context manager using loading importnb as IPython extension.
 
@@ -169,9 +185,9 @@ For example, create a file called `tricks.yaml` containing
 
 ## Developer
 
-* [Tests](src/importnb/tests/test_importnb.ipynb)
 * [Source Notebooks](src/notebooks/)
 * [Transpiled Python Source](src/importnb/)
+* [Tests](src/importnb/tests)
 
 ### Format and test the Source Code
 
@@ -204,12 +220,16 @@ For example, create a file called `tricks.yaml` containing
     src/notebooks/parameterize.ipynb
     src/notebooks/utils/__init__.ipynb
     src/notebooks/utils/ipython.ipynb
+
+
+    test_import (src.importnb.tests.test_unittests.TestContext) ... 
+
     src/notebooks/utils/pytest_plugin.ipynb
     src/notebooks/utils/setup.ipynb
     src/notebooks/utils/watch.ipynb
 
 
-    test_import (src.importnb.tests.test_unittests.TestContext) ... ok
+    ok
     test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
     test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
     test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
@@ -218,36 +238,12 @@ For example, create a file called `tricks.yaml` containing
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.017s
+    Ran 7 tests in 2.023s
     
     OK (skipped=1, expected failures=1)
 
 
-### Format the Github markdown files
-
 
 ```python
-    if __name__ == '__main__':
-        from nbconvert.exporters.markdown import MarkdownExporter
-        for path in map(Path, ('readme.ipynb', 'changelog.ipynb')):
-            path.with_suffix('.md').write_text(MarkdownExporter().from_filename(path)[0])
-```
-
-### Format the Github Pages documentation
-
-We use `/docs` as the `local_dir`.
-
-
-```python
-    if __name__ == '__main__':
-        from nbconvert.exporters.markdown import MarkdownExporter
-        files = 'readme.ipynb', 'changelog.ipynb'
-        for doc in Path().rglob('*.ipynb'): #map(Path, files):
-            try:
-                to = ('docs' / doc.with_suffix('.md'))
-                to.parent.parent.parent.mkdir(exist_ok=True)
-                to.parent.parent.mkdir(exist_ok=True)
-                to.parent.mkdir(exist_ok=True)
-                to.write_text(MarkdownExporter().from_filename(doc)[0])
-            except: ...
+    !jupyter nbconvert --to markdown readme.ipynb
 ```
