@@ -1,3 +1,17 @@
+
+# coding: utf-8
+"""
+# Watchdog for modules
+
+Creates a module path from a source file to watch and execute file changes.
+
+    tricks:
+        patterns:
+        - *.ipynb
+        shell_command: ipython -m ${watch_dest_path}
+        
+"""
+
 import os
 from watchdog.tricks import ShellCommandTrick
 
@@ -23,12 +37,6 @@ class ModuleTrick(ShellCommandTrick):
 
 
 if __name__ == "__main__":
-    try:
-        from .compiler_python import ScriptExporter
-    except:
-        from importnb.compiler_python import ScriptExporter
-    from pathlib import Path
+    from importnb.loader import export
 
-    Path("../../importnb/utils/watch.py").write_text(
-        ScriptExporter().from_filename("watch.ipynb")[0]
-    )
+    export("watch.ipynb", "../../importnb/utils/watch.py")

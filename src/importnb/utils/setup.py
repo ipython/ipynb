@@ -1,7 +1,16 @@
-try:
-    from .. import exporter
-except:
-    import importnb.exporter
+
+# coding: utf-8
+"""
+It is important to distribute notebooks in packages during the initial stages of code development.  This notebook creates a setuptools command class that allows for both python and notebook imports.  This was specifically created to allow notebooks as py_module imports, but could serve a greater purpose.
+"""
+"""
+    class BuildWithNotebooks(setuptools.command.build_py.build_py):
+        def __new__(cls, distribution):
+            from importnb.utils.setup import build_ipynb
+            return build_ipynb(distribution)
+    setup_args.update(cmdclass=dict(build_py=BuildWithNotebooks))
+
+"""
 
 from setuptools.command.build_py import build_py
 import sys, os
@@ -76,13 +85,6 @@ class build_ipynb(build_py):
 
 
 if __name__ == "__main__":
-    from pathlib import Path
+    from importnb.loader import export
 
-    try:
-        from ..compiler_python import ScriptExporter
-    except:
-        from importnb.compiler_python import ScriptExporter
-
-    Path("../../importnb/utils/setup.py").write_text(
-        ScriptExporter().from_filename("setup.ipynb")[0]
-    )
+    export("setup.ipynb", "../../importnb/utils/setup.py")

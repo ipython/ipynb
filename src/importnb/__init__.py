@@ -12,9 +12,9 @@ try:
         reload,
         Lazy,
         export,
+        __IPYTHON__,
     )
     from .parameterize import Parameterize
-    from . import utils
 except:
     from loader import (
         Notebook,
@@ -24,11 +24,6 @@ except:
         reload,
         Lazy,
         export,
+        __IPYTHON__,
     )
     from parameterize import Parameterize
-    import utils
-
-
-if __name__ == "__main__":
-    export("__init__.ipynb", "../importnb/__init__.py")
-    export("__init__.ipynb", "__init__.py")

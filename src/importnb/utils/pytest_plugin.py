@@ -1,7 +1,10 @@
+
+# coding: utf-8
+
 import pytest
 
 try:
-    from .loader import Notebook
+    from ..loader import Notebook
 except:
     from importnb.loader import Notebook
 

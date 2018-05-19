@@ -3,7 +3,24 @@
 """
 # The [Import Loader](https://docs.python.org/3/reference/import.html#loaders)
 
-`importnb` provides the ability to import Notebooks in Python packages and as modules.
+`importnb` uses context manager to import Notebooks as Python packages and modules.  `importnb.Notebook` simplest context manager.  It will find and load any notebook as a module.
+
+    >>> with Notebook(): 
+    ...     import importnb
+    
+The `importnb.Partial` context manager is used when an import raises an error.
+
+    >>> with Partial(): 
+    ...     import importnb
+    
+There is a [lazy importer]()
+
+    >>> with Lazy(): 
+    ...     import importnb
+    
+Loading from a file.
+
+    nb = Untitled = Notebook.from_filename('Untitled.ipynb')
 """
 
 try:
