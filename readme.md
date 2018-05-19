@@ -8,6 +8,10 @@ __importnb__ imports notebooks as modules & packages.
 
 
     pip install importnb
+    
+---
+
+    conda install -c conda-forge importnb
 
 # `importnb` works in Python and IPython
 
@@ -15,13 +19,19 @@ Use the `Notebook` context manager.
 
 ### For brevity
 
-[`importnb.loader`](src/notebooks/loader.ipynb) will find notebooks avaiable anywhere along the [`sys.path`](https://docs.python.org/2/library/sys.html#sys.path).
+[`importnb.loader`](src/notebooks/loader.ipynb) will find notebooks available anywhere along the [`sys.path`](https://docs.python.org/2/library/sys.html#sys.path).
 
 
 ```python
     with __import__('importnb').Notebook(): 
         import readme
 ```
+
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 10372 bytes to readme.md
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 10372 bytes to readme.md
+
 
 #### or explicity 
 
@@ -50,6 +60,10 @@ The context manager is required to `reload` a module.
     with Notebook():
         reload(readme)
 ```
+
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 10372 bytes to readme.md
+
 
 ### Partial loading
 
@@ -195,52 +209,110 @@ For example, create a file called `tricks.yaml` containing
 ```python
     if __name__ == '__main__':
         from pathlib import Path
-        from importnb.compiler_python import ScriptExporter
+        from nbconvert.exporters.python import PythonExporter
+        from importnb.compile import export
         for path in Path('src/notebooks/').rglob("""*.ipynb"""):                
             if 'checkpoint' not in str(path):
-                src = ScriptExporter().from_filename(path)[0]
-                try:
-                    import black
-                    src = black.format_str(src, 100)
-                except: ...
-
-                print(path)
-                (Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks')).write_text(src)
+                export(path, Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks'))
             
         __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False) 
 
 ```
 
-    src/notebooks/capture.ipynb
-    src/notebooks/compiler_ipython.ipynb
-    src/notebooks/compiler_python.ipynb
-    src/notebooks/decoder.ipynb
-    src/notebooks/exporter.ipynb
-    src/notebooks/loader.ipynb
-    src/notebooks/parameterize.ipynb
-    src/notebooks/utils/__init__.ipynb
-    src/notebooks/utils/ipython.ipynb
+
+    ---------------------------------------------------------------------------
+
+    TemplateNotFound                          Traceback (most recent call last)
+
+    <ipython-input-10-04e274158377> in <module>()
+          5     for path in Path('src/notebooks/').rglob("""*.ipynb"""):
+          6         if 'checkpoint' not in str(path):
+    ----> 7             export(path, Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks'))
+          8 
+          9     __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False)
 
 
-    test_import (src.importnb.tests.test_unittests.TestContext) ... 
+    ~/importnb/src/importnb/compile.py in export(file, to)
+         59 
+         60     exporter = ImportNbStyleExporter()
+    ---> 61     code = exporter.from_filename(file)[0]
+         62     if to:
+         63         Path(to).with_suffix(exporter.file_extension).write_text(code)
 
-    src/notebooks/utils/pytest_plugin.ipynb
-    src/notebooks/utils/setup.ipynb
-    src/notebooks/utils/watch.ipynb
+
+    ~/anaconda/envs/p6/lib/python3.6/site-packages/nbconvert/exporters/exporter.py in from_filename(self, filename, resources, **kw)
+        172 
+        173         with io.open(filename, encoding='utf-8') as f:
+    --> 174             return self.from_file(f, resources=resources, **kw)
+        175 
+        176 
 
 
-    ok
-    test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
-    test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
-    test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
-    test_exception (src.importnb.tests.test_unittests.TestPartial) ... ok
-    test_traceback (src.importnb.tests.test_unittests.TestPartial) ... ok
-    test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
-    
-    ----------------------------------------------------------------------
-    Ran 7 tests in 2.023s
-    
-    OK (skipped=1, expected failures=1)
+    ~/anaconda/envs/p6/lib/python3.6/site-packages/nbconvert/exporters/exporter.py in from_file(self, file_stream, resources, **kw)
+        190 
+        191         """
+    --> 192         return self.from_notebook_node(nbformat.read(file_stream, as_version=4), resources=resources, **kw)
+        193 
+        194 
+
+
+    ~/importnb/src/importnb/compile.py in from_notebook_node(self, nb, resources, **kw)
+         47 
+         48     def from_notebook_node(self, nb, resources=None, **kw):
+    ---> 49         code, resources = super().from_notebook_node(nb, resources=resources, **kw)
+         50         try:
+         51             from black import format_str
+
+
+    ~/anaconda/envs/p6/lib/python3.6/site-packages/nbconvert/exporters/templateexporter.py in from_notebook_node(self, nb, resources, **kw)
+        293 
+        294         # Top level variables are passed to the template_exporter here.
+    --> 295         output = self.template.render(nb=nb_copy, resources=resources)
+        296         return output, resources
+        297 
+
+
+    ~/anaconda/envs/p6/lib/python3.6/site-packages/nbconvert/exporters/templateexporter.py in template(self)
+        109     def template(self):
+        110         if self._template_cached is None:
+    --> 111             self._template_cached = self._load_template()
+        112         return self._template_cached
+        113 
+
+
+    ~/anaconda/envs/p6/lib/python3.6/site-packages/nbconvert/exporters/templateexporter.py in _load_template(self)
+        264         self.log.debug("Attempting to load template %s", template_file)
+        265         self.log.debug("    template_path: %s", os.pathsep.join(self.template_path))
+    --> 266         return self.environment.get_template(template_file)
+        267 
+        268     def from_notebook_node(self, nb, resources=None, **kw):
+
+
+    ~/anaconda/envs/p6/lib/python3.6/site-packages/jinja2/environment.py in get_template(self, name, parent, globals)
+        828         if parent is not None:
+        829             name = self.join_path(name, parent)
+    --> 830         return self._load_template(name, self.make_globals(globals))
+        831 
+        832     @internalcode
+
+
+    ~/anaconda/envs/p6/lib/python3.6/site-packages/jinja2/environment.py in _load_template(self, name, globals)
+        802                                          template.is_up_to_date):
+        803                 return template
+    --> 804         template = self.loader.load(self, name, globals)
+        805         if self.cache is not None:
+        806             self.cache[cache_key] = template
+
+
+    ~/anaconda/envs/p6/lib/python3.6/site-packages/jinja2/loaders.py in load(self, environment, name, globals)
+        406             except TemplateNotFound:
+        407                 pass
+    --> 408         raise TemplateNotFound(name)
+        409 
+        410     def list_templates(self):
+
+
+    TemplateNotFound: /Users/tonyfast/importnb/src/importnb/block_string.tpl
 
 
 
