@@ -1,10 +1,17 @@
+
+# coding: utf-8
+
 try:
-    from .loader import Notebook
+    from .loader import Notebook, export
 except:
-    from loader import Notebook
+    from loader import Notebook, export
 from inspect import getsource
 
 from types import ModuleType
+
+"""
+Are single target `ast.Expr` that will `ast.literal_eval` is a possible parameter.
+"""
 
 from ast import (
     NodeTransformer,
@@ -43,6 +50,13 @@ class FreeStatement(NodeTransformer):
         return FreeStatement.globals, fix_missing_locations(FreeStatement.visit(nodes))
 
 
+"""
+# `Parameterize` notebooks
+
+`Parameterize` is callable version of a notebook.  It uses `pidgin` to load the `NotebookNode` and evaluates the `FreeStatement`s to discover the signature.
+"""
+
+
 def combine_input_strings(nb):
     cells = nb["cells"]
     new_cells = []
@@ -59,7 +73,7 @@ def combine_input_strings(nb):
 
 class Parameterize:
     """Parameterize takes a module, filename, or notebook dictionary and returns callable object that parameterizes the notebook module.
-
+    
     f = Parameterize('parameterize.ipynb')
     """
 
@@ -121,16 +135,28 @@ try:
 except:
     from importnb.loader import AST
 
+"""
+#### Examples that do work
+"""
+
 import sys
 
 param = "xyz"
 extraparam = 42
+
+"""
+#### Examples that do *not* work
+"""
 
 """Parameters are not created when literal_eval fails."""
 noparam0 = Parameterize
 
 """Multiple target assignments are ignored."""
 noparam1, noparam2 = "xyz", 42
+
+"""
+## Developer
+"""
 
 __test__ = dict(
     imports="""
@@ -149,10 +175,7 @@ if __name__ == "__main__":
     f = Parameterize(globals().get("__file__", "parameterize.ipynb"))
     __import__("doctest").testmod(verbose=1)
 
+
 if __name__ == "__main__":
-    try:
-        from .utils import export
-    except:
-        from utils import export
     export("parameterize.ipynb", "../importnb/parameterize.py")
     __import__("doctest").testmod()

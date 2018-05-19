@@ -1,3 +1,11 @@
+
+# coding: utf-8
+"""
+# Decoding
+
+If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `importnb` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported.
+"""
+
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
 
 
@@ -54,8 +62,10 @@ class LineNoDecoder(JSONDecoder):
 
 
 if __name__ == "__main__":
-    from pathlib import Path
-    from nbconvert.exporters.script import ScriptExporter
+    try:
+        from .compile import export
+    except:
+        from compile import export
+    export("decoder.ipynb", "../importnb/decoder.py")
 
-    Path("decoder.py").write_text(ScriptExporter().from_filename("decoder.ipynb")[0])
     __import__("doctest").testmod()

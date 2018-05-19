@@ -1,48 +1,46 @@
-from nbconvert.exporters.notebook import NotebookExporter
-from IPython.core.compilerop import CachingCompiler
-from nbformat import NotebookNode
-import ast
 
+# coding: utf-8
+
+# # The IPython compiler
+
+# In[2]:
+
+
+from nbconvert.exporters.python import PythonExporter
+from IPython.core.compilerop import CachingCompiler
+import ast
 
 class Compiler(CachingCompiler):
     """{Shell} provides the IPython machinery to objects."""
-
     @property
-    def ip(Compiler):
+    def ip(Compiler): 
         """The current interactive shell"""
         from IPython import get_ipython
         from IPython.core.interactiveshell import InteractiveShell
-
         return get_ipython() or InteractiveShell()
-
+    
     def ast_transform(Compiler, node):
-        for visitor in Compiler.ip.ast_transformers:
+        for visitor in Compiler.ip.ast_transformers: 
             node = visitor.visit(node)
         return node
-
+    
     @property
-    def transform(Compiler):
-        return Compiler.ip.input_transformer_manager.transform_cell
+    def transform(Compiler): return Compiler.ip.input_transformer_manager.transform_cell
 
-    def compile(Compiler, ast):
+    def compile(Compiler, ast): 
         """Compile AST to bytecode using the an IPython compiler."""
-        return (Compiler.ip and Compiler.ip.compile or CachingCompiler())(
-            ast, Compiler.filename, "exec"
-        )
-
-    def ast_parse(Compiler, source, filename="<unknown>", symbol="exec", lineno=0):
-        return ast.increment_lineno(super().ast_parse(source, Compiler.filename, "exec"), lineno)
+        return (Compiler.ip and Compiler.ip.compile or CachingCompiler())(ast, Compiler.filename, 'exec')
+            
+    def ast_parse(Compiler, source, filename='<unknown>', symbol='exec', lineno=0): 
+        return ast.increment_lineno(super().ast_parse(source, Compiler.filename, 'exec'), lineno)
 
 
-if __name__ == "__main__":
+
+# In[4]:
+
+
+if __name__ ==  '__main__':
     from pathlib import Path
+    Path('../importnb/compiler_ipython.py').write_text(PythonExporter().from_filename('compiler_ipython.ipynb')[0])
+    __import__('doctest').testmod()
 
-    try:
-        from .compiler_python import ScriptExporter
-    except:
-        from compiler_python import ScriptExporter
-
-    Path("../importnb/compiler_ipython.py").write_text(
-        ScriptExporter().from_filename("compiler_ipython.ipynb")[0]
-    )
-    __import__("doctest").testmod()
