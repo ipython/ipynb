@@ -1,2 +1,2 @@
-include LICENSE readme.md changelog.md
+include LICENSE readme.md changelog.md src/notebooks/block_string.tpl
 recursive-include src/importnb *.ipynb
