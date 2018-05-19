@@ -69,8 +69,8 @@ def wrap_md_docstring(object):
     if isinstance(object, list):
         object = "".join(object)
     if '"""' in object:
-        return "__doc__ = '''{}'''".format(object)
-    return '__doc__ = """{}"""'.format(object)
+        return "'''{}'''".format(object)
+    return '"""{}"""'.format(object)
 
 
 class Code(NotebookExporter, Compiler):
@@ -149,3 +149,5 @@ if __name__ == "__main__":
     export("compile.ipynb", "../importnb/compile.py")
     __import__("doctest").testmod()
     import compile
+
+    print(compile.__doc__)

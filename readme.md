@@ -27,12 +27,6 @@ Use the `Notebook` context manager.
         import readme
 ```
 
-    [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 7031 bytes to readme.md
-    [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 7031 bytes to readme.md
-
-
 #### or explicity 
 
 
@@ -60,10 +54,6 @@ The context manager is required to `reload` a module.
     with Notebook():
         reload(readme)
 ```
-
-    [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 7031 bytes to readme.md
-
 
 ### Partial loading
 
@@ -95,6 +85,18 @@ The [`importnb.loader.Lazy`](src/notebooks/loader.ipynb#Lazy-Loader) will delay 
     with Notebook(stdout=True, stderr=True, display=True) as output:
         import readme
 ```
+
+### Docstring
+
+The first cell is the module docstring.
+
+
+```python
+    print(readme.__doc__.splitlines()[0])
+```
+
+    __importnb__ imports notebooks as modules & packages.
+
 
 # Import notebooks from files
 
@@ -228,12 +230,17 @@ For example, create a file called `tricks.yaml` containing
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.027s
+    Ran 7 tests in 2.026s
     
     OK (skipped=1, expected failures=1)
 
 
 
 ```python
-    !jupyter nbconvert --to markdown readme.ipynb
+    if __name__ == '__main__':
+        !jupyter nbconvert --to markdown readme.ipynb
 ```
+
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 6787 bytes to readme.md
+
