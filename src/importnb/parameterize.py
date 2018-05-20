@@ -9,9 +9,10 @@ from inspect import getsource
 
 from types import ModuleType
 
+
+"""Are single target `ast.Expr` that will `ast.literal_eval` is a possible parameter.
 """
-Are single target `ast.Expr` that will `ast.literal_eval` is a possible parameter.
-"""
+
 
 from ast import (
     NodeTransformer,
@@ -25,7 +26,7 @@ from ast import (
 )
 
 
-class FreeStatement(NodeTransformer):
+class FreeStatementFinder(NodeTransformer):
 
     def __init__(self, params=None, globals=None):
         self.params = params if params is not None else []
@@ -50,8 +51,7 @@ class FreeStatement(NodeTransformer):
         return FreeStatement.globals, fix_missing_locations(FreeStatement.visit(nodes))
 
 
-"""
-# `Parameterize` notebooks
+"""# `Parameterize` notebooks
 
 `Parameterize` is callable version of a notebook.  It uses `pidgin` to load the `NotebookNode` and evaluates the `FreeStatement`s to discover the signature.
 """
@@ -102,7 +102,7 @@ class Parameterize:
         self.__notebook__ = combine_input_strings(self.__notebook__)
 
         with capture_output(stdout=False, stderr=False) as output:
-            self.__variables__, self.__ast__ = FreeStatement()(
+            self.__variables__, self.__ast__ = FreeStatementFinder()(
                 AST().from_notebook_node(self.__notebook__)
             )
         self.__output__ = output
@@ -135,18 +135,20 @@ try:
 except:
     from importnb.loader import AST
 
+
+"""#### Examples that do work
 """
-#### Examples that do work
-"""
+
 
 import sys
 
 param = "xyz"
 extraparam = 42
 
+
+"""#### Examples that do *not* work
 """
-#### Examples that do *not* work
-"""
+
 
 """Parameters are not created when literal_eval fails."""
 noparam0 = Parameterize
@@ -154,9 +156,10 @@ noparam0 = Parameterize
 """Multiple target assignments are ignored."""
 noparam1, noparam2 = "xyz", 42
 
+
+"""## Developer
 """
-## Developer
-"""
+
 
 __test__ = dict(
     imports="""
