@@ -5,8 +5,8 @@
 
 New ideas may include tests in a notebook.  The `importnb.test.Test` context will `doctest` and `unittest` a notebook.
 
-    >>> from importnb import Test
-    >>> assert Test
+    >>> from importnb import NotebookTest
+    >>> assert NotebookTest
 """
 
 
@@ -18,7 +18,7 @@ except:
 from unittest import TestProgram, TestCase
 from doctest import DocTestSuite
 
-__file__ = globals().get("__file__", "test.ipynb")
+__file__ = globals().get("__file__", "nbtest.ipynb")
 
 
 def attach_doctest(module):
@@ -53,7 +53,7 @@ def testmod(
     return module
 
 
-class Test(Notebook):
+class NotebookTest(Notebook):
 
     def exec_module(self, module):
         super().exec_module(module)
@@ -67,7 +67,7 @@ class _test(TestCase):
 
 
 if __name__ == "__main__":
-    export("test.ipynb", "../importnb/test.py")
-    __import__("doctest").testmod(Notebook.from_filename("loader.ipynb"))
-    m = Test.from_filename(__file__)
+    export("nbtest.ipynb", "../importnb/nbtest.py")
+    __import__("doctest").testmod(Notebook.from_filename("nbtest.ipynb"))
+    m = NotebookTest.from_filename(__file__)
     testmod(m, "-f")
