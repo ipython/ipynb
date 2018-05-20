@@ -1,7 +1,7 @@
 
 # coding: utf-8
-"""
-# Watchdog for modules
+
+"""# Watchdog for modules
 
 Creates a module path from a source file to watch and execute file changes.
 
@@ -11,6 +11,7 @@ Creates a module path from a source file to watch and execute file changes.
         shell_command: ipython -m ${watch_dest_path}
         
 """
+
 
 import os
 from watchdog.tricks import ShellCommandTrick

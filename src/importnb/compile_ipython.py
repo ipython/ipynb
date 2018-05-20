@@ -1,7 +1,8 @@
 
 # coding: utf-8
 
-"""# The IPython compiler"""
+"""# The IPython compiler
+"""
 
 
 try:

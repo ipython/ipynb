@@ -1,7 +1,8 @@
 
 # coding: utf-8
 
-"""# The `compile` module"""
+"""# The `compile` module
+"""
 
 
 import ast, sys

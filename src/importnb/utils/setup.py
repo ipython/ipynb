@@ -1,16 +1,18 @@
 
 # coding: utf-8
+
+"""It is important to distribute notebooks in packages during the initial stages of code development.  This notebook creates a setuptools command class that allows for both python and notebook imports.  This was specifically created to allow notebooks as py_module imports, but could serve a greater purpose.
 """
-It is important to distribute notebooks in packages during the initial stages of code development.  This notebook creates a setuptools command class that allows for both python and notebook imports.  This was specifically created to allow notebooks as py_module imports, but could serve a greater purpose.
-"""
-"""
-    class BuildWithNotebooks(setuptools.command.build_py.build_py):
+
+
+"""    class BuildWithNotebooks(setuptools.command.build_py.build_py):
         def __new__(cls, distribution):
             from importnb.utils.setup import build_ipynb
             return build_ipynb(distribution)
     setup_args.update(cmdclass=dict(build_py=BuildWithNotebooks))
 
 """
+
 
 from setuptools.command.build_py import build_py
 import sys, os
