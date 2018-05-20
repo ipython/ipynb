@@ -5,19 +5,19 @@
 
 `importnb` uses context manager to import Notebooks as Python packages and modules.  `importnb.Notebook` simplest context manager.  It will find and load any notebook as a module.
 
-    >>> with Notebook():
+    >>> with Notebook(): 
     ...     import importnb
-
+    
 The `importnb.Partial` context manager is used when an import raises an error.
 
-    >>> with Partial():
+    >>> with Partial(): 
     ...     import importnb
-
+    
 There is a [lazy importer]()
 
-    >>> with Lazy():
+    >>> with Lazy(): 
     ...     import importnb
-
+    
 Loading from a file.
 
     nb = Untitled = Notebook.from_filename('Untitled.ipynb')
@@ -59,8 +59,8 @@ __all__ = "Notebook", "Partial", "reload", "Lazy"
 @contextmanager
 def modify_file_finder_details():
     """yield the FileFinder in the sys.path_hooks that loads Python files and assure
-    the import cache is cleared afterwards.
-
+    the import cache is cleared afterwards.  
+    
     Everything goes to shit if the import cache is not cleared."""
 
     for id, hook in enumerate(sys.path_hooks):
@@ -152,6 +152,7 @@ class Notebook(SourceFileLoader, capture_output):
 
     def exec_module(self, module):
         """All exceptions specific in the context."""
+        module.__doc__ = module.__doc__ or ""
         try:
             super().exec_module(module)
             module.__exception__ = None
@@ -191,7 +192,7 @@ class Notebook(SourceFileLoader, capture_output):
         """Load a python module or notebook from a file location.
 
         from_filename is not reloadable because it is not in the sys.modules.
-
+        
         This still needs some work for packages.
         """
         from importlib.util import spec_from_loader
@@ -232,16 +233,16 @@ class Notebook(SourceFileLoader, capture_output):
 
 class Partial(Notebook):
     """A partial import tool for notebooks.
-
+    
     Sometimes notebooks don't work, but there may be useful code!
-
+    
     with Partial():
         import Untitled as nb
         assert nb.__exception__
-
+    
     if isinstance(nb.__exception__, AssertionError):
         print("There was a False assertion.")
-
+            
     Partial is useful in logging specific debugging approaches to the exception.
     """
     __init__ = partialmethod(Notebook.__init__, exceptions=BaseException)
@@ -254,9 +255,9 @@ The lazy loader is helpful for time consuming operations.  The module is not eva
 
 
 class Lazy(Notebook):
-    """A lazy importer for notebooks.  For long operations and a lot of data, the lazy importer delays imports until
+    """A lazy importer for notebooks.  For long operations and a lot of data, the lazy importer delays imports until 
     an attribute is accessed the first time.
-
+    
     with Lazy():
         import Untitled as nb
     """
