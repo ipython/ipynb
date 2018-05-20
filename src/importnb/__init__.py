@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-__all__ = "Notebook", "Partial", "reload", "Parameterize", "Lazy"
+__all__ = "Notebook", "Partial", "reload", "Parameterize", "Lazy", "Test"
 
 try:
     from .loader import (
@@ -15,6 +15,7 @@ try:
         __IPYTHON__,
     )
     from .parameterize import Parameterize
+    
 except:
     from loader import (
         Notebook,
@@ -27,3 +28,4 @@ except:
         __IPYTHON__,
     )
     from parameterize import Parameterize
+    from test import Test
