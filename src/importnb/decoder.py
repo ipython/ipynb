@@ -7,7 +7,7 @@ If a notebook is imported, it should provide a natural __traceback__ experience 
 """
 
 
-from singledispatch import singledispatch
+from functools import singledispatch
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
 from json import load as _load, loads as _loads
 from functools import partial
