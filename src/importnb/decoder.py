@@ -3,7 +3,8 @@
 
 """# Decoding
 
-If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `importnb` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported."""
+If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `importnb` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported.
+"""
 
 
 from singledispatch import singledispatch
@@ -78,9 +79,9 @@ def codify_markdown(string_or_list):
 @codify_markdown.register(str)
 def codify_markdown_string(str):
     if '"""' in str:
-        str = "'''{}'''".format(str)
+        str = "'''{}\n'''".format(str)
     else:
-        str = '"""{}"""'.format(str)
+        str = '"""{}\n"""'.format(str)
     return str
 
 
@@ -91,11 +92,6 @@ def codify_markdown_list(str):
 
 load = partial(_load, cls=LineNoDecoder)
 loads = partial(_loads, cls=LineNoDecoder)
-
-
-"""    with open('decoder.ipynb') as f:
-        nb = load(f)
-    print(nb)"""
 
 
 if __name__ == "__main__":
