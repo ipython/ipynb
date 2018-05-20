@@ -95,9 +95,6 @@ class AST(Code):
     >>> assert type(AST().from_filename(Path(__nb__).with_suffix('.ipynb'))) is ast.Module"""
 
     def from_notebook_node(AST, nb, resource=None, **dict):
-
-        # The module ast node has a docstring parameter.
-        # https://docs.python.org/3.7/whatsnew/3.7.html#changes-in-the-python-api
         module = AST.ast_transform(
             ast.fix_missing_locations(
                 ast.Module(
@@ -117,6 +114,8 @@ class AST(Code):
         )
 
         if sys.version_info.major == 3 and sys.version_info.minor >= 3.7:
+            # The module ast node has a docstring parameter.
+            # https://docs.python.org/3.7/whatsnew/3.7.html#changes-in-the-python-api
             if isinstance(module.body[0], ast.Str):
                 module.docstring = module.body[0].s
 
