@@ -92,7 +92,8 @@ The first cell is the module docstring.
 
 
 ```python
-    print(readme.__doc__.splitlines()[0])
+    if __name__ == '__main__':
+        print(readme.__doc__.splitlines()[0])
 ```
 
     __importnb__ imports notebooks as modules & packages.
@@ -230,7 +231,7 @@ For example, create a file called `tricks.yaml` containing
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.026s
+    Ran 7 tests in 2.022s
     
     OK (skipped=1, expected failures=1)
 
@@ -241,6 +242,7 @@ For example, create a file called `tricks.yaml` containing
         !jupyter nbconvert --to markdown readme.ipynb
 ```
 
-    [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 6787 bytes to readme.md
-
+    if __name__ == '__main__':
+        from IPython.display import display, Image
+        !pyreverse importnb -opng -pimportnb
+        display(*map(Image, ('classes_importnb.png', 'packages_importnb.png')))
