@@ -32,10 +32,6 @@ else:
         from .compile_python import Compiler, PythonExporter
     except:
         from compile_python import Compiler, PythonExporter
-try:
-    from .decoder import load
-except:
-    from decoder import load
 
 
 class ImportNbStyleExporter(PythonExporter):
