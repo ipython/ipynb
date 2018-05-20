@@ -1,11 +1,15 @@
 
 # coding: utf-8
-"""
-# The Python compile module
-"""
+
+"""# The Python compile module"""
+
 
 import ast, sys
-from json import load
+
+try:
+    from .decoder import load
+except:
+    from decoder import load
 from pathlib import Path
 from textwrap import dedent
 from codeop import Compile
@@ -28,10 +32,16 @@ class Compiler(Compile):
         return ast.increment_lineno(ast.parse(source, Compiler.filename, "exec"), lineno)
 
 
+"""    with open('compile_python.ipynb') as f:
+        nb = load(f)
+
+    nb"""
+
+
 class NotebookExporter:
 
-    def from_file(self, file_stream, resources=None, **dict):
-        return self.from_notebook_node(load(file_stream), resources=resources, **dict)
+    def from_file(self, file_stream, resources=None, **kw):
+        return self.from_notebook_node(load(file_stream), resources, **kw)
 
     def from_filename(self, filename, resources=None, **dict):
         with open(filename, "r") as file_stream:
@@ -48,13 +58,9 @@ class PythonExporter(NotebookExporter):
         for i, cell in enumerate(nb["cells"]):
             if isinstance(cell["source"], list):
                 nb["cells"][i]["source"] = "".join(cell["source"])
-
         return ("\n" * 2).join(
             dedent(cell["source"]) for cell in nb["cells"] if cell["cell_type"] == "code"
         ), resources
-
-
-NotebookNode = dict
 
 
 if __name__ == "__main__":

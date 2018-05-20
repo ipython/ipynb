@@ -1,12 +1,17 @@
 
 # coding: utf-8
-"""
-# The IPython compiler
-"""
 
-from nbconvert.exporters.python import PythonExporter
+"""# The IPython compiler"""
+
+
+try:
+    from .decoder import load
+except:
+    from decoder import load
+
+from nbconvert.exporters.python import PythonExporter as _PythonExporter
 from nbconvert.exporters.notebook import NotebookExporter
-from nbformat import NotebookNode
+from nbformat import from_dict
 from IPython.core.compilerop import CachingCompiler
 import ast
 
@@ -39,6 +44,12 @@ class Compiler(CachingCompiler):
 
     def ast_parse(Compiler, source, filename="<unknown>", symbol="exec", lineno=0):
         return ast.increment_lineno(super().ast_parse(source, Compiler.filename, "exec"), lineno)
+
+
+class PythonExporter(_PythonExporter):
+
+    def from_file(self, file_stream, resources=None, **kw):
+        return self.from_notebook_node(from_dict(load(file_stream)), resources, **kw)
 
 
 if __name__ == "__main__":

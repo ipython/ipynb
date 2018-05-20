@@ -1,12 +1,15 @@
 
 # coding: utf-8
-"""
-# Decoding
 
-If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `importnb` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported.
-"""
+"""# Decoding
 
+If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `importnb` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported."""
+
+
+from singledispatch import singledispatch
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
+from json import load as _load, loads as _loads
+from functools import partial
 
 
 class LineNoDecoder(JSONDecoder):
@@ -55,16 +58,44 @@ class LineNoDecoder(JSONDecoder):
                 {"lineno": len(s_and_end[0][:next].rsplit('"source":', 1)[0].splitlines())}
             )
 
+            if object["cell_type"] == "markdown":
+                object["source"] = codify_markdown(object["source"])
+                object["outputs"] = []
+                object["cell_type"] = "code"
+                object["execution_count"] = None
+
         for key in ("source", "text"):
             if key in object:
                 object[key] = "".join(object[key])
         return object, next
 
 
-from functools import partial
+@singledispatch
+def codify_markdown(string_or_list):
+    raise TypeError("Markdown must be a string or a list.")
 
-load = partial(__import__("json").load, cls=LineNoDecoder)
-loads = partial(__import__("json").loads, cls=LineNoDecoder)
+
+@codify_markdown.register(str)
+def codify_markdown_string(str):
+    if '"""' in str:
+        str = "'''{}'''".format(str)
+    else:
+        str = '"""{}"""'.format(str)
+    return str
+
+
+@codify_markdown.register(list)
+def codify_markdown_list(str):
+    return list(map("{}\n".format, codify_markdown_string("".join(str)).splitlines()))
+
+
+load = partial(_load, cls=LineNoDecoder)
+loads = partial(_loads, cls=LineNoDecoder)
+
+
+"""    with open('decoder.ipynb') as f:
+        nb = load(f)
+    print(nb)"""
 
 
 if __name__ == "__main__":

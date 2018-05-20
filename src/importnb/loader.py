@@ -1,7 +1,7 @@
 
 # coding: utf-8
-"""
-# The [Import Loader](https://docs.python.org/3/reference/import.html#loaders)
+
+"""# The [Import Loader](https://docs.python.org/3/reference/import.html#loaders)
 
 `importnb` uses context manager to import Notebooks as Python packages and modules.  `importnb.Notebook` simplest context manager.  It will find and load any notebook as a module.
 
@@ -20,8 +20,8 @@ There is a [lazy importer]()
     
 Loading from a file.
 
-    nb = Untitled = Notebook.from_filename('Untitled.ipynb')
-"""
+    nb = Untitled = Notebook.from_filename('Untitled.ipynb')"""
+
 
 try:
     from .compile import __IPYTHON__, export, Compile, AST
@@ -39,6 +39,8 @@ try:
 except:
     # python 3.4
     from importlib.machinery import FileFinder
+
+from io import StringIO
 from functools import partialmethod, partial
 from importlib import reload
 from traceback import print_exc, format_exc
@@ -48,9 +50,8 @@ from pathlib import Path
 
 __all__ = "Notebook", "Partial", "reload", "Lazy"
 
-"""
-## `sys.path_hook` modifiers
-"""
+
+"""## `sys.path_hook` modifiers"""
 
 
 @contextmanager
@@ -74,9 +75,7 @@ def modify_file_finder_details():
     sys.path_importer_cache.clear()
 
 
-"""
-Update the file_finder details with functions to append and remove the [loader details](https://docs.python.org/3.7/library/importlib.html#importlib.machinery.FileFinder).
-"""
+"""Update the file_finder details with functions to append and remove the [loader details](https://docs.python.org/3.7/library/importlib.html#importlib.machinery.FileFinder)."""
 
 
 def add_path_hooks(loader: SourceFileLoader, extensions, *, position=0, lazy=False):
@@ -109,14 +108,12 @@ def lazy_loader_cls(loader):
     return loader
 
 
-"""
-## Context Manager
+"""## Context Manager
 
-`importnb` uses a context manager to assure that the traditional import system behaviors as expected.  If the loader is permenantly available then it may create some unexpected import behaviors.
-"""
-"""
-The way the context manager works it is difficult to attach contexts to each module.
-"""
+`importnb` uses a context manager to assure that the traditional import system behaviors as expected.  If the loader is permenantly available then it may create some unexpected import behaviors."""
+
+
+"""The way the context manager works it is difficult to attach contexts to each module."""
 
 
 class ImportNbException(BaseException):
@@ -172,7 +169,7 @@ class Notebook(SourceFileLoader, capture_output):
         remove_one_path_hook(type(self)), super().__exit__(*excepts)
 
     def source_to_code(Notebook, data, path):
-        with __import__("io").BytesIO(data) as stream:
+        with StringIO(data.decode("utf-8")) as stream:
             return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
 
     @classmethod
@@ -218,9 +215,7 @@ class Notebook(SourceFileLoader, capture_output):
         return module
 
 
-"""
-### Partial Loader
-"""
+"""### Partial Loader"""
 
 
 class Partial(Notebook):
@@ -240,11 +235,9 @@ class Partial(Notebook):
     __init__ = partialmethod(Notebook.__init__, exceptions=BaseException)
 
 
-"""
-### Lazy Loader
+"""### Lazy Loader
 
-The lazy loader is helpful for time consuming operations.  The module is not evaluated until it is used the first time after loading.
-"""
+The lazy loader is helpful for time consuming operations.  The module is not evaluated until it is used the first time after loading."""
 
 
 class Lazy(Notebook):
@@ -257,9 +250,7 @@ class Lazy(Notebook):
     __init__ = partialmethod(Notebook.__init__, lazy=True)
 
 
-"""
-# IPython Extensions
-"""
+"""# IPython Extensions"""
 
 
 def load_ipython_extension(ip=None):
@@ -270,9 +261,8 @@ def unload_ipython_extension(ip=None):
     remove_one_path_hook(Notebook)
 
 
-"""
-# Developer
-"""
+"""# Developer"""
+
 
 if __name__ == "__main__":
     export("loader.ipynb", "../importnb/loader.py")

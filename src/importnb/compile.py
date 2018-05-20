@@ -1,15 +1,14 @@
 
 # coding: utf-8
-"""
-# The `compile` module
-"""
+
+"""# The `compile` module"""
+
 
 import ast, sys
 from pathlib import Path
 
 __file__ = globals().get("__file__", "compile.ipynb")
 __nb__ = __file__.replace("src/importnb", "src/notebooks")
-
 
 __IPYTHON__ = False
 
@@ -23,26 +22,23 @@ try:
 except:
     ...
 
-
 if __IPYTHON__:
     try:
-        from .compile_ipython import Compiler, PythonExporter, NotebookExporter, NotebookNode
+        from .compile_ipython import Compiler, PythonExporter
     except:
-        from compile_ipython import Compiler, PythonExporter, NotebookExporter, NotebookNode
-    PythonExporter.template_path.default_args[0].append(str(Path(__file__).parent))
+        from compile_ipython import Compiler, PythonExporter
 else:
     try:
-        from .compile_python import Compiler, PythonExporter, NotebookExporter, NotebookNode
+        from .compile_python import Compiler, PythonExporter
     except:
-        from compile_python import Compiler, PythonExporter, NotebookExporter, NotebookNode
+        from compile_python import Compiler, PythonExporter
 try:
-    from .decoder import loads
+    from .decoder import load
 except:
-    from decoder import loads
+    from decoder import load
 
 
 class ImportNbStyleExporter(PythonExporter):
-    template_file = "block_string.tpl"
     PythonExporter.exclude_input_prompt = True
 
     def from_notebook_node(self, nb, resources=None, **kw):
@@ -64,24 +60,13 @@ def export(file, to=None):
     return code
 
 
-def wrap_md_docstring(object):
-    if isinstance(object, list):
-        object = "".join(object)
-    if '"""' in object:
-        return "'''{}'''".format(object)
-    return '"""{}"""'.format(object)
-
-
-import sys
-
-
-class Code(NotebookExporter, Compiler):
+class Code(PythonExporter, Compiler):
     """An exporter than returns transforms a NotebookNode through the InputSplitter.
     
-    >>> assert type(Code().from_filename(Path(__nb__).with_suffix('.ipynb'))) is NotebookNode"""
+    >>> assert type(Code().from_filename(Path(__nb__).with_suffix('.ipynb'))) is __import__('nbformat').NotebookNode"""
 
     def __init__(self, filename="<module exporter>", name="__main__"):
-        NotebookExporter.__init__(self)
+        PythonExporter.__init__(self)
         Compiler.__init__(self)
         self.filename = filename
         self.name = name
@@ -89,10 +74,7 @@ class Code(NotebookExporter, Compiler):
     def from_file(Code, file_stream, resources=None, **dict):
         for str in ("name", "filename"):
             setattr(Code, str, dict.pop(str, getattr(Code, str)))
-        file_stream = file_stream.read()
-        if isinstance(file_stream, bytes):
-            file_stream = file_stream.decode("utf-8")
-        return Code.from_notebook_node(NotebookNode(**loads(file_stream)), resources, **dict)
+        return super().from_file(file_stream, resources, **dict)
 
     def from_filename(Code, filename, resources=None, **dict):
         Code.filename, Code.name = filename, Path(filename).stem
@@ -100,12 +82,6 @@ class Code(NotebookExporter, Compiler):
 
     def from_notebook_node(Code, nb, resources=None, **dict):
         for index, cell in enumerate(nb["cells"]):
-            if cell["cell_type"] == "markdown":
-                cell.update(
-                    source=["", "__doc__ = "][index == 0 and sys.version_info.minor >= 7]
-                    + wrap_md_docstring(cell["source"]),
-                    cell_type="code",
-                )
             if cell["cell_type"] == "code":
                 if isinstance(cell["source"], list):
                     cell["source"] = "".join(cell["source"])
