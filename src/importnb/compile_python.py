@@ -5,7 +5,7 @@
 """
 
 import ast, sys
-from json import load, loads
+from json import load
 from pathlib import Path
 from textwrap import dedent
 from codeop import Compile

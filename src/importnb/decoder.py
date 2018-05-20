@@ -61,6 +61,12 @@ class LineNoDecoder(JSONDecoder):
         return object, next
 
 
+from functools import partial
+
+load = partial(__import__("json").load, cls=LineNoDecoder)
+loads = partial(__import__("json").loads, cls=LineNoDecoder)
+
+
 if __name__ == "__main__":
     try:
         from .compile import export

@@ -5,7 +5,6 @@
 """
 
 import ast, sys
-from json import load, loads
 from pathlib import Path
 
 __file__ = globals().get("__file__", "compile.ipynb")
@@ -37,9 +36,9 @@ else:
     except:
         from compile_python import Compiler, PythonExporter, NotebookExporter, NotebookNode
 try:
-    from .decoder import LineNoDecoder
+    from .decoder import loads
 except:
-    from decoder import LineNoDecoder
+    from decoder import loads
 
 
 class ImportNbStyleExporter(PythonExporter):
@@ -73,17 +72,19 @@ def wrap_md_docstring(object):
     return '"""{}"""'.format(object)
 
 
+import sys
+
+
 class Code(NotebookExporter, Compiler):
     """An exporter than returns transforms a NotebookNode through the InputSplitter.
     
     >>> assert type(Code().from_filename(Path(__nb__).with_suffix('.ipynb'))) is NotebookNode"""
 
-    def __init__(self, filename="<module exporter>", name="__main__", decoder=LineNoDecoder):
+    def __init__(self, filename="<module exporter>", name="__main__"):
         NotebookExporter.__init__(self)
         Compiler.__init__(self)
         self.filename = filename
         self.name = name
-        self.decoder = decoder
 
     def from_file(Code, file_stream, resources=None, **dict):
         for str in ("name", "filename"):
@@ -91,9 +92,7 @@ class Code(NotebookExporter, Compiler):
         file_stream = file_stream.read()
         if isinstance(file_stream, bytes):
             file_stream = file_stream.decode("utf-8")
-        return Code.from_notebook_node(
-            NotebookNode(**loads(file_stream, cls=Code.decoder)), resources, **dict
-        )
+        return Code.from_notebook_node(NotebookNode(**loads(file_stream)), resources, **dict)
 
     def from_filename(Code, filename, resources=None, **dict):
         Code.filename, Code.name = filename, Path(filename).stem
@@ -102,8 +101,14 @@ class Code(NotebookExporter, Compiler):
     def from_notebook_node(Code, nb, resources=None, **dict):
         for index, cell in enumerate(nb["cells"]):
             if cell["cell_type"] == "markdown":
-                cell.update(source=wrap_md_docstring(cell["source"]), cell_type="code")
+                cell.update(
+                    source=["", "__doc__ = "][index == 0 and sys.version_info.minor >= 7]
+                    + wrap_md_docstring(cell["source"]),
+                    cell_type="code",
+                )
             if cell["cell_type"] == "code":
+                if isinstance(cell["source"], list):
+                    cell["source"] = "".join(cell["source"])
                 cell["source"] = Code.from_code_cell(cell, **dict)
         return nb
 
@@ -148,6 +153,4 @@ class Compile(AST):
 if __name__ == "__main__":
     export("compile.ipynb", "../importnb/compile.py")
     __import__("doctest").testmod()
-    import compile
-
-    print(compile.__doc__)
+    print(__import__("compile").__doc__)
