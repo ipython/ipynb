@@ -21,9 +21,22 @@ from doctest import DocTestSuite
 __file__ = globals().get("__file__", "test.ipynb")
 
 
+def attach_doctest(module):
+    """A function to include doctests in a unittest suite.
+    """
+
+    def load_tests(loader, tests, ignore):
+        tests.addTests(DocTestSuite(module))
+        return tests
+
+    module.load_tests = load_tests
+    return module
+
+
 def testmod(
     module, extras="", doctest=True, exit=True, verbosity=1, failfast=None, catchbreak=None
 ):
+    """Test a module using unittest, include the docstrings by default."""
     if doctest:
         attach_doctest(module)
     try:
@@ -37,17 +50,6 @@ def testmod(
         )
     except SystemExit:
         ...
-    return module
-
-
-def attach_doctest(module):
-    print(module)
-
-    def load_tests(loader, tests, ignore):
-        tests.addTests(DocTestSuite(module))
-        return tests
-
-    module.load_tests = load_tests
     return module
 
 
