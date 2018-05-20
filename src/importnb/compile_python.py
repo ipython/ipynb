@@ -15,7 +15,7 @@ from textwrap import dedent
 from codeop import Compile
 
 
-class Compiler(Compile):
+class PythonCompiler(Compile):
     """{Shell} provides the IPython machinery to objects."""
 
     def ast_transform(Compiler, node):
@@ -32,13 +32,10 @@ class Compiler(Compile):
         return ast.increment_lineno(ast.parse(source, Compiler.filename, "exec"), lineno)
 
 
-"""    with open('compile_python.ipynb') as f:
-        nb = load(f)
-
-    nb"""
+Compiler = PythonCompiler
 
 
-class NotebookExporter:
+class PythonNotebookExporter:
 
     def from_file(self, file_stream, resources=None, **kw):
         return self.from_notebook_node(load(file_stream), resources, **kw)
@@ -51,7 +48,10 @@ class NotebookExporter:
         return nb, resources
 
 
-class PythonExporter(NotebookExporter):
+NotebookExporter = PythonNotebookExporter
+
+
+class PythonPythonExporter(NotebookExporter):
 
     def from_notebook_node(self, nb, resources=None, **dict):
         nb, resources = super().from_notebook_node(nb, resources, **dict)
@@ -61,6 +61,9 @@ class PythonExporter(NotebookExporter):
         return ("\n" * 2).join(
             dedent(cell["source"]) for cell in nb["cells"] if cell["cell_type"] == "code"
         ), resources
+
+
+PythonExporter = PythonPythonExporter
 
 
 if __name__ == "__main__":

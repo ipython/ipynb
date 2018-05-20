@@ -16,7 +16,7 @@ from IPython.core.compilerop import CachingCompiler
 import ast
 
 
-class Compiler(CachingCompiler):
+class IpythonCompiler(CachingCompiler):
     """{Shell} provides the IPython machinery to objects."""
 
     @property
@@ -46,10 +46,16 @@ class Compiler(CachingCompiler):
         return ast.increment_lineno(super().ast_parse(source, Compiler.filename, "exec"), lineno)
 
 
-class PythonExporter(_PythonExporter):
+Compiler = IpythonCompiler
+
+
+class IpythonPythonExporter(_PythonExporter):
 
     def from_file(self, file_stream, resources=None, **kw):
         return self.from_notebook_node(from_dict(load(file_stream)), resources, **kw)
+
+
+PythonExporter = IpythonPythonExporter
 
 
 if __name__ == "__main__":
