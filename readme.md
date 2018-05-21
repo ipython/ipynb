@@ -242,6 +242,10 @@ For example, create a file called `tricks.yaml` containing
         !jupyter nbconvert --to markdown readme.ipynb
 ```
 
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 7130 bytes to readme.md
+
+
     if __name__ == '__main__':
         from IPython.display import display, Image
         !pyreverse importnb -opng -pimportnb

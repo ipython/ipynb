@@ -12,11 +12,12 @@ here = Path(__file__).parent
 with (here/ 'src' / 'importnb'/ '_version.py').open('r') as file:
     exec(file.read())
 
-description =""""""
-for info in ("readme.md", "changelog.md"):
-    with (here/info).open('r') as file:
-        description += file.read()
-        description += "\n\n"
+description = (here/'readme.md').read_text()
+import json
+with (here/'changelog.ipynb').open('r') as f:
+    description += '\n'+ '\n'.join(
+        ''.join(cell['source']) for cell in json.load(f)['cells'] if cell['cell_type'] == 'markdown'
+    )
 
 import sys
 
