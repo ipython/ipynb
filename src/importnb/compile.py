@@ -2,6 +2,10 @@
 # coding: utf-8
 
 """# The `compile` module
+
+...provides compatibility for Python and IPython through [`compile_python`](compile_python.ipynb) and [`compile_ipython`](compile_ipython.ipynb), respectively.  
+
+    >>> from importnb.compile import __IPYTHON__, Compiler, PythonExporter
 """
 
 
@@ -130,5 +134,8 @@ class Compile(AST):
 
 if __name__ == "__main__":
     export("compile.ipynb", "../importnb/compile.py")
-    __import__("doctest").testmod()
-    print(__import__("compile").__doc__)
+    try:
+        from . import compile
+    except:
+        import compile
+    __import__("doctest").testmod(compile, verbose=2)
