@@ -1,4 +1,16 @@
+
+# coding: utf-8
+
+"""# Decoding
+
+If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `importnb` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported.
+"""
+
+
+from functools import singledispatch
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
+from json import load as _load, loads as _loads
+from functools import partial
 
 
 class LineNoDecoder(JSONDecoder):
@@ -47,15 +59,46 @@ class LineNoDecoder(JSONDecoder):
                 {"lineno": len(s_and_end[0][:next].rsplit('"source":', 1)[0].splitlines())}
             )
 
+            if object["cell_type"] == "markdown":
+                object["source"] = codify_markdown(object["source"])
+                object["outputs"] = []
+                object["cell_type"] = "code"
+                object["execution_count"] = None
+
         for key in ("source", "text"):
             if key in object:
                 object[key] = "".join(object[key])
         return object, next
 
 
-if __name__ == "__main__":
-    from pathlib import Path
-    from nbconvert.exporters.script import ScriptExporter
+@singledispatch
+def codify_markdown(string_or_list):
+    raise TypeError("Markdown must be a string or a list.")
 
-    Path("decoder.py").write_text(ScriptExporter().from_filename("decoder.ipynb")[0])
+
+@codify_markdown.register(str)
+def codify_markdown_string(str):
+    if '"""' in str:
+        str = "'''{}\n'''".format(str)
+    else:
+        str = '"""{}\n"""'.format(str)
+    return str
+
+
+@codify_markdown.register(list)
+def codify_markdown_list(str):
+    return list(map("{}\n".format, codify_markdown_string("".join(str)).splitlines()))
+
+
+load = partial(_load, cls=LineNoDecoder)
+loads = partial(_loads, cls=LineNoDecoder)
+
+
+if __name__ == "__main__":
+    try:
+        from .compile import export
+    except:
+        from compile import export
+    export("decoder.ipynb", "../importnb/decoder.py")
+
     __import__("doctest").testmod()

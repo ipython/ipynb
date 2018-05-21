@@ -1,4 +1,8 @@
+
+# coding: utf-8
+
 from IPython import paths, get_ipython
+
 
 from pathlib import Path
 import json

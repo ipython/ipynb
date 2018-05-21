@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import setuptools
 
@@ -12,11 +13,13 @@ here = Path(__file__).parent
 with (here/ 'src' / 'importnb'/ '_version.py').open('r') as file:
     exec(file.read())
 
-description =""""""
-for info in ("readme.md", "changelog.md"):
-    with (here/info).open('r') as file:
-        description += file.read()
-        description += "\n\n"
+with open(str(here/'readme.md'),'r') as f:
+    description = f.read()
+    
+with open(str(here/'changelog.ipynb'), 'r') as f:
+    description += '\n'+ '\n'.join(
+        ''.join(cell['source']) for cell in json.load(f)['cells'] if cell['cell_type'] == 'markdown'
+    )
 
 import sys
 
@@ -62,7 +65,8 @@ setup_args = dict(
         'pytest11': ['pytest-importnb = importnb.utils.pytest_plugin',],
         'console_scripts': [
             'importnb-install = importnb.utils.ipython:install',
-            'importnb-uninstall = importnb.utils.ipython:uninstall'
+            'importnb-uninstall = importnb.utils.ipython:uninstall',
+            'nbdoctest = importnb.utils.nbdoctest:_test',
         ]
     },
 )

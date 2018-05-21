@@ -1,11 +1,26 @@
+
+# coding: utf-8
+
+"""# The IPython compiler
+"""
+
+
+try:
+    from .decoder import load
+except:
+    from decoder import load
+
+from nbconvert.exporters.python import PythonExporter as _PythonExporter
 from nbconvert.exporters.notebook import NotebookExporter
+from nbformat import from_dict
 from IPython.core.compilerop import CachingCompiler
-from nbformat import NotebookNode
+from IPython.core.inputsplitter import IPythonInputSplitter
 import ast
 
 
-class Compiler(CachingCompiler):
+class IpythonCompiler(CachingCompiler):
     """{Shell} provides the IPython machinery to objects."""
+    transform = staticmethod(IPythonInputSplitter().transform_cell)
 
     @property
     def ip(Compiler):
@@ -20,10 +35,6 @@ class Compiler(CachingCompiler):
             node = visitor.visit(node)
         return node
 
-    @property
-    def transform(Compiler):
-        return Compiler.ip.input_transformer_manager.transform_cell
-
     def compile(Compiler, ast):
         """Compile AST to bytecode using the an IPython compiler."""
         return (Compiler.ip and Compiler.ip.compile or CachingCompiler())(
@@ -34,15 +45,22 @@ class Compiler(CachingCompiler):
         return ast.increment_lineno(super().ast_parse(source, Compiler.filename, "exec"), lineno)
 
 
+Compiler = IpythonCompiler
+
+
+class IpythonPythonExporter(_PythonExporter):
+
+    def from_file(self, file_stream, resources=None, **kw):
+        return self.from_notebook_node(from_dict(load(file_stream)), resources, **kw)
+
+
+PythonExporter = IpythonPythonExporter
+
+
 if __name__ == "__main__":
-    from pathlib import Path
-
     try:
-        from .compiler_python import ScriptExporter
+        from .compile import export
     except:
-        from compiler_python import ScriptExporter
-
-    Path("../importnb/compiler_ipython.py").write_text(
-        ScriptExporter().from_filename("compiler_ipython.ipynb")[0]
-    )
+        from compile import export
+    export("compile_ipython.ipynb", "../importnb/compile_ipython.py")
     __import__("doctest").testmod()

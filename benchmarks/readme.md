@@ -55,7 +55,7 @@ Benchmarks for `importnb` explore the ability to import existing notebooks as mo
     🏆 ThinkDSP/code/chap09soln.ipynb
     😩 ThinkDSP/code/chap10.ipynb
     🏆 ThinkDSP/code/chap10preview.ipynb
-    🏆 ThinkDSP/code/chap10soln.ipynb
+    😩 ThinkDSP/code/chap10soln.ipynb
     😩 ThinkDSP/code/chap11.ipynb
     😩 ThinkDSP/code/chap11soln.ipynb
     😩 ThinkDSP/code/diff_int.ipynb
@@ -63,7 +63,7 @@ Benchmarks for `importnb` explore the ability to import existing notebooks as mo
     🏆 ThinkDSP/code/saxophone.ipynb
     🏆 ThinkDSP/code/scipy2015_demo.ipynb
     😩 ThinkDSP/code/voss.ipynb
-    70.0% of the ThinkDSP notebooks loaded with a import threshold of 10.000000 seconds
+    66.7% of the ThinkDSP notebooks loaded with a import threshold of 10.000000 seconds
     {'repo': 'https://www.github.com/jakevdp/PythonDataScienceHandbook', 'notebooks': 'PythonDataScienceHandbook/notebooks/'}
     ==========
     🏆 PythonDataScienceHandbook/notebooks/00.00-Preface.ipynb
@@ -257,7 +257,7 @@ Benchmarks for `importnb` explore the ability to import existing notebooks as mo
 
 
     😩 PythonDataScienceHandbook/notebooks/05.07-Support-Vector-Machines.ipynb
-    🏆 PythonDataScienceHandbook/notebooks/05.08-Random-Forests.ipynb
+    😩 PythonDataScienceHandbook/notebooks/05.08-Random-Forests.ipynb
     🏆 PythonDataScienceHandbook/notebooks/05.09-Principal-Component-Analysis.ipynb
     😩 PythonDataScienceHandbook/notebooks/05.10-Manifold-Learning.ipynb
     😩 PythonDataScienceHandbook/notebooks/05.11-K-Means.ipynb
@@ -267,17 +267,12 @@ Benchmarks for `importnb` explore the ability to import existing notebooks as mo
     🏆 PythonDataScienceHandbook/notebooks/05.15-Learning-More.ipynb
     🏆 PythonDataScienceHandbook/notebooks/06.00-Figure-Code.ipynb
     🏆 PythonDataScienceHandbook/notebooks/Index.ipynb
-    60.3% of the PythonDataScienceHandbook notebooks loaded with a import threshold of 10.000000 seconds
+    58.8% of the PythonDataScienceHandbook notebooks loaded with a import threshold of 10.000000 seconds
 
 
 
 ![png](readme_files/readme_4_3.png)
 
-
-
-```python
-    
-```
 
 
 ```python

@@ -1,11 +1,22 @@
+
+# coding: utf-8
+
+"""# The Python compile module
+"""
+
+
 import ast, sys
-from json import load, loads
+
+try:
+    from .decoder import load
+except:
+    from decoder import load
 from pathlib import Path
 from textwrap import dedent
 from codeop import Compile
 
 
-class Compiler(Compile):
+class PythonCompiler(Compile):
     """{Shell} provides the IPython machinery to objects."""
 
     def ast_transform(Compiler, node):
@@ -22,10 +33,13 @@ class Compiler(Compile):
         return ast.increment_lineno(ast.parse(source, Compiler.filename, "exec"), lineno)
 
 
-class NotebookExporter:
+Compiler = PythonCompiler
 
-    def from_file(self, file_stream, resources=None, **dict):
-        return self.from_notebook_node(load(file_stream), resources=resources, **dict)
+
+class PythonNotebookExporter:
+
+    def from_file(self, file_stream, resources=None, **kw):
+        return self.from_notebook_node(load(file_stream), resources, **kw)
 
     def from_filename(self, filename, resources=None, **dict):
         with open(filename, "r") as file_stream:
@@ -35,25 +49,28 @@ class NotebookExporter:
         return nb, resources
 
 
-class ScriptExporter(NotebookExporter):
+NotebookExporter = PythonNotebookExporter
+
+
+class PythonPythonExporter(NotebookExporter):
 
     def from_notebook_node(self, nb, resources=None, **dict):
         nb, resources = super().from_notebook_node(nb, resources, **dict)
         for i, cell in enumerate(nb["cells"]):
             if isinstance(cell["source"], list):
                 nb["cells"][i]["source"] = "".join(cell["source"])
-
         return ("\n" * 2).join(
             dedent(cell["source"]) for cell in nb["cells"] if cell["cell_type"] == "code"
         ), resources
 
 
-NotebookNode = dict
+PythonExporter = PythonPythonExporter
+
 
 if __name__ == "__main__":
-    from pathlib import Path
-
-    Path("../importnb/compiler_python.py").write_text(
-        ScriptExporter().from_filename("compiler_python.ipynb")[0]
-    )
+    try:
+        from .compile import export
+    except:
+        from compile import export
+    export("compile_python.ipynb", "../importnb/compile_python.py")
     __import__("doctest").testmod()

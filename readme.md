@@ -8,6 +8,10 @@ __importnb__ imports notebooks as modules & packages.
 
 
     pip install importnb
+    
+---
+
+    conda install -c conda-forge importnb
 
 # `importnb` works in Python and IPython
 
@@ -15,7 +19,7 @@ Use the `Notebook` context manager.
 
 ### For brevity
 
-[`importnb.loader`](src/notebooks/loader.ipynb) will find notebooks avaiable anywhere along the [`sys.path`](https://docs.python.org/2/library/sys.html#sys.path).
+[`importnb.loader`](src/notebooks/loader.ipynb) will find notebooks available anywhere along the [`sys.path`](https://docs.python.org/2/library/sys.html#sys.path).
 
 
 ```python
@@ -81,6 +85,19 @@ The [`importnb.loader.Lazy`](src/notebooks/loader.ipynb#Lazy-Loader) will delay 
     with Notebook(stdout=True, stderr=True, display=True) as output:
         import readme
 ```
+
+### Docstring
+
+The first cell is the module docstring.
+
+
+```python
+    if __name__ == '__main__':
+        print(readme.__doc__.splitlines()[0])
+```
+
+    __importnb__ imports notebooks as modules & packages.
+
 
 # Import notebooks from files
 
@@ -195,41 +212,17 @@ For example, create a file called `tricks.yaml` containing
 ```python
     if __name__ == '__main__':
         from pathlib import Path
-        from importnb.compiler_python import ScriptExporter
+        from nbconvert.exporters.python import PythonExporter
+        from importnb.compile import export
         for path in Path('src/notebooks/').rglob("""*.ipynb"""):                
             if 'checkpoint' not in str(path):
-                src = ScriptExporter().from_filename(path)[0]
-                try:
-                    import black
-                    src = black.format_str(src, 100)
-                except: ...
-
-                print(path)
-                (Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks')).write_text(src)
+                export(path, Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks'))
             
         __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False) 
 
 ```
 
-    src/notebooks/capture.ipynb
-    src/notebooks/compiler_ipython.ipynb
-    src/notebooks/compiler_python.ipynb
-    src/notebooks/decoder.ipynb
-    src/notebooks/exporter.ipynb
-    src/notebooks/loader.ipynb
-    src/notebooks/parameterize.ipynb
-    src/notebooks/utils/__init__.ipynb
-    src/notebooks/utils/ipython.ipynb
-
-
-    test_import (src.importnb.tests.test_unittests.TestContext) ... 
-
-    src/notebooks/utils/pytest_plugin.ipynb
-    src/notebooks/utils/setup.ipynb
-    src/notebooks/utils/watch.ipynb
-
-
-    ok
+    test_import (src.importnb.tests.test_unittests.TestContext) ... ok
     test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
     test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
     test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
@@ -238,12 +231,22 @@ For example, create a file called `tricks.yaml` containing
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.023s
+    Ran 7 tests in 2.022s
     
     OK (skipped=1, expected failures=1)
 
 
 
 ```python
-    !jupyter nbconvert --to markdown readme.ipynb
+    if __name__ == '__main__':
+        !jupyter nbconvert --to markdown readme.ipynb
 ```
+
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 7130 bytes to readme.md
+
+
+    if __name__ == '__main__':
+        from IPython.display import display, Image
+        !pyreverse importnb -opng -pimportnb
+        display(*map(Image, ('classes_importnb.png', 'packages_importnb.png')))
