@@ -38,6 +38,8 @@ class ModuleTrick(ShellCommandTrick):
 
 
 if __name__ == "__main__":
-    from importnb.loader import export
-
-    export("watch.ipynb", "../../importnb/utils/watch.py")
+    try:
+        from ..loader import export
+    except:
+        from importnb.loader import export
+    export("watch.ipynb", "../../utils/watch.py")

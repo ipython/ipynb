@@ -32,11 +32,7 @@ class Module(pytest.Module):
 
 if __name__ == "__main__":
     try:
-        from .compiler_python import ScriptExporter
+        from ..loader import export
     except:
-        from importnb.compiler_python import ScriptExporter
-    from pathlib import Path
-
-    Path("../../importnb/utils/pytest_plugin.py").write_text(
-        ScriptExporter().from_filename("pytest_plugin.ipynb")[0]
-    )
+        from importnb.loader import export
+    export("pytest_plugin.ipynb", "../../utils/pytest_plugin.py")

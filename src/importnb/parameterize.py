@@ -180,5 +180,5 @@ if __name__ == "__main__":
 
 
 if __name__ == "__main__":
-    export("parameterize.ipynb", "../importnb/parameterize.py")
+    export("parameterize.ipynb", "../parameterize.py")
     __import__("doctest").testmod()

@@ -13,7 +13,7 @@ import ast, sys
 from pathlib import Path
 
 __file__ = globals().get("__file__", "compile.ipynb")
-__nb__ = __file__.replace("src/importnb", "src/notebooks")
+__nb__ = __file__.replace("src/importnb", "src/importnb")
 
 __IPYTHON__ = False
 
@@ -133,7 +133,7 @@ class Compile(AST):
 
 
 if __name__ == "__main__":
-    export("compile.ipynb", "../importnb/compile.py")
+    export("compile.ipynb", "../compile.py")
     try:
         from . import compile
     except:

@@ -99,6 +99,6 @@ if __name__ == "__main__":
         from .compile import export
     except:
         from compile import export
-    export("decoder.ipynb", "../importnb/decoder.py")
+    export("decoder.ipynb", "../decoder.py")
 
     __import__("doctest").testmod()

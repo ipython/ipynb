@@ -269,5 +269,5 @@ def unload_ipython_extension(ip=None):
 
 
 if __name__ == "__main__":
-    export("loader.ipynb", "../importnb/loader.py")
+    export("loader.ipynb", "../loader.py")
     __import__("doctest").testmod(Notebook()("loader.ipynb"))

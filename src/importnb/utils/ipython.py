@@ -66,11 +66,7 @@ def load_ipython_extension(ip):
 
 if __name__ == "__main__":
     try:
-        from .compiler_python import ScriptExporter
+        from ..loader import export
     except:
-        from importnb.compiler_python import ScriptExporter
-    from pathlib import Path
-
-    Path("../../importnb/utils/ipython.py").write_text(
-        ScriptExporter().from_filename("ipython.ipynb")[0]
-    )
+        from importnb.loader import export
+    export("ipython.ipynb", "../../utils/ipython.py")
