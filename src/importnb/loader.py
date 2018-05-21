@@ -20,7 +20,9 @@ There is a [lazy importer]()
     
 Loading from a file.
 
-    nb = Untitled = Notebook.from_filename('Untitled.ipynb')
+    loader = Notebook()
+    nb = Untitled = loader.from_filename('Untitled.ipynb')
+    nb = Untitled = loader('Untitled.ipynb')
 """
 
 
@@ -111,13 +113,9 @@ def lazy_loader_cls(loader):
     return loader
 
 
-"""## Context Manager
+"""## Loader Context Manager
 
 `importnb` uses a context manager to assure that the traditional import system behaviors as expected.  If the loader is permenantly available then it may create some unexpected import behaviors.
-"""
-
-
-"""The way the context manager works it is difficult to attach contexts to each module.
 """
 
 
