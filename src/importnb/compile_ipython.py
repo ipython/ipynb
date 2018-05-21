@@ -14,11 +14,13 @@ from nbconvert.exporters.python import PythonExporter as _PythonExporter
 from nbconvert.exporters.notebook import NotebookExporter
 from nbformat import from_dict
 from IPython.core.compilerop import CachingCompiler
+from IPython.core.inputsplitter import IPythonInputSplitter
 import ast
 
 
 class IpythonCompiler(CachingCompiler):
     """{Shell} provides the IPython machinery to objects."""
+    transform = staticmethod(IPythonInputSplitter().transform_cell)
 
     @property
     def ip(Compiler):
@@ -32,10 +34,6 @@ class IpythonCompiler(CachingCompiler):
         for visitor in Compiler.ip.ast_transformers:
             node = visitor.visit(node)
         return node
-
-    @property
-    def transform(Compiler):
-        return Compiler.ip.input_transformer_manager.transform_cell
 
     def compile(Compiler, ast):
         """Compile AST to bytecode using the an IPython compiler."""
