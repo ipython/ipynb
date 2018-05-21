@@ -178,21 +178,11 @@ class Notebook(SourceFileLoader, capture_output):
         with StringIO(data.decode("utf-8")) as stream:
             return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
 
-    @classmethod
-    def from_filename(
-        loader,
-        file,
-        main=False,
-        stdout=False,
-        stderr=False,
-        display=False,
-        lazy=False,
-        exceptions=None,
-    ):
+    def from_filename(self, file):
         """Load a python module or notebook from a file location.
 
         from_filename is not reloadable because it is not in the sys.modules.
-        
+
         This still needs some work for packages.
         """
         from importlib.util import spec_from_loader
@@ -207,24 +197,24 @@ class Notebook(SourceFileLoader, capture_output):
                 return _SpecMethods(spec).create()
 
         file = Path(file)
-        name = (main and "__main__") or file.stem
-
-        capture = loader(
-            name, str(file), stdout=stdout, stderr=stderr, display=display, exceptions=exceptions
-        )
+        name = (self.name == "__main__" and "__main__") or file.stem
 
         if file.suffixes[-1] == ".ipynb":
-            loader = capture
+            loader = self
+            loader.name = name
+            loader.path = str(file)
         else:
             loader = SourceFileLoader(name, str(file))
 
-        with capture as captured:
+        with capture_output(self.stdout, self.stderr, self.display) as captured:
             spec = spec_from_loader(name, loader)
             module = module_from_spec(spec)
             module.__loader__.exec_module(module)
 
         module.__output__ = captured
         return module
+
+    __call__ = from_filename
 
 
 """### Partial Loader
@@ -282,4 +272,4 @@ def unload_ipython_extension(ip=None):
 
 if __name__ == "__main__":
     export("loader.ipynb", "../importnb/loader.py")
-    __import__("doctest").testmod(Notebook.from_filename("loader.ipynb"))
+    __import__("doctest").testmod(Notebook()("loader.ipynb"))
