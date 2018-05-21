@@ -113,11 +113,8 @@ class AST(Code):
             )
         )
 
-        if sys.version_info.major == 3 and sys.version_info.minor >= 3.7:
-            # The module ast node has a docstring parameter.
-            # https://docs.python.org/3.7/whatsnew/3.7.html#changes-in-the-python-api
-            if isinstance(module.body[0], ast.Str):
-                module.docstring = module.body.pop(0)
+        # The module ast node has a docstring parameter.
+        # https://docs.python.org/3.7/whatsnew/3.7.html#changes-in-the-python-api
 
         return module
 
