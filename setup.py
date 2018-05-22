@@ -23,6 +23,11 @@ with open(str(here/'changelog.ipynb'), 'r') as f:
 
 import sys
 
+from setuptools.command.test import test as TestCommand
+class PyTest(TestCommand):
+    def run_tests(self): sys.exit(__import__('pytest').main([]))
+
+
 setup_args = dict(
     name=name,
     version=__version__,
@@ -61,6 +66,7 @@ setup_args = dict(
     extras_require={
         'watch': ['watchdog']
     },
+    cmdclass={'test': PyTest,},
     entry_points = {
         'pytest11': ['pytest-importnb = importnb.utils.pytest_plugin',],
         'console_scripts': [
