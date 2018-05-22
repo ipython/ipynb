@@ -1,6 +1,10 @@
 
 # coding: utf-8
 
+"""# Python and IPython compatible stdout, stderr, and displays captures.
+"""
+
+
 try:
     from .compile import export, __IPYTHON__, export
 except:
@@ -69,5 +73,5 @@ else:
 
 
 if __name__ == "__main__":
-    export("capture.ipynb", "../importnb/capture.py")
+    export("capture.ipynb", "../capture.py")
     __import__("doctest").testmod()

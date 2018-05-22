@@ -67,7 +67,7 @@ class _test(TestCase):
 
 
 if __name__ == "__main__":
-    export("nbtest.ipynb", "../importnb/nbtest.py")
-    __import__("doctest").testmod(Notebook.from_filename("nbtest.ipynb"))
-    m = NotebookTest.from_filename(__file__)
+    export("nbtest.ipynb", "../nbtest.py")
+    __import__("doctest").testmod(Notebook().from_filename("nbtest.ipynb"))
+    m = NotebookTest().from_filename(__file__)
     testmod(m, "-f")

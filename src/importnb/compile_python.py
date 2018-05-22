@@ -72,5 +72,5 @@ if __name__ == "__main__":
         from .compile import export
     except:
         from compile import export
-    export("compile_python.ipynb", "../importnb/compile_python.py")
+    export("compile_python.ipynb", "../compile_python.py")
     __import__("doctest").testmod()

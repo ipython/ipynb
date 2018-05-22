@@ -214,37 +214,23 @@ For example, create a file called `tricks.yaml` containing
         from pathlib import Path
         from nbconvert.exporters.python import PythonExporter
         from importnb.compile import export
-        for path in Path('src/notebooks/').rglob("""*.ipynb"""):                
+        root = 'src/importnb/notebooks/'
+        for path in Path(root).rglob("""*.ipynb"""):                
             if 'checkpoint' not in str(path):
-                export(path, Path('src/importnb') / path.with_suffix('.py').relative_to('src/notebooks'))
+                export(path, Path('src/importnb') / path.with_suffix('.py').relative_to(root))
             
         __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False) 
 
 ```
 
     test_import (src.importnb.tests.test_unittests.TestContext) ... ok
-    test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
-    test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
-    test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
-    test_exception (src.importnb.tests.test_unittests.TestPartial) ... ok
-    test_traceback (src.importnb.tests.test_unittests.TestPartial) ... ok
-    test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
-    
-    ----------------------------------------------------------------------
-    Ran 7 tests in 2.022s
-    
-    OK (skipped=1, expected failures=1)
-
+    test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... 
 
 
 ```python
     if __name__ == '__main__':
         !jupyter nbconvert --to markdown readme.ipynb
 ```
-
-    [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 7130 bytes to readme.md
-
 
     if __name__ == '__main__':
         from IPython.display import display, Image
