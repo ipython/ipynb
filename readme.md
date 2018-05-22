@@ -224,7 +224,18 @@ For example, create a file called `tricks.yaml` containing
 ```
 
     test_import (src.importnb.tests.test_unittests.TestContext) ... ok
-    test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... 
+    test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
+    test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
+    test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
+    test_exception (src.importnb.tests.test_unittests.TestPartial) ... ok
+    test_traceback (src.importnb.tests.test_unittests.TestPartial) ... ok
+    test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
+    
+    ----------------------------------------------------------------------
+    Ran 7 tests in 2.018s
+    
+    OK (skipped=1, expected failures=1)
+
 
 
 ```python

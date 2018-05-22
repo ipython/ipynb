@@ -2,9 +2,11 @@
 # coding: utf-8
 
 try:
-    from .loader import Notebook, export
+    from .loader import Notebook
+    from .decoder import loads_ast
 except:
-    from loader import Notebook, export
+    from loader import Notebook
+    from decoder import loads_ast
 from inspect import getsource
 
 from types import ModuleType
@@ -57,20 +59,6 @@ class FreeStatementFinder(NodeTransformer):
 """
 
 
-def combine_input_strings(nb):
-    cells = nb["cells"]
-    new_cells = []
-    for cell in cells:
-        if cell["cell_type"] == "code":
-            source = cell["source"]
-            if isinstance(source, list):
-                cell["source"] = "".join(source)
-
-        new_cells.append(cell)
-    nb["cells"] = new_cells
-    return nb
-
-
 class Parameterize:
     """Parameterize takes a module, filename, or notebook dictionary and returns callable object that parameterizes the notebook module.
     
@@ -88,32 +76,26 @@ class Parameterize:
 
         if isinstance(object, ModuleType):
             self.__file__ = object.__file__
-            object = loads(getsource(object))
-
-        if isinstance(object, str):
+            object = getsource(object)
+        elif isinstance(object, (Path, str)):
             self.__file__ = object
-            with open(object) as f:
-                self.__notebook__ = load(f)
+            with open(str(object)) as f:
+                object = f.read()
         elif isinstance(object, dict):
-            self.__notebook__ = object
+            ...
         else:
             raise ValueError("object must be a module, file string, or dict.")
 
-        self.__notebook__ = combine_input_strings(self.__notebook__)
-
-        with capture_output(stdout=False, stderr=False) as output:
-            self.__variables__, self.__ast__ = FreeStatementFinder()(
-                AST().from_notebook_node(self.__notebook__)
-            )
-        self.__output__ = output
+        self.__variables__, self.__ast__ = FreeStatementFinder()(loads_ast(object))
         self.__signature__ = self.vars_to_sig(**self.__variables__)
-        #             Parameterize.__doc__ = docify(Parameterize.__notebook__)
 
     def __call__(self, **dict):
         self = __import__("copy").copy(self)
         self.__dict__.update(self.__variables__)
         self.__dict__.update(dict)
-        exec(AST(filename=self.__file__).compile(self.__ast__), *[self.__dict__] * 2)
+        exec(
+            compile(self.__ast__, self.__file__ or "<parameterized>", "exec"), *[self.__dict__] * 2
+        )
         return self
 
     def interact(Parameterize):
@@ -128,12 +110,6 @@ class Parameterize:
         return Signature(
             [Parameter(str, Parameter.KEYWORD_ONLY, default=vars[str]) for str in vars]
         )
-
-
-try:
-    from importnb.loader import AST
-except:
-    from importnb.loader import AST
 
 
 """#### Examples that do work
@@ -180,5 +156,5 @@ if __name__ == "__main__":
 
 
 if __name__ == "__main__":
-    export("parameterize.ipynb", "../parameterize.py")
+    #         export('parameterize.ipynb', '../parameterize.py')
     __import__("doctest").testmod()

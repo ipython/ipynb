@@ -12,8 +12,19 @@ from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
 from json import load as _load, loads as _loads
 from functools import partial
 
+try:
+    from IPython.core.inputsplitter import IPythonInputSplitter
 
-class LineNoDecoder(JSONDecoder):
+    dedent = IPythonInputSplitter().transform_cell
+except:
+    from textwrap import dedent
+
+
+def identity(*x):
+    return x[0]
+
+
+class LineNumberDecoder(JSONDecoder):
     """A JSON Decoder to return a NotebookNode with lines numbers in the metadata."""
 
     def __init__(
@@ -36,10 +47,10 @@ class LineNoDecoder(JSONDecoder):
             strict=strict,
             object_pairs_hook=object_pairs_hook,
         )
-        self.parse_object = self.object
+        self.parse_object = self._parse_object
         self.scan_once = py_make_scanner(self)
 
-    def object(
+    def _parse_object(
         self,
         s_and_end,
         strict,
@@ -53,7 +64,6 @@ class LineNoDecoder(JSONDecoder):
         object, next = JSONObject(
             s_and_end, strict, scan_once, object_hook, object_pairs_hook, memo=memo, _w=_w, _ws=_ws
         )
-
         if "cell_type" in object:
             object["metadata"].update(
                 {"lineno": len(s_and_end[0][:next].rsplit('"source":', 1)[0].splitlines())}
@@ -68,6 +78,7 @@ class LineNoDecoder(JSONDecoder):
         for key in ("source", "text"):
             if key in object:
                 object[key] = "".join(object[key])
+
         return object, next
 
 
@@ -90,15 +101,44 @@ def codify_markdown_list(str):
     return list(map("{}\n".format, codify_markdown_string("".join(str)).splitlines()))
 
 
-load = partial(_load, cls=LineNoDecoder)
-loads = partial(_loads, cls=LineNoDecoder)
+load = partial(_load, cls=LineNumberDecoder)
+loads = partial(_loads, cls=LineNumberDecoder)
+
+
+def transform_cells(object, transform=dedent):
+    for cell in object["cells"]:
+        if "source" in cell:
+            cell["source"] = transform("".join(cell["source"]))
+    return object
+
+
+def ast_from_cells(object, transform=identity):
+    import ast
+
+    module = ast.Module(body=[])
+    for cell in object["cells"]:
+        module.body.extend(
+            ast.fix_missing_locations(
+                ast.increment_lineno(
+                    ast.parse("".join(cell["source"])), cell["metadata"].get("lineno", 1)
+                )
+            ).body
+        )
+    return module
+
+
+def loads_ast(object, loads=loads, transform=dedent, ast_transform=identity):
+    if isinstance(object, str):
+        object = loads(object)
+    object = transform_cells(object, transform)
+    return ast_from_cells(object, ast_transform)
 
 
 if __name__ == "__main__":
     try:
-        from .compile import export
+        from .utils.export import export
     except:
-        from compile import export
+        from utils.export import export
     export("decoder.ipynb", "../decoder.py")
 
     __import__("doctest").testmod()

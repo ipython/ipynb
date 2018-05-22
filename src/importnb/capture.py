@@ -6,15 +6,11 @@
 
 
 try:
-    from .compile import export, __IPYTHON__, export
-except:
-    from compile import export, __IPYTHON__, export
-__all__ = "capture_output",
-
-
-if __IPYTHON__:
     from IPython.utils.capture import capture_output
-else:
+    from IPython import get_ipython
+
+    assert get_ipython(), """There is no interactive shell"""
+except:
     from contextlib import redirect_stdout, ExitStack
     from io import StringIO
 
@@ -73,5 +69,9 @@ else:
 
 
 if __name__ == "__main__":
+    try:
+        from .utils.export import export
+    except:
+        from utils.export import export
     export("capture.ipynb", "../capture.py")
     __import__("doctest").testmod()

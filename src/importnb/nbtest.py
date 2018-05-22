@@ -11,9 +11,9 @@ New ideas may include tests in a notebook.  The `importnb.test.Test` context wil
 
 
 try:
-    from .loader import Notebook, export
+    from .loader import Notebook
 except:
-    from loader import Notebook, export
+    from loader import Notebook
 
 from unittest import TestProgram, TestCase
 from doctest import DocTestSuite

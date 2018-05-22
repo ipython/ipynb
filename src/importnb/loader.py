@@ -27,12 +27,11 @@ Loading from a file.
 
 
 try:
-    from .compile import __IPYTHON__, export, Compile, AST
     from .capture import capture_output
+    from .decoder import loads_ast, identity, loads, dedent
 except:
-    from compile import __IPYTHON__, export, Compile, AST
     from capture import capture_output
-
+    from decoder import loads_ast, identity, loads, dedent
 
 import inspect, sys
 from importlib.machinery import SourceFileLoader
@@ -127,6 +126,11 @@ class Notebook(SourceFileLoader, capture_output):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = ".ipynb",
 
+    _compile = staticmethod(compile)
+    _loads = staticmethod(loads)
+    _transform = staticmethod(dedent)
+    _ast_transform = staticmethod(identity)
+
     def __init__(
         self,
         fullname=None,
@@ -172,9 +176,17 @@ class Notebook(SourceFileLoader, capture_output):
     def __exit__(self, *excepts):
         remove_one_path_hook(type(self)), super().__exit__(*excepts)
 
-    def source_to_code(Notebook, data, path):
-        with StringIO(data.decode("utf-8")) as stream:
-            return Compile().from_file(stream, filename=Notebook.path, name=Notebook.name)
+    def source_to_code(self, data, path):
+        return self._compile(
+            loads_ast(
+                data.decode("utf-8"),
+                loads=self._loads,
+                transform=self._transform,
+                ast_transform=self._ast_transform,
+            ),
+            path or "<notebook-compiled>",
+            "exec",
+        )
 
     def from_filename(self, file):
         """Load a python module or notebook from a file location.
@@ -269,5 +281,9 @@ def unload_ipython_extension(ip=None):
 
 
 if __name__ == "__main__":
+    try:
+        from utils.export import export
+    except:
+        from .utils.export import export
     export("loader.ipynb", "../loader.py")
     __import__("doctest").testmod(Notebook()("loader.ipynb"))

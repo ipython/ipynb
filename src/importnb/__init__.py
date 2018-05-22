@@ -11,8 +11,6 @@ try:
         unload_ipython_extension,
         reload,
         Lazy,
-        export,
-        __IPYTHON__,
     )
     from .parameterize import Parameterize
     from .nbtest import NotebookTest, testmod
@@ -25,8 +23,6 @@ except:
         unload_ipython_extension,
         reload,
         Lazy,
-        export,
-        __IPYTHON__,
     )
     from parameterize import Parameterize
     from nbtest import NotebookTest, testmod

@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-"""# The `compile` module
+"""# The `export` module
 
 ...provides compatibility for Python and IPython through [`compile_python`](compile_python.ipynb) and [`compile_ipython`](compile_ipython.ipynb), respectively.  
 
