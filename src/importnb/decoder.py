@@ -1,11 +1,8 @@
-
 # coding: utf-8
-
 """# Decoding
 
 If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `importnb` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported.
 """
-
 
 from functools import singledispatch
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
@@ -19,10 +16,8 @@ try:
 except:
     from textwrap import dedent
 
-
 def identity(*x):
     return x[0]
-
 
 class LineNumberDecoder(JSONDecoder):
     """A JSON Decoder to return a NotebookNode with lines numbers in the metadata."""
@@ -81,7 +76,6 @@ class LineNumberDecoder(JSONDecoder):
 
         return object, next
 
-
 @singledispatch
 def codify_markdown(string_or_list):
     raise TypeError("Markdown must be a string or a list.")
@@ -104,7 +98,6 @@ def codify_markdown_list(str):
 load = partial(_load, cls=LineNumberDecoder)
 loads = partial(_loads, cls=LineNumberDecoder)
 
-
 def transform_cells(object, transform=dedent):
     for cell in object["cells"]:
         if "source" in cell:
@@ -126,13 +119,11 @@ def ast_from_cells(object, transform=identity):
         )
     return module
 
-
 def loads_ast(object, loads=loads, transform=dedent, ast_transform=identity):
     if isinstance(object, str):
         object = loads(object)
     object = transform_cells(object, transform)
     return ast_from_cells(object, ast_transform)
-
 
 if __name__ == "__main__":
     try:
@@ -142,3 +133,4 @@ if __name__ == "__main__":
     export("decoder.ipynb", "../decoder.py")
 
     __import__("doctest").testmod()
+

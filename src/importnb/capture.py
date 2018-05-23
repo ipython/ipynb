@@ -1,9 +1,6 @@
-
 # coding: utf-8
-
 """# Python and IPython compatible stdout, stderr, and displays captures.
 """
-
 
 try:
     from IPython.utils.capture import capture_output
@@ -66,7 +63,6 @@ except:
         @property
         def stderr(self):
             return self._stderr and self._stderr.getvalue() or ""
-
 
 if __name__ == "__main__":
     try:

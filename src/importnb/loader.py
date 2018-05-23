@@ -1,6 +1,4 @@
-
 # coding: utf-8
-
 """# The [Import Loader](https://docs.python.org/3/reference/import.html#loaders)
 
 `importnb` uses context manager to import Notebooks as Python packages and modules.  `importnb.Notebook` simplest context manager.  It will find and load any notebook as a module.
@@ -25,7 +23,6 @@ Loading from a file.
     nb = Untitled = loader('Untitled.ipynb')
 """
 
-
 try:
     from .capture import capture_output
     from .decoder import loads_ast, identity, loads, dedent
@@ -34,6 +31,7 @@ except:
     from decoder import loads_ast, identity, loads, dedent
 
 import inspect, sys
+from copy import copy
 from importlib.machinery import SourceFileLoader
 
 try:
@@ -52,10 +50,8 @@ from pathlib import Path
 
 __all__ = "Notebook", "Partial", "reload", "Lazy"
 
-
 """## `sys.path_hook` modifiers
 """
-
 
 @contextmanager
 def modify_file_finder_details():
@@ -77,50 +73,39 @@ def modify_file_finder_details():
     sys.path_hooks.insert(id, FileFinder.path_hook(*details))
     sys.path_importer_cache.clear()
 
-
 """Update the file_finder details with functions to append and remove the [loader details](https://docs.python.org/3.7/library/importlib.html#importlib.machinery.FileFinder).
 """
 
-
-def add_path_hooks(loader: SourceFileLoader, extensions, *, position=0, lazy=False):
+def add_path_hooks(loader: SourceFileLoader, extensions, *, position=0):
     """Update the FileFinder loader in sys.path_hooks to accomodate a {loader} with the {extensions}"""
     with modify_file_finder_details() as details:
-        try:
-            from importlib.util import LazyLoader
-
-            if lazy:
-                loader = LazyLoader.factory(loader)
-        except:
-            ImportWarning("""LazyLoading is only available in > Python 3.5""")
         details.insert(position, (loader, extensions))
 
 
 def remove_one_path_hook(loader):
+    loader = lazy_loader_cls(loader)
     with modify_file_finder_details() as details:
         _details = list(details)
         for ct, (cls, ext) in enumerate(_details):
             cls = lazy_loader_cls(cls)
-            if issubclass(cls, loader):
+            if cls == loader:
                 details.pop(ct)
                 break
 
-
 def lazy_loader_cls(loader):
     """Extract the loader contents of a lazy loader in the import path."""
-    if not isinstance(loader, type) and callable(loader):
+    try:
         return inspect.getclosurevars(loader).nonlocals.get("cls", loader)
-    return loader
-
+    except:
+        return loader
 
 """## Loader Context Manager
 
 `importnb` uses a context manager to assure that the traditional import system behaviors as expected.  If the loader is permenantly available then it may create some unexpected import behaviors.
 """
 
-
 class ImportNbException(BaseException):
     """ImportNbException allows all exceptions to be raised, a null except statement always passes."""
-
 
 class Notebook(SourceFileLoader, capture_output):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
@@ -131,6 +116,8 @@ class Notebook(SourceFileLoader, capture_output):
     _transform = staticmethod(dedent)
     _ast_transform = staticmethod(identity)
 
+    __slots__ = "stdout", "stderr", "display", "_lazy", "_exceptions"
+
     def __init__(
         self,
         fullname=None,
@@ -140,41 +127,57 @@ class Notebook(SourceFileLoader, capture_output):
         stderr=False,
         display=False,
         lazy=False,
-        exceptions=None
+        exceptions=ImportNbException
     ):
-        path = str(path)
-        SourceFileLoader.__init__(self, fullname, path)
+        self.rename(fullname, path)
         capture_output.__init__(self, stdout=stdout, stderr=stderr, display=display)
         self._lazy = lazy
-        self._exceptions = exceptions or ImportNbException
+        self._exceptions = exceptions
+
+    def rename(self, fullname=None, path=None):
+        return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
+
+    def prepare(self, loader):
+        if self._lazy:
+            try:
+                from importlib.util import LazyLoader
+
+                if self._lazy:
+                    loader = LazyLoader.factory(loader)
+            except:
+                ImportWarning("""LazyLoading is only available in > Python 3.5""")
+        return loader
 
     def __enter__(self, position=0):
-        add_path_hooks(type(self), self.EXTENSION_SUFFIXES, position=position, lazy=self._lazy)
-        return super().__enter__()
+        add_path_hooks(self.prepare(self), self.EXTENSION_SUFFIXES, position=position)
+        return self
 
     def exec_module(self, module):
-        """All exceptions specific in the context."""
+        """All exceptions specific in the context.
+        """
         module.__doc__ = module.__doc__ or ""
-        try:
-            super().exec_module(module)
-            module.__exception__ = None
-        except self._exceptions as e:
-            """Display a message if an error is escaped."""
-            module.__exception__ = e
-            warn(
-                ".".join(
-                    [
-                        """{name} was partially imported with a {error}""".format(
-                            error=type(e), name=module.__name__
-                        ),
-                        "=" * 10,
-                        format_exc(),
-                    ]
+        module.__exception__ = None
+        with capture_output(stdout=self.stdout, stderr=self.stderr, display=self.display) as out:
+            module.__output__ = out
+            try:
+                super().exec_module(module)
+            except self._exceptions as e:
+                """Display a message if an error is escaped."""
+                module.__exception__ = e
+                warn(
+                    ".".join(
+                        [
+                            """{name} was partially imported with a {error}""".format(
+                                error=type(e), name=module.__name__
+                            ),
+                            "=" * 10,
+                            format_exc(),
+                        ]
+                    )
                 )
-            )
 
     def __exit__(self, *excepts):
-        remove_one_path_hook(type(self)), super().__exit__(*excepts)
+        remove_one_path_hook(self)
 
     def source_to_code(self, data, path):
         return self._compile(
@@ -208,28 +211,21 @@ class Notebook(SourceFileLoader, capture_output):
 
         file = Path(file)
         name = (self.name == "__main__" and "__main__") or file.stem
-
         if file.suffixes[-1] == ".ipynb":
-            loader = self
-            loader.name = name
-            loader.path = str(file)
+            loader = self(name, file)
         else:
             loader = SourceFileLoader(name, str(file))
 
-        with capture_output(self.stdout, self.stderr, self.display) as captured:
-            spec = spec_from_loader(name, loader)
-            module = module_from_spec(spec)
-            module.__loader__.exec_module(module)
+        module = module_from_spec(spec_from_loader(name, loader))
+        module.__loader__.exec_module(module)
 
-        module.__output__ = captured
         return module
 
-    __call__ = from_filename
-
+    def __call__(self, fullname=None, path=None):
+        return copy(self).rename(fullname, path)
 
 """### Partial Loader
 """
-
 
 class Partial(Notebook):
     """A partial import tool for notebooks.
@@ -247,12 +243,10 @@ class Partial(Notebook):
     """
     __init__ = partialmethod(Notebook.__init__, exceptions=BaseException)
 
-
 """### Lazy Loader
 
 The lazy loader is helpful for time consuming operations.  The module is not evaluated until it is used the first time after loading.
 """
-
 
 class Lazy(Notebook):
     """A lazy importer for notebooks.  For long operations and a lot of data, the lazy importer delays imports until 
@@ -263,10 +257,8 @@ class Lazy(Notebook):
     """
     __init__ = partialmethod(Notebook.__init__, lazy=True)
 
-
 """# IPython Extensions
 """
-
 
 def load_ipython_extension(ip=None):
     add_path_hooks(Notebook, Notebook.EXTENSION_SUFFIXES)
@@ -275,10 +267,8 @@ def load_ipython_extension(ip=None):
 def unload_ipython_extension(ip=None):
     remove_one_path_hook(Notebook)
 
-
 """# Developer
 """
-
 
 if __name__ == "__main__":
     try:
@@ -286,4 +276,5 @@ if __name__ == "__main__":
     except:
         from .utils.export import export
     export("loader.ipynb", "../loader.py")
-    __import__("doctest").testmod(Notebook()("loader.ipynb"))
+    __import__("doctest").testmod(Notebook().from_filename("loader.ipynb"))
+

@@ -213,7 +213,7 @@ For example, create a file called `tricks.yaml` containing
     if __name__ == '__main__':
         from pathlib import Path
         from nbconvert.exporters.python import PythonExporter
-        from importnb.compile import export
+        from importnb.utils.export import export
         root = 'src/importnb/notebooks/'
         for path in Path(root).rglob("""*.ipynb"""):                
             if 'checkpoint' not in str(path):
@@ -232,7 +232,7 @@ For example, create a file called `tricks.yaml` containing
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.018s
+    Ran 7 tests in 2.031s
     
     OK (skipped=1, expected failures=1)
 
@@ -242,6 +242,10 @@ For example, create a file called `tricks.yaml` containing
     if __name__ == '__main__':
         !jupyter nbconvert --to markdown readme.ipynb
 ```
+
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 7153 bytes to readme.md
+
 
     if __name__ == '__main__':
         from IPython.display import display, Image

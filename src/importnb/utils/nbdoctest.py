@@ -1,6 +1,4 @@
-
 # coding: utf-8
-
 from IPython import get_ipython
 from doctest import OPTIONFLAGS_BY_NAME, testfile, testmod, FAIL_FAST
 import os, argparse
@@ -9,7 +7,6 @@ try:
     from ..loader import Notebook
 except:
     from importnb import Notebook
-
 
 def _test():
     parser = argparse.ArgumentParser(description="doctest runner")
@@ -69,10 +66,8 @@ def _test():
             return 1
     return 0
 
-
 if __name__ == "__main__":
     _test()
-
 
 if __name__ == "__main__":
     try:

@@ -1,17 +1,12 @@
-
 # coding: utf-8
-
 from IPython import paths, get_ipython
-
 
 from pathlib import Path
 import json
 
-
 def get_config():
     ip = get_ipython()
     return Path(ip.profile_dir.location if ip else paths.locate_profile()) / "ipython_config.json"
-
 
 def load_config():
     location = get_config()
@@ -29,7 +24,6 @@ def load_config():
 
     return config, location
 
-
 def install(ip=None):
     config, location = load_config()
 
@@ -39,11 +33,9 @@ def install(ip=None):
     with location.open("w") as file:
         json.dump(config, file)
 
-
 def installed():
     config = load_config()
     return "importnb.utils.ipython" in config.get("InteractiveShellApp", {}).get("extensions", [])
-
 
 def uninstall(ip=None):
     config, location = load_config()
@@ -57,12 +49,10 @@ def uninstall(ip=None):
     with location.open("w") as file:
         json.dump(config, file)
 
-
 def load_ipython_extension(ip):
     from ..loader import Notebook
 
     Notebook().__enter__(position=-1)
-
 
 if __name__ == "__main__":
     try:
@@ -70,3 +60,4 @@ if __name__ == "__main__":
     except:
         from importnb.loader import export
     export("ipython.ipynb", "../../utils/ipython.py")
+
