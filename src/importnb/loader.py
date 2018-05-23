@@ -112,7 +112,7 @@ def lazy_loader_cls(loader):
 class ImportNbException(BaseException):
     """ImportNbException allows all exceptions to be raised, a null except statement always passes."""
 
-class PathHooksContext(capture_output):
+class PathHooksContext:
 
     def __enter__(self, position=0):
         add_path_hooks(self.prepare(self), self.EXTENSION_SUFFIXES, position=position)
@@ -169,7 +169,7 @@ def from_resource(loader, file, resource=None):
 
     return module
 
-class Notebook(SourceFileLoader, PathHooksContext):
+class Notebook(SourceFileLoader, PathHooksContext, capture_output):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = ".ipynb",
 
