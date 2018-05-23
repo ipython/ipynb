@@ -132,7 +132,7 @@ class PathHooksContext:
                 ImportWarning("""LazyLoading is only available in > Python 3.5""")
         return loader
 
-def from_resource(loader, file, resource=None):
+def from_resource(loader, file, resource=None, lazy=False):
     """Load a python module or notebook from a file location.
 
     from_filename is not reloadable because it is not in the sys.modules.
@@ -163,6 +163,14 @@ def from_resource(loader, file, resource=None):
             loader = loader(name, file)
         else:
             loader = SourceFileLoader(name, str(file))
+
+        if getattr(loader, "_lazy", False):
+            try:
+                from importlib.util import LazyLoader
+
+                loader = LazyLoader(loader)
+            except:
+                ImportWarning("""LazyLoading is only available in > Python 3.5""")
 
         module = module_from_spec(spec_from_loader(name, loader))
         module.__loader__.exec_module(module)
