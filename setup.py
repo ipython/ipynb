@@ -15,7 +15,7 @@ with (here/ 'src' / 'importnb'/ '_version.py').open('r') as file:
 
 with open(str(here/'readme.md'),'r') as f:
     description = f.read()
-    
+
 with open(str(here/'changelog.ipynb'), 'r') as f:
     description += '\n'+ '\n'.join(
         ''.join(cell['source']) for cell in json.load(f)['cells'] if cell['cell_type'] == 'markdown'
@@ -27,6 +27,11 @@ from setuptools.command.test import test as TestCommand
 class PyTest(TestCommand):
     def run_tests(self): sys.exit(__import__('pytest').main([]))
 
+install_requires = []
+try:
+    from importlib import resources
+except:
+    install_requires += ['importlib_resources']
 
 setup_args = dict(
     name=name,
@@ -45,7 +50,7 @@ setup_args = dict(
         'setuptools>=38.6.',
     ] + ([] if sys.version_info.minor == 4 else ['wheel>=0.31.0']),
     tests_require=['pytest', 'nbformat'],
-    install_requires=[],
+    install_requires=install_requires,
     include_package_data=True,
     packages=setuptools.find_packages(where="src"),
     package_dir={"": "src"},

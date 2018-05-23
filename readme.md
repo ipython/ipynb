@@ -232,7 +232,7 @@ For example, create a file called `tricks.yaml` containing
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.031s
+    Ran 7 tests in 2.018s
     
     OK (skipped=1, expected failures=1)
 
@@ -244,7 +244,7 @@ For example, create a file called `tricks.yaml` containing
 ```
 
     [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 7153 bytes to readme.md
+    [NbConvertApp] Writing 7144 bytes to readme.md
 
 
     if __name__ == '__main__':

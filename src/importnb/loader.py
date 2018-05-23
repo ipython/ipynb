@@ -48,6 +48,11 @@ from warnings import warn
 from contextlib import contextmanager, ExitStack
 from pathlib import Path
 
+try:
+    from importlib.resources import path
+except:
+    from importlib_resources import path
+
 __all__ = "Notebook", "Partial", "reload", "Lazy"
 
 """## `sys.path_hook` modifiers
@@ -107,7 +112,64 @@ def lazy_loader_cls(loader):
 class ImportNbException(BaseException):
     """ImportNbException allows all exceptions to be raised, a null except statement always passes."""
 
-class Notebook(SourceFileLoader, capture_output):
+class PathHooksContext(capture_output):
+
+    def __enter__(self, position=0):
+        add_path_hooks(self.prepare(self), self.EXTENSION_SUFFIXES, position=position)
+        return self
+
+    def __exit__(self, *excepts):
+        remove_one_path_hook(self)
+
+    def prepare(self, loader):
+        if self._lazy:
+            try:
+                from importlib.util import LazyLoader
+
+                if self._lazy:
+                    loader = LazyLoader.factory(loader)
+            except:
+                ImportWarning("""LazyLoading is only available in > Python 3.5""")
+        return loader
+
+def from_resource(loader, file, resource=None):
+    """Load a python module or notebook from a file location.
+
+    from_filename is not reloadable because it is not in the sys.modules.
+
+    This still needs some work for packages.
+    
+    >>> assert from_resource(Notebook(), 'loader.ipynb', 'importnb.notebooks')
+    """
+    from importlib.util import spec_from_loader
+
+    try:
+        from importlib.util import module_from_spec
+    except:
+        # Python 3.4 compatability
+        from importlib._bootstrap import _SpecMethods
+
+        def module_from_spec(spec):
+            return _SpecMethods(spec).create()
+
+    with ExitStack() as stack:
+        if resource is not None:
+            file = Path(stack.enter_context(path(resource, file)))
+        else:
+            file = Path(file)
+
+        name = (loader.name == "__main__" and "__main__") or file.stem
+        if file.suffixes[-1] == ".ipynb":
+            loader = loader(name, file)
+        else:
+            loader = SourceFileLoader(name, str(file))
+
+        module = module_from_spec(spec_from_loader(name, loader))
+        module.__loader__.exec_module(module)
+
+    return module
+
+class Notebook(SourceFileLoader, PathHooksContext):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = ".ipynb",
 
@@ -129,28 +191,14 @@ class Notebook(SourceFileLoader, capture_output):
         lazy=False,
         exceptions=ImportNbException
     ):
-        self.rename(fullname, path)
+        SourceFileLoader.__init__(self, fullname, path)
         capture_output.__init__(self, stdout=stdout, stderr=stderr, display=display)
         self._lazy = lazy
         self._exceptions = exceptions
 
-    def rename(self, fullname=None, path=None):
+    def __call__(self, fullname=None, path=None):
+        self = copy(self)
         return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
-
-    def prepare(self, loader):
-        if self._lazy:
-            try:
-                from importlib.util import LazyLoader
-
-                if self._lazy:
-                    loader = LazyLoader.factory(loader)
-            except:
-                ImportWarning("""LazyLoading is only available in > Python 3.5""")
-        return loader
-
-    def __enter__(self, position=0):
-        add_path_hooks(self.prepare(self), self.EXTENSION_SUFFIXES, position=position)
-        return self
 
     def exec_module(self, module):
         """All exceptions specific in the context.
@@ -176,9 +224,6 @@ class Notebook(SourceFileLoader, capture_output):
                     )
                 )
 
-    def __exit__(self, *excepts):
-        remove_one_path_hook(self)
-
     def source_to_code(self, data, path):
         return self._compile(
             loads_ast(
@@ -191,38 +236,7 @@ class Notebook(SourceFileLoader, capture_output):
             "exec",
         )
 
-    def from_filename(self, file):
-        """Load a python module or notebook from a file location.
-
-        from_filename is not reloadable because it is not in the sys.modules.
-
-        This still needs some work for packages.
-        """
-        from importlib.util import spec_from_loader
-
-        try:
-            from importlib.util import module_from_spec
-        except:
-            # Python 3.4 compatability
-            from importlib._bootstrap import _SpecMethods
-
-            def module_from_spec(spec):
-                return _SpecMethods(spec).create()
-
-        file = Path(file)
-        name = (self.name == "__main__" and "__main__") or file.stem
-        if file.suffixes[-1] == ".ipynb":
-            loader = self(name, file)
-        else:
-            loader = SourceFileLoader(name, str(file))
-
-        module = module_from_spec(spec_from_loader(name, loader))
-        module.__loader__.exec_module(module)
-
-        return module
-
-    def __call__(self, fullname=None, path=None):
-        return copy(self).rename(fullname, path)
+    from_filename = from_resource
 
 """### Partial Loader
 """
