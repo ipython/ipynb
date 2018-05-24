@@ -22,11 +22,11 @@ The `__notebook__` attribute complies with `nbformat`
 try:
 
     from .capture import capture_output
-    from .loader import Partial
+    from .loader import Notebook
     from .decoder import loads_ast, identity, loads, dedent
 except:
     from capture import capture_output
-    from loader import Partial
+    from loader import Notebook
     from decoder import loads_ast, identity, loads, dedent
 
 import inspect, sys, ast
@@ -61,7 +61,7 @@ def cell_to_ast(object, transform=identity, ast_transform=identity, prefix=False
     prefix and module.body.insert(0, ast.Expr(ast.Ellipsis()))
     return ast.fix_missing_locations(ast_transform(module))
 
-class Execute(Partial):
+class Execute(Notebook):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
 
     def exec_module(self, module):
@@ -89,8 +89,13 @@ class Execute(Partial):
                             "exec",
                         )
                         _bootstrap._call_with_frames_removed(exec, code, module.__dict__)
-                    except self._exceptions as e:
+                    except BaseException as e:
                         error = new_error(e)
+                        try:
+                            module.__exception__ = e
+                            raise e
+                        except self._exceptions:
+                            ...
                         break
                     finally:
                         if out.outputs:
@@ -102,8 +107,9 @@ class Execute(Partial):
                         if out.stderr:
                             cell["outputs"] += [new_stream(out.stderr, "stderr")]
 
-if __name__ == "__main__":
-    m = Execute(stdout=True).from_filename("loader.ipynb")
+"""    if __name__ == '__main__':
+        m = Execute(stdout=True).from_filename('loader.ipynb')
+"""
 
 """# Developer
 """

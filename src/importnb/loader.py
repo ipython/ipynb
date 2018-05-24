@@ -25,10 +25,10 @@ Loading from a file.
 
 try:
     from .capture import capture_output
-    from .decoder import loads_ast, identity, loads, dedent
+    from .decoder import identity, loads, dedent, cell_to_ast
 except:
     from capture import capture_output
-    from decoder import loads_ast, identity, loads, dedent
+    from decoder import identity, loads, dedent, cell_to_ast
 
 import inspect, sys
 from copy import copy
@@ -42,7 +42,7 @@ except:
 
 from io import StringIO
 from functools import partialmethod, partial
-from importlib import reload
+from importlib import reload, _bootstrap
 from traceback import print_exc, format_exc
 from warnings import warn
 from contextlib import contextmanager, ExitStack
@@ -207,22 +207,29 @@ class Notebook(SourceFileLoader, PathHooksContext, capture_output):
         stderr=False,
         display=False,
         lazy=False,
-        exceptions=ImportNbException
+        exceptions=ImportNbException,
+        globals=None
     ):
         SourceFileLoader.__init__(self, fullname, path)
         capture_output.__init__(self, stdout=stdout, stderr=stderr, display=display)
         self._lazy = lazy
         self._exceptions = exceptions
+        self.globals = {} if globals is None else globals
 
     def __call__(self, fullname=None, path=None):
         self = copy(self)
         return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
 
+    def create_module(self, spec):
+        module = _bootstrap._new_module(spec.name)
+        module = _bootstrap._init_module_attrs(spec, module)
+        module.__exception__ = None
+        module.__dict__.update(self.globals)
+        return module
+
     def exec_module(self, module):
         """All exceptions specific in the context.
         """
-        module.__doc__ = module.__doc__ or ""
-        module.__exception__ = None
         with capture_output(stdout=self.stdout, stderr=self.stderr, display=self.display) as out:
             module.__output__ = out
             try:
@@ -243,16 +250,19 @@ class Notebook(SourceFileLoader, PathHooksContext, capture_output):
                 )
 
     def source_to_code(self, data, path):
-        return self._compile(
-            loads_ast(
-                data.decode("utf-8"),
-                loads=self._loads,
-                transform=self._transform,
-                ast_transform=self._ast_transform,
+        import ast
+
+        module = ast.Module(body=[])
+        module.body = sum(
+            (
+                cell_to_ast(
+                    object, transform=self._transform, ast_transform=self._ast_transform
+                ).body
+                for object in self._loads(data.decode("utf-8"))["cells"]
             ),
-            path or "<notebook-compiled>",
-            "exec",
+            module.body,
         )
+        return self._compile(module, path or "<notebook-compiled>", "exec")
 
     from_filename = from_resource
 
@@ -317,4 +327,8 @@ if __name__ == "__main__":
         from .utils.export import export
     export("loader.ipynb", "../loader.py")
     __import__("doctest").testmod(Notebook().from_filename("loader.ipynb"), verbose=2)
+
+"""    if __name__ ==  '__main__':
+        __import__('doctest').testmod(Notebook().from_filename('loader.ipynb'), verbose=2)
+"""
 
