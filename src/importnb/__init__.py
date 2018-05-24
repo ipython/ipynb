@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-__all__ = "Notebook", "Partial", "reload", "Parameterize", "Lazy", "NotebookTest", "testmod"
+__all__ = "Notebook", "Partial", "reload", "Parameterize", "Lazy", "NotebookTest", "testmod", "Execute"
 
 try:
     from .loader import (
@@ -14,6 +14,7 @@ try:
     )
     from .parameterize import Parameterize
     from .nbtest import NotebookTest, testmod
+    from .execute import Execute
     
 except:
     from loader import (
@@ -25,4 +26,5 @@ except:
         Lazy,
     )
     from parameterize import Parameterize
+    from execute import Execute
     from nbtest import NotebookTest, testmod

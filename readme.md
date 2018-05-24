@@ -63,7 +63,8 @@ The [`importnb.loader.Partial`](src/notebooks/loader.ipynb#Partial-Loader) will 
 ```python
     from importnb import Partial
     with Partial():
-        import readme
+        try: from . import readme
+        except: import readme
 ```
 
 ### Lazy imports
@@ -210,9 +211,13 @@ For example, create a file called `tricks.yaml` containing
 
 
 ```python
+    from IPython import get_ipython
+```
+
+
+```python
     if __name__ == '__main__':
         from pathlib import Path
-        from nbconvert.exporters.python import PythonExporter
         from importnb.utils.export import export
         root = 'src/importnb/notebooks/'
         for path in Path(root).rglob("""*.ipynb"""):                
@@ -225,26 +230,27 @@ For example, create a file called `tricks.yaml` containing
 
     test_import (src.importnb.tests.test_unittests.TestContext) ... ok
     test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
-    test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
+    test_failure (src.importnb.tests.test_unittests.TestExtension) ... unexpected success
     test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
     test_exception (src.importnb.tests.test_unittests.TestPartial) ... ok
     test_traceback (src.importnb.tests.test_unittests.TestPartial) ... ok
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 2.018s
+    Ran 7 tests in 1.014s
     
-    OK (skipped=1, expected failures=1)
+    FAILED (skipped=1, unexpected successes=1)
 
 
 
 ```python
     if __name__ == '__main__':
+        
         !jupyter nbconvert --to markdown readme.ipynb
 ```
 
     [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 7144 bytes to readme.md
+    [NbConvertApp] Writing 7109 bytes to readme.md
 
 
     if __name__ == '__main__':
