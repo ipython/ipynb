@@ -77,6 +77,7 @@ setup_args = dict(
         'console_scripts': [
             'importnb-install = importnb.utils.ipython:install',
             'importnb-uninstall = importnb.utils.ipython:uninstall',
+            'importnb-run = importnb.loader:main',
             'nbdoctest = importnb.utils.nbdoctest:_test',
         ]
     },

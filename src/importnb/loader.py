@@ -132,7 +132,7 @@ class PathHooksContext:
                 ImportWarning("""LazyLoading is only available in > Python 3.5""")
         return loader
 
-def from_resource(loader, file, resource=None, lazy=False):
+def from_resource(loader, file=None, resource=None):
     """Load a python module or notebook from a file location.
 
     from_filename is not reloadable because it is not in the sys.modules.
@@ -156,9 +156,8 @@ def from_resource(loader, file, resource=None, lazy=False):
         if resource is not None:
             file = Path(stack.enter_context(path(resource, file)))
         else:
-            file = Path(file)
-
-        name = (loader.name == "__main__" and "__main__") or file.stem
+            file = Path(file or loader.path)
+        name = (getattr(loader, "name", False) == "__main__" and "__main__") or file.stem
         if file.suffixes[-1] == ".ipynb":
             loader = loader(name, file)
         else:
@@ -173,9 +172,20 @@ def from_resource(loader, file, resource=None, lazy=False):
                 ImportWarning("""LazyLoading is only available in > Python 3.5""")
 
         module = module_from_spec(spec_from_loader(name, loader))
+        stack.enter_context(modify_sys_path(file))
         module.__loader__.exec_module(module)
 
     return module
+
+@contextmanager
+def modify_sys_path(file):
+    """This is only invoked when using from_resource."""
+    path = str(Path(file).parent)
+    if path not in map(str, map(Path, sys.path)):
+        yield sys.path.insert(0, path)
+        sys.path = [object for object in sys.path if str(Path(object)) != path]
+    else:
+        yield
 
 class Notebook(SourceFileLoader, PathHooksContext, capture_output):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
@@ -289,6 +299,14 @@ def load_ipython_extension(ip=None):
 def unload_ipython_extension(ip=None):
     remove_one_path_hook(Notebook)
 
+def main(*files):
+    with ExitStack() as stack:
+        loader = stack.enter_context(Notebook("__main__"))
+        if not files:
+            files = sys.argv[1:]
+        for file in files:
+            loader.from_filename(file)
+
 """# Developer
 """
 
@@ -298,5 +316,5 @@ if __name__ == "__main__":
     except:
         from .utils.export import export
     export("loader.ipynb", "../loader.py")
-    __import__("doctest").testmod(Notebook().from_filename("loader.ipynb"))
+    __import__("doctest").testmod(Notebook().from_filename("loader.ipynb"), verbose=2)
 
