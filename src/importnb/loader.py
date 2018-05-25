@@ -3,19 +3,24 @@
 
 `importnb` uses context manager to import Notebooks as Python packages and modules.  `importnb.Notebook` simplest context manager.  It will find and load any notebook as a module.
 
-    >>> with Notebook():
-    ...     import importnb
+    >>> m = Notebook().from_filename('loader.ipynb', 'importnb.notebooks')
+    >>> assert m and m.Notebook
+ 
+ 
+Global variables may be inserted into the module.
 
+    >>> assert Notebook(globals=dict(bar=50)).from_filename('loader.ipynb', 'importnb.notebooks').bar == 50
+    
 The `importnb.Partial` context manager is used when an import raises an error.
 
-    >>> with Partial():
+    >>> with Partial(): 
     ...     import importnb
-
+    
 There is a [lazy importer]()
 
-    >>> with Lazy():
+    >>> with Lazy(): 
     ...     import importnb
-
+    
 Loading from a file.
 
     loader = Notebook()
@@ -74,8 +79,8 @@ __all__ = "Notebook", "Partial", "reload", "Lazy"
 @contextmanager
 def modify_file_finder_details():
     """yield the FileFinder in the sys.path_hooks that loads Python files and assure
-    the import cache is cleared afterwards.
-
+    the import cache is cleared afterwards.  
+    
     Everything goes to shit if the import cache is not cleared."""
 
     for id, hook in enumerate(sys.path_hooks):
@@ -145,13 +150,13 @@ class PathHooksContext:
                 ImportWarning("""LazyLoading is only available in > Python 3.5""")
         return loader
 
-def from_resource(loader, file=None, resource=None):
+def from_resource(loader, file=None, resource=None, exec=True, **globals):
     """Load a python module or notebook from a file location.
 
     from_filename is not reloadable because it is not in the sys.modules.
 
     This still needs some work for packages.
-
+    
     >>> assert from_resource(Notebook(), 'loader.ipynb', 'importnb.notebooks')
     """
     with ExitStack() as stack:
@@ -165,7 +170,8 @@ def from_resource(loader, file=None, resource=None):
         else:
             loader = SourceFileLoader(name, str(file))
 
-        if getattr(loader, "_lazy", False):
+        lazy = getattr(loader, "_lazy", False)
+        if lazy:
             try:
                 from importlib.util import LazyLoader
 
@@ -174,9 +180,9 @@ def from_resource(loader, file=None, resource=None):
                 ImportWarning("""LazyLoading is only available in > Python 3.5""")
 
         module = module_from_spec(spec_from_loader(name, loader))
-        stack.enter_context(modify_sys_path(file))
-        module.__loader__.exec_module(module)
-
+        if exec:
+            stack.enter_context(modify_sys_path(file))
+            module.__loader__.exec_module(module, **globals)
     return module
 
 @contextmanager
@@ -189,16 +195,15 @@ def modify_sys_path(file):
     else:
         yield
 
-class Notebook(SourceFileLoader, PathHooksContext, capture_output):
+class Notebook(SourceFileLoader, PathHooksContext, capture_output, ast.NodeTransformer):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
     EXTENSION_SUFFIXES = ".ipynb",
 
     _compile = staticmethod(compile)
     _loads = staticmethod(loads)
-    _transform = staticmethod(dedent)
-    _ast_transform = staticmethod(identity)
+    format = _transform = staticmethod(dedent)
 
-    __slots__ = "stdout", "stderr", "display", "_lazy", "_exceptions"
+    __slots__ = "stdout", "stderr", "display", "_lazy", "_exceptions", "globals"
 
     def __init__(
         self,
@@ -222,16 +227,21 @@ class Notebook(SourceFileLoader, PathHooksContext, capture_output):
         self = copy(self)
         return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
 
+    def visit(self, node):
+        node = super().visit(node)
+        return ast.fix_missing_locations(super().visit(node))
+
     def create_module(self, spec):
         module = _new_module(spec.name)
         _init_module_attrs(spec, module)
         module.__exception__ = None
         module.__dict__.update(self.globals)
-        return module 
+        return module
 
-    def exec_module(self, module):
+    def exec_module(self, module, **globals):
         """All exceptions specific in the context.
         """
+        module.__dict__.update(globals)
         with capture_output(stdout=self.stdout, stderr=self.stderr, display=self.display) as out:
             module.__output__ = out
             try:
@@ -252,40 +262,39 @@ class Notebook(SourceFileLoader, PathHooksContext, capture_output):
                 )
 
     def _data_to_ast(self, data):
+        if isinstance(data, bytes):
+            data = self._loads(data.decode("utf-8"))
         return ast.Module(
             body=sum(
-                (
-                    cell_to_ast(
-                        object, transform=self._transform, ast_transform=self._ast_transform
-                    ).body
-                    for object in self._loads(data.decode("utf-8"))["cells"]
-                ),
-                [],
+                (cell_to_ast(object, transform=self.format).body for object in data["cells"]), []
             )
         )
 
     def source_to_code(self, data, path):
         return self._compile(
-            self._ast_transform(self._data_to_ast(data)), path or "<notebook-compiled>", "exec"
+            self.visit(self._data_to_ast(data)), path or "<notebook-compiled>", "exec"
         )
 
     from_filename = from_resource
+
+if __name__ == "__main__":
+    m = Notebook().from_filename("loader.ipynb")
 
 """### Partial Loader
 """
 
 class Partial(Notebook):
     """A partial import tool for notebooks.
-
+    
     Sometimes notebooks don't work, but there may be useful code!
-
+    
     with Partial():
         import Untitled as nb
         assert nb.__exception__
-
+    
     if isinstance(nb.__exception__, AssertionError):
         print("There was a False assertion.")
-
+            
     Partial is useful in logging specific debugging approaches to the exception.
     """
     __init__ = partialmethod(Notebook.__init__, exceptions=BaseException)
@@ -296,9 +305,9 @@ The lazy loader is helpful for time consuming operations.  The module is not eva
 """
 
 class Lazy(Notebook):
-    """A lazy importer for notebooks.  For long operations and a lot of data, the lazy importer delays imports until
+    """A lazy importer for notebooks.  For long operations and a lot of data, the lazy importer delays imports until 
     an attribute is accessed the first time.
-
+    
     with Lazy():
         import Untitled as nb
     """
@@ -337,3 +346,4 @@ if __name__ == "__main__":
 """    if __name__ ==  '__main__':
         __import__('doctest').testmod(Notebook().from_filename('loader.ipynb'), verbose=2)
 """
+

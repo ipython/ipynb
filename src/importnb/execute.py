@@ -22,11 +22,11 @@ The `__notebook__` attribute complies with `nbformat`
 try:
 
     from .capture import capture_output
-    from .loader import Notebook
+    from .loader import Notebook, lazy_loader_cls
     from .decoder import loads_ast, identity, loads, dedent
 except:
     from capture import capture_output
-    from loader import Notebook
+    from loader import Notebook, lazy_loader_cls
     from decoder import loads_ast, identity, loads, dedent
 
 import inspect, sys, ast
@@ -54,41 +54,47 @@ def new_error(Exception):
 def new_display(object):
     return {"data": object.data, "metadata": {}, "output_type": "display_data"}
 
-def cell_to_ast(object, transform=identity, ast_transform=identity, prefix=False):
+def cell_to_ast(object, transform=identity, prefix=False):
     module = ast.increment_lineno(
         ast.parse(transform("".join(object["source"]))), object["metadata"].get("lineno", 1)
     )
     prefix and module.body.insert(0, ast.Expr(ast.Ellipsis()))
-    return ast.fix_missing_locations(ast_transform(module))
+    return module
 
 class Execute(Notebook):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
 
-    def exec_module(self, module):
+    def create_module(self, spec):
+        module = super().create_module(spec)
+        module.__notebook__ = self._loads(self.get_data(self.path).decode("utf-8"))
+        return module
+
+    def exec_module(self, module, **globals):
         """All exceptions specific in the context.
         """
-        module.__notebook__ = self._loads(self.get_data(self.path).decode("utf-8"))
+        module.__dict__.update(globals)
         for cell in module.__notebook__["cells"]:
             if "outputs" in cell:
                 cell["outputs"] = []
+
         for i, cell in enumerate(module.__notebook__["cells"]):
             if cell["cell_type"] == "code":
                 error = None
+
                 with capture_output(
                     stdout=self.stdout, stderr=self.stderr, display=self.display
                 ) as out:
                     try:
                         code = self._compile(
-                            cell_to_ast(
-                                cell,
-                                transform=self._transform,
-                                ast_transform=self._ast_transform,
-                                prefix=i > 0,
+                            fix_missing_locations(
+                                self.visit(cell_to_ast(cell, transform=self.format, prefix=i > 0))
                             ),
                             self.path or "<notebook-compiled>",
                             "exec",
                         )
-                        _bootstrap._call_with_frames_removed(exec, code, module.__dict__)
+                        _bootstrap._call_with_frames_removed(
+                            exec, code, module.__dict__, module.__dict__
+                        )
                     except BaseException as e:
                         error = new_error(e)
                         try:
@@ -107,6 +113,88 @@ class Execute(Notebook):
                         if out.stderr:
                             cell["outputs"] += [new_stream(out.stderr, "stderr")]
 
+from ast import (
+    NodeTransformer,
+    parse,
+    Assign,
+    literal_eval,
+    dump,
+    fix_missing_locations,
+    Str,
+    Tuple,
+    Ellipsis,
+    Interactive,
+)
+
+class ParameterizeNode(NodeTransformer):
+    visit_Module = NodeTransformer.generic_visit
+
+    def visit_Assign(FreeStatement, node):
+        if len(node.targets):
+            try:
+                if not getattr(node.targets[0], "id", "_").startswith("_"):
+                    literal_eval(node.value)
+                    return node
+            except:
+                assert True, """The target can not will not literally evaluate."""
+        return None
+
+    def generic_visit(self, node):
+        ...
+
+class ExecuteNode(ParameterizeNode):
+
+    def visit_Assign(self, node):
+        if super().visit_Assign(node):
+            return ast.Expr(Ellipsis())
+        return node
+
+    def generic_visit(self, node):
+        return node
+
+def vars_to_sig(**vars):
+    """Create a signature for a dictionary of names."""
+    from inspect import Parameter, Signature
+
+    return Signature([Parameter(str, Parameter.KEYWORD_ONLY, default=vars[str]) for str in vars])
+
+class Parameterize(Execute, ExecuteNode):
+
+    def create_module(self, spec):
+        module = super().create_module(spec)
+        nodes = self._data_to_ast(module.__notebook__)
+        doc = None
+        if isinstance(nodes, ast.Module) and nodes.body:
+            node = nodes.body[0]
+            if isinstance(node, ast.Expr) and isinstance(node.value, ast.Str):
+                doc = node
+        params = ParameterizeNode().visit(nodes)
+        doc and params.body.insert(0, doc)
+        exec(compile(params, "<parameterize>", "exec"), module.__dict__, module.__dict__)
+        return module
+
+    def from_filename(self, filename, path=None, **globals):
+        module = super().from_filename(filename, path, exec=False)
+
+        def recall(**kwargs):
+            nonlocal module, globals
+            module.__loader__.exec_module(module, **{**globals, **kwargs})
+            return module
+
+        recall.__signature__ = vars_to_sig(
+            **{k: v for k, v in module.__dict__.items() if not k.startswith("_")}
+        )
+        recall.__doc__ = module.__doc__
+        return recall
+
+foo = 90
+
+if __name__ == "__main__":
+    f = Parameterize().from_filename("execute.ipynb")
+    f()
+
+print(foo)
+
 """    if __name__ == '__main__':
         m = Execute(stdout=True).from_filename('loader.ipynb')
 """
@@ -122,3 +210,4 @@ if __name__ == "__main__":
     export("execute.ipynb", "../execute.py")
     module = Execute().from_filename("execute.ipynb")
     __import__("doctest").testmod(module, verbose=2)
+
