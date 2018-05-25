@@ -158,6 +158,8 @@ def vars_to_sig(**vars):
 
     return Signature([Parameter(str, Parameter.KEYWORD_ONLY, default=vars[str]) for str in vars])
 
+from collections import ChainMap
+
 class Parameterize(Execute, ExecuteNode):
 
     def create_module(self, spec):
@@ -178,7 +180,7 @@ class Parameterize(Execute, ExecuteNode):
 
         def recall(**kwargs):
             nonlocal module, globals
-            module.__loader__.exec_module(module, **{**globals, **kwargs})
+            module.__loader__.exec_module(module, **ChainMap(kwargs, globals))
             return module
 
         recall.__signature__ = vars_to_sig(
@@ -187,13 +189,8 @@ class Parameterize(Execute, ExecuteNode):
         recall.__doc__ = module.__doc__
         return recall
 
-foo = 90
-
 if __name__ == "__main__":
     f = Parameterize().from_filename("execute.ipynb")
-    f()
-
-print(foo)
 
 """    if __name__ == '__main__':
         m = Execute(stdout=True).from_filename('loader.ipynb')
