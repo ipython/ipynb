@@ -35,8 +35,10 @@ from copy import copy
 from importlib.machinery import SourceFileLoader
 from importlib.util import spec_from_loader
 
+from importlib._bootstrap import _call_with_frames_removed, _new_module
+
 try:
-    from importlib._bootstrap import _init_module_attrs
+    from importlib._bootstrap import _init_module_attrs, _call_with_frames_removed
     from importlib._bootstrap_external import FileFinder
     from importlib.util import module_from_spec
 except:
@@ -53,7 +55,7 @@ except:
 
 from io import StringIO
 from functools import partialmethod, partial
-from importlib import reload, _bootstrap
+from importlib import reload
 from traceback import print_exc, format_exc
 from warnings import warn
 from contextlib import contextmanager, ExitStack
@@ -221,8 +223,8 @@ class Notebook(SourceFileLoader, PathHooksContext, capture_output):
         return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
 
     def create_module(self, spec):
-        module = _bootstrap._new_module(spec.name)
-        module = _bootstrap._init_module_attrs(spec, module)
+        module = _new_module(spec.name)
+        module = _init_module_attrs(spec, module)
         module.__exception__ = None
         module.__dict__.update(self.globals)
         return module
