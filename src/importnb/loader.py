@@ -224,7 +224,7 @@ class Notebook(SourceFileLoader, PathHooksContext, capture_output):
 
     def create_module(self, spec):
         module = _new_module(spec.name)
-        module = _init_module_attrs(spec, module)
+        _init_module_attrs(spec, module)
         module.__exception__ = None
         module.__dict__.update(self.globals)
         return module
