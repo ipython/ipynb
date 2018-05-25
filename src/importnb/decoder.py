@@ -1,9 +1,4 @@
 # coding: utf-8
-"""# Decoding
-
-If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `importnb` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported.
-"""
-
 from functools import singledispatch
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
 from json import load as _load, loads as _loads
