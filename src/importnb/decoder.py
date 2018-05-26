@@ -1,4 +1,9 @@
 # coding: utf-8
+"""# Decoding
+
+If a notebook is imported, it should provide a natural __traceback__ experience similar to python imports.  The `importnb` importer creates a just decoder object that retains line numbers to the raw json when the notebook is imported.
+"""
+
 from functools import singledispatch
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
 from json import load as _load, loads as _loads
@@ -94,12 +99,12 @@ def codify_markdown_list(str):
 load = partial(_load, cls=LineNumberDecoder)
 loads = partial(_loads, cls=LineNumberDecoder)
 
-def cell_to_ast(object, transform=identity, ast_transform=identity, prefix=False):
+def cell_to_ast(object, transform=identity, prefix=False):
     module = ast.increment_lineno(
         ast.parse(transform("".join(object["source"]))), object["metadata"].get("lineno", 1)
     )
     prefix and module.body.insert(0, ast.Expr(ast.Ellipsis()))
-    return ast.fix_missing_locations(ast_transform(module))
+    return module
 
 def transform_cells(object, transform=dedent):
     for cell in object["cells"]:

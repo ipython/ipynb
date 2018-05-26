@@ -6,27 +6,41 @@
     >>> m = Notebook().from_filename('loader.ipynb', 'importnb.notebooks')
     >>> assert m and m.Notebook
  
- 
-Global variables may be inserted into the module.
-
-    >>> assert Notebook(globals=dict(bar=50)).from_filename('loader.ipynb', 'importnb.notebooks').bar == 50
-    
-The `importnb.Partial` context manager is used when an import raises an error.
+     
+### `importnb.Partial` 
 
     >>> with Partial(): 
-    ...     import importnb
+    ...     from importnb.notebooks import loader
+    >>> assert loader.__exception__ is None
     
-There is a [lazy importer]()
+## There is a [lazy importer]()
+
+The Lazy importer will delay the module execution until it is used the first time.  It is a useful approach for delaying visualization or data loading.
 
     >>> with Lazy(): 
-    ...     import importnb
+    ...     from importnb.notebooks import loader
     
-Loading from a file.
+## Loading from resources
 
-    loader = Notebook()
-    nb = Untitled = loader.from_filename('Untitled.ipynb')
-    nb = Untitled = loader('Untitled.ipynb')
+Not all notebooks may be loaded as modules throught the standard python import finder.  `from_resource`, or the uncomfortably named `Notebook.from_filename` attributes, support [`importlib_resources`]() style imports and raw file imports.
+
+    >>> from importnb.loader import from_resource
+    >>> assert from_resource(Notebook(), 'loader.ipynb', 'importnb.notebooks')
+    >>> assert Notebook().from_filename('loader.ipynb', 'importnb.notebooks')
+    >>> assert Notebook().from_filename(m.__file__)
+    
+
+## Capturing stdin, stdout, and display objects
+
+    >>> with Notebook(stdout=True, stderr=True, display=True, globals=dict(show=True)):
+    ...     from importnb.notebooks import loader
+    >>> assert loader.__output__
+    
+    # loader.__output__.stdout
 """
+
+if "show" in globals():
+    print("Catch me if you can")
 
 try:
     from .capture import capture_output

@@ -23,11 +23,11 @@ try:
 
     from .capture import capture_output
     from .loader import Notebook, lazy_loader_cls
-    from .decoder import loads_ast, identity, loads, dedent
+    from .decoder import loads_ast, identity, loads, dedent, cell_to_ast
 except:
     from capture import capture_output
     from loader import Notebook, lazy_loader_cls
-    from decoder import loads_ast, identity, loads, dedent
+    from decoder import loads_ast, identity, loads, dedent, cell_to_ast
 
 import inspect, sys, ast
 from functools import partialmethod, partial
@@ -37,6 +37,19 @@ from warnings import warn
 import traceback
 
 __all__ = "Notebook", "Partial", "reload", "Lazy"
+
+from ast import (
+    NodeTransformer,
+    parse,
+    Assign,
+    literal_eval,
+    dump,
+    fix_missing_locations,
+    Str,
+    Tuple,
+    Ellipsis,
+    Interactive,
+)
 
 def new_stream(text, name="stdout"):
     return {"name": name, "output_type": "stream", "text": text}
@@ -54,13 +67,6 @@ def new_error(Exception):
 def new_display(object):
     return {"data": object.data, "metadata": {}, "output_type": "display_data"}
 
-def cell_to_ast(object, transform=identity, prefix=False):
-    module = ast.increment_lineno(
-        ast.parse(transform("".join(object["source"]))), object["metadata"].get("lineno", 1)
-    )
-    prefix and module.body.insert(0, ast.Expr(ast.Ellipsis()))
-    return module
-
 class Execute(Notebook):
     """A SourceFileLoader for notebooks that provides line number debugginer in the JSON source."""
 
@@ -69,6 +75,17 @@ class Execute(Notebook):
         module.__notebook__ = self._loads(self.get_data(self.path).decode("utf-8"))
         return module
 
+    def _iter_cells(self, module):
+        for i, cell in enumerate(module.__notebook__["cells"]):
+            if cell["cell_type"] == "code":
+                yield self._compile(
+                    fix_missing_locations(
+                        self.visit(cell_to_ast(cell, transform=self.format, prefix=i > 0))
+                    ),
+                    self.path or "<notebook-compiled>",
+                    "exec",
+                )
+
     def exec_module(self, module, **globals):
         """All exceptions specific in the context.
         """
@@ -76,55 +93,38 @@ class Execute(Notebook):
         for cell in module.__notebook__["cells"]:
             if "outputs" in cell:
                 cell["outputs"] = []
-
-        for i, cell in enumerate(module.__notebook__["cells"]):
-            if cell["cell_type"] == "code":
-                error = None
-
-                with capture_output(
-                    stdout=self.stdout, stderr=self.stderr, display=self.display
-                ) as out:
+        for i, code in enumerate(self._iter_cells(module)):
+            error = None
+            with capture_output(
+                stdout=self.stdout, stderr=self.stderr, display=self.display
+            ) as out:
+                try:
+                    _bootstrap._call_with_frames_removed(
+                        exec, code, module.__dict__, module.__dict__
+                    )
+                except BaseException as e:
+                    error = new_error(e)
+                    print(error)
                     try:
-                        code = self._compile(
-                            fix_missing_locations(
-                                self.visit(cell_to_ast(cell, transform=self.format, prefix=i > 0))
-                            ),
-                            self.path or "<notebook-compiled>",
-                            "exec",
-                        )
-                        _bootstrap._call_with_frames_removed(
-                            exec, code, module.__dict__, module.__dict__
-                        )
-                    except BaseException as e:
-                        error = new_error(e)
-                        try:
-                            module.__exception__ = e
-                            raise e
-                        except self._exceptions:
-                            ...
-                        break
-                    finally:
-                        if out.outputs:
-                            cell["outputs"] += [new_display(object) for object in out.outputs]
-                        if out.stdout:
-                            cell["outputs"] += [new_stream(out.stdout)]
-                        if error:
-                            cell["outputs"] += [error]
-                        if out.stderr:
-                            cell["outputs"] += [new_stream(out.stderr, "stderr")]
+                        module.__exception__ = e
+                        raise e
+                    except self._exceptions:
+                        ...
+                    break
+                finally:
+                    if out.outputs:
+                        cell["outputs"] += [new_display(object) for object in out.outputs]
+                    if out.stdout:
 
-from ast import (
-    NodeTransformer,
-    parse,
-    Assign,
-    literal_eval,
-    dump,
-    fix_missing_locations,
-    Str,
-    Tuple,
-    Ellipsis,
-    Interactive,
-)
+                        cell["outputs"] += [new_stream(out.stdout)]
+                    if error:
+                        cell["outputs"] += [error]
+                    if out.stderr:
+                        cell["outputs"] += [new_stream(out.stderr, "stderr")]
+
+"""    if __name__ == '__main__':
+        m = Execute(stdout=True).from_filename('loader.ipynb')
+"""
 
 class ParameterizeNode(NodeTransformer):
     visit_Module = NodeTransformer.generic_visit
@@ -189,11 +189,8 @@ class Parameterize(Execute, ExecuteNode):
         recall.__doc__ = module.__doc__
         return recall
 
-if __name__ == "__main__":
-    f = Parameterize().from_filename("execute.ipynb")
-
 """    if __name__ == '__main__':
-        m = Execute(stdout=True).from_filename('loader.ipynb')
+        f = Parameterize().from_filename('execute.ipynb')
 """
 
 """# Developer
@@ -207,4 +204,7 @@ if __name__ == "__main__":
     export("execute.ipynb", "../execute.py")
     module = Execute().from_filename("execute.ipynb")
     __import__("doctest").testmod(module, verbose=2)
+
+"""For more information check out [`importnb`](https://github.com/deathbeds/importnb)
+"""
 
