@@ -1,7 +1,4 @@
 # coding: utf-8
-"""# Python and IPython compatible stdout, stderr, and displays captures.
-"""
-
 try:
     from IPython.utils.capture import capture_output, CapturedIO
     from IPython import get_ipython
@@ -10,11 +7,11 @@ try:
 except:
     from contextlib import redirect_stdout, ExitStack
     from io import StringIO
+    import sys
 
     try:
         from contextlib import redirect_stderr
     except:
-        import sys
 
         class redirect_stderr:
 
@@ -78,3 +75,4 @@ if __name__ == "__main__":
         from utils.export import export
     export("capture.ipynb", "../capture.py")
     __import__("doctest").testmod()
+

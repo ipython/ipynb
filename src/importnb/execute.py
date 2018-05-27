@@ -1,4 +1,7 @@
 # coding: utf-8
+if globals().get("show", None):
+    print("I am tested.")
+
 try:
     from .capture import capture_output
     from .loader import Notebook, advanced_exec_module, markdown_to_source
@@ -118,6 +121,8 @@ class Execute(Notebook):
                     if out.stderr:
                         cell["outputs"] += [new_stream(out.stderr, "stderr")]
             out.show()
+
+    source_to_code = partialmethod(NotebookCells.source_to_code)
 
 if __name__ == "__main__":
     nb = Execute(display=True, stdout=True).from_filename("execute.ipynb", "importnb.notebooks")

@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-__all__ = "Notebook", "Partial", "reload", "Parameterize", "Lazy", "NotebookTest", "testmod", "Execute"
+__all__ = "Notebook", "reload", "Parameterize", "NotebookTest", "testmod", "Execute"
 
 try:
     from .loader import (

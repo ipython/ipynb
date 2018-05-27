@@ -75,8 +75,11 @@ def markdown_to_source(object):
     return object
 
 def cell_to_ast(loader, object):
-    if object.get("cell_type", None) in ("code", "markdown"):
+    if object["cell_type"] == "markdown":
         object = markdown_to_source(object)
+
+    if object.get("cell_type", None) in ("code", "markdown"):
+
         module = ast.increment_lineno(
             ast.parse(loader.format("".join(object["source"]))), object["metadata"].get("lineno", 1)
         )
@@ -261,3 +264,4 @@ if __name__ == "__main__":
     export("loader.ipynb", "../loader.py")
     m = Notebook().from_filename("loader.ipynb")
     print(__import__("doctest").testmod(m))
+
