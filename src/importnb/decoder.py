@@ -65,39 +65,11 @@ class LineNumberDecoder(JSONDecoder):
                 {"lineno": len(s_and_end[0][:next].rsplit('"source":', 1)[0].splitlines())}
             )
 
-            if object["cell_type"] == "markdown":
-                object["source"] = codify_markdown(object["source"])
-                object["outputs"] = []
-                object["cell_type"] = "code"
-                object["execution_count"] = None
-
         for key in ("source", "text"):
             if key in object:
                 object[key] = "".join(object[key])
 
         return object, next
-
-@singledispatch
-def codify_markdown(string_or_list):
-    raise TypeError("Markdown must be a string or a list.")
-
-
-@codify_markdown.register(str)
-def codify_markdown_string(str):
-    if '"""' in str:
-        str = "'''{}\n'''".format(str)
-    else:
-        str = '"""{}\n"""'.format(str)
-    return str
-
-
-@codify_markdown.register(list)
-def codify_markdown_list(str):
-    return list(map("{}\n".format, codify_markdown_string("".join(str)).splitlines()))
-
-
-load = partial(_load, cls=LineNumberDecoder)
-loads = partial(_loads, cls=LineNumberDecoder)
 
 def cell_to_ast(object, transform=identity, prefix=False):
     module = ast.increment_lineno(
@@ -127,11 +99,13 @@ def ast_from_cells(object, transform=identity):
         )
     return module
 
-def loads_ast(object, loads=loads, transform=dedent, ast_transform=identity):
+def loads_ast(object, loads=_loads, transform=dedent, ast_transform=identity):
     if isinstance(object, str):
         object = loads(object)
     object = transform_cells(object, transform)
     return ast_from_cells(object, ast_transform)
+
+loads = partial(_loads, cls=LineNumberDecoder)
 
 if __name__ == "__main__":
     try:

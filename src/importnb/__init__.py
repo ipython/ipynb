@@ -6,11 +6,9 @@ __all__ = "Notebook", "Partial", "reload", "Parameterize", "Lazy", "NotebookTest
 try:
     from .loader import (
         Notebook,
-        Partial,
         load_ipython_extension,
         unload_ipython_extension,
         reload,
-        Lazy,
     )
     from .parameterize import Parameterize
     from .nbtest import NotebookTest, testmod
@@ -19,11 +17,9 @@ try:
 except:
     from loader import (
         Notebook,
-        Partial,
         load_ipython_extension,
         unload_ipython_extension,
         reload,
-        Lazy,
     )
     from parameterize import Parameterize
     from execute import Execute

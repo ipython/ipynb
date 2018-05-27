@@ -3,7 +3,7 @@
 """
 
 try:
-    from IPython.utils.capture import capture_output
+    from IPython.utils.capture import capture_output, CapturedIO
     from IPython import get_ipython
 
     assert get_ipython(), """There is no interactive shell"""
@@ -63,6 +63,13 @@ except:
         @property
         def stderr(self):
             return self._stderr and self._stderr.getvalue() or ""
+
+        def show(self):
+            """write my output to sys.stdout/err as appropriate"""
+            sys.stdout.write(self.stdout)
+            sys.stderr.write(self.stderr)
+            sys.stdout.flush()
+            sys.stderr.flush()
 
 if __name__ == "__main__":
     try:
