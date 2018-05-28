@@ -61,8 +61,7 @@ The [`importnb.loader.Partial`](src/notebooks/loader.ipynb#Partial-Loader) will 
 
 
 ```python
-    from importnb import Partial
-    with Partial():
+    with Notebook(exceptions=BaseException):
         try: from . import readme
         except: import readme
 ```
@@ -118,8 +117,8 @@ In `readme`, `foo` is a parameter because it may be evaluated with ast.literal_v
 
 
 ```python
-    from importnb import Parameterize
-    f = Parameterize(readme)
+    from importnb.execute import Parameterize
+    f = Parameterize().from_filename(readme.__file__)
     
 ```
 
@@ -223,6 +222,7 @@ For example, create a file called `tricks.yaml` containing
         for path in Path(root).rglob("""*.ipynb"""):                
             if 'checkpoint' not in str(path):
                 export(path, Path('src/importnb') / path.with_suffix('.py').relative_to(root))
+                
             
         __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False) 
 
@@ -237,7 +237,7 @@ For example, create a file called `tricks.yaml` containing
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
     
     ----------------------------------------------------------------------
-    Ran 7 tests in 1.014s
+    Ran 7 tests in 1.011s
     
     FAILED (skipped=1, unexpected successes=1)
 
@@ -245,12 +245,14 @@ For example, create a file called `tricks.yaml` containing
 
 ```python
     if __name__ == '__main__':
-        
         !jupyter nbconvert --to markdown readme.ipynb
 ```
 
     [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 7109 bytes to readme.md
+    [NbConvertApp] Support files will be in readme_files/
+    [NbConvertApp] Making directory readme_files
+    [NbConvertApp] Making directory readme_files
+    [NbConvertApp] Writing 8946 bytes to readme.md
 
 
     if __name__ == '__main__':
