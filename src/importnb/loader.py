@@ -243,7 +243,7 @@ def advanced_exec_module(exec_module):
 """
 
 
-class Notebook(NotebookLoader, capture_output):
+class Notebook(NotebookLoader):
     """The Notebook loader is an advanced loader for IPython notebooks:
     
     * Capture stdout, stderr, and display objects.
@@ -271,7 +271,9 @@ class Notebook(NotebookLoader, capture_output):
         exceptions=ImportNbException
     ):
         super().__init__(fullname, path)
-        capture_output.__init__(self, stdout=stdout, stderr=stderr, display=display)
+        self.stdout = stdout
+        self.stderr = stderr
+        self.display = display
         self._lazy = lazy
         self.globals = {} if globals is None else globals
         self.exceptions = exceptions
