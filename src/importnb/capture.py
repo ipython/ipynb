@@ -1,4 +1,7 @@
 # coding: utf-8
+"""# Python and IPython compatible stdout, stderr, and displays captures.
+"""
+
 try:
     from IPython.utils.capture import capture_output, CapturedIO
     from IPython import get_ipython
@@ -68,6 +71,7 @@ except:
             sys.stdout.flush()
             sys.stderr.flush()
 
+
 if __name__ == "__main__":
     try:
         from .utils.export import export
@@ -75,4 +79,3 @@ if __name__ == "__main__":
         from utils.export import export
     export("capture.ipynb", "../capture.py")
     __import__("doctest").testmod()
-

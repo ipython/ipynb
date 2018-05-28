@@ -1,5 +1,48 @@
 # coding: utf-8
-if "show" in globals():
+"""# The [Import Loader](https://docs.python.org/3/reference/import.html#loaders)
+
+`importnb` uses context manager to import Notebooks as Python packages and modules.  `importnb.Notebook` simplest context manager.  It will find and load any notebook as a module.
+
+    >>> m = Notebook().from_filename('loader.ipynb', 'importnb.notebooks')
+    >>> assert m and m.Notebook
+ 
+     
+### `importnb.Partial` 
+
+    >>> with Notebook(exceptions=BaseException): 
+    ...     from importnb.notebooks import loader
+    >>> assert loader._exception is None
+    
+## There is a [lazy importer]()
+
+The Lazy importer will delay the module execution until it is used the first time.  It is a useful approach for delaying visualization or data loading.
+
+    >>> with Notebook(lazy=True): 
+    ...     from importnb.notebooks import loader
+    
+## Loading from resources
+
+Not all notebooks may be loaded as modules throught the standard python import finder.  `from_resource`, or the uncomfortably named `Notebook.from_filename` attributes, support [`importlib_resources`]() style imports and raw file imports.
+
+    >>> from importnb.loader import from_resource
+    >>> assert from_resource(Notebook(), 'loader.ipynb', 'importnb.notebooks')
+    >>> assert Notebook().from_filename('loader.ipynb', 'importnb.notebooks')
+    >>> assert Notebook().from_filename(m.__file__)
+    
+
+## Capturing stdin, stdout, and display objects
+
+    >>> with Notebook(stdout=True, stderr=True, display=True, globals=dict(show=True)):
+    ...     from importnb.notebooks import loader
+    >>> assert loader._capture
+
+## Assigning globals
+
+    >>> nb = Notebook(stdout=True, globals={'show': True}).from_filename('loader.ipynb', 'importnb.notebooks')
+    >>> assert nb._capture.stdout
+"""
+
+if globals().get("show", None):
     print("Catch me if you can")
 
 try:
@@ -62,64 +105,19 @@ from collections import ChainMap
 
 __all__ = "Notebook", "Partial", "reload", "Lazy"
 
+
 class ImportNbException(BaseException):
     """ImportNbException allows all exceptions to be raised, a null except statement always passes."""
 
-def markdown_to_source(object):
-    if object["cell_type"] == "markdown":
-        object = copy(object)
-        object["source"] = codify_markdown(object["source"])
-        object["outputs"] = []
-        object["cell_type"] = "code"
-        object["execution_count"] = None
-    return object
 
-def cell_to_ast(loader, object):
-    if object["cell_type"] == "markdown":
-        object = markdown_to_source(object)
+"""## Converting cells to code
 
-    if object.get("cell_type", None) in ("code", "markdown"):
+These functions are attached to the loaders.s
+"""
 
-        module = ast.increment_lineno(
-            ast.parse(loader.format("".join(object["source"]))), object["metadata"].get("lineno", 1)
-        )
-        return module
-    return ast.Module(body=[])
+"""## Loading from resources
+"""
 
-def nb_to_ast(loader, nb):
-    return ast.Module(body=sum((loader.cell_to_ast(object).body for object in nb["cells"]), []))
-
-@singledispatch
-def codify_markdown(string_or_list):
-    raise TypeError("Markdown must be a string or a list.")
-
-
-@codify_markdown.register(str)
-def codify_markdown_string(str):
-    if '"""' in str:
-        str = "'''{}\n'''".format(str)
-    else:
-        str = '"""{}\n"""'.format(str)
-    return str
-
-
-@codify_markdown.register(list)
-def codify_markdown_list(str):
-    return list(map("{}\n".format, codify_markdown_string("".join(str)).splitlines()))
-
-def source_to_code(loader, object, path=None):
-    cells = []
-    if isinstance(object, bytes):
-        object = loads(object.decode("utf-8"))
-
-    if "cells" in object:
-        cells.extend(object["cells"])
-    elif isinstance(object, dict):
-        cells.append(object)
-    else:
-        cells.append({"source": object, "cell_type": "code"})
-
-    return compile(loader.visit(loader.nb_to_ast({"cells": cells})), path or "<importnb>", "exec")
 
 def from_resource(loader, file=None, resource=None, exec=True, **globals):
     """Load a python module or notebook from a file location.
@@ -156,30 +154,63 @@ def from_resource(loader, file=None, resource=None, exec=True, **globals):
             module.__loader__.exec_module(module, **globals)
     return module
 
-class NotebookLoader(SourceFileLoader, PathHooksContext):
+
+"""# The Notebook Loader
+"""
+
+
+class NotebookLoader(SourceFileLoader, PathHooksContext, NodeTransformer):
     """The simplest implementation of a Notebook Source File Loader.
     >>> with NotebookLoader():
     ...    from importnb.notebooks import decoder
     >>> assert decoder.__file__.endswith('.ipynb')
     """
     EXTENSION_SUFFIXES = ".ipynb",
+    __slots__ = "name", "path",
 
     def __init__(self, fullname=None, path=None):
         super().__init__(fullname, path)
 
     format = staticmethod(dedent)
-    __slots__ = "name", "path",
-    source_to_code = source_to_code
-    nb_to_ast = nb_to_ast
-    cell_to_ast = cell_to_ast
-
     from_filename = from_resource
-
-    # loader_globals(loader_exceptions(loader_capture()))
 
     def __call__(self, fullname=None, path=None):
         self = copy(self)
         return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
+
+    def source_to_code(loader, object, path=None):
+        node = loader.visit(object)
+        return compile(node, path or "<importnb>", "exec")
+
+    def visit(self, node, **opts):
+        if isinstance(node, bytes):
+            node = loads(node.decode("utf-8"))
+
+        if isinstance(node, dict):
+            if "cells" in node:
+                body = []
+                for cell in node["cells"]:
+                    _node = self.visit(cell)
+                    _node = ast.increment_lineno(_node, cell["metadata"].get("lineno", 1))
+                    body.extend(getattr(_node, "body", [_node]))
+                node = ast.Module(body=body)
+
+            elif "source" in node:
+                source = "".join(node["source"])
+                if node["cell_type"] == "markdown":
+                    node = ast.Expr(ast.Str(s=source))
+                elif node["cell_type"] == "code":
+                    node = ast.parse(
+                        self.format(source), self.path or "<notebook_node_visitor>", "exec"
+                    )
+            else:
+                node = ast.Module(body=[])
+        return ast.fix_missing_locations(super().visit(node))
+
+
+"""## An advanced `exec_module` decorator.
+"""
+
 
 def advanced_exec_module(exec_module):
     """Decorate `SourceFileLoader.exec_module` objects with abilities to:
@@ -191,7 +222,7 @@ def advanced_exec_module(exec_module):
     """
 
     def _exec_module(loader, module, **globals):
-        module.__exception__ = None
+        module._exception = None
         module.__dict__.update(globals)
         with capture_output(
             stdout=loader.stdout, stderr=loader.stderr, display=loader.display
@@ -204,7 +235,12 @@ def advanced_exec_module(exec_module):
 
     return _exec_module
 
-class Notebook(NotebookLoader, ast.NodeTransformer, capture_output):
+
+"""# The Advanced Notebook loader
+"""
+
+
+class Notebook(NotebookLoader, capture_output):
     """The Notebook loader is an advanced loader for IPython notebooks:
     
     * Capture stdout, stderr, and display objects.
@@ -215,7 +251,6 @@ class Notebook(NotebookLoader, ast.NodeTransformer, capture_output):
     """
     EXTENSION_SUFFIXES = ".ipynb",
 
-    _compile = staticmethod(compile)
     format = _transform = staticmethod(dedent)
 
     __slots__ = "stdout", "stderr", "display", "_lazy", "exceptions", "globals"
@@ -246,8 +281,6 @@ class Notebook(NotebookLoader, ast.NodeTransformer, capture_output):
 
     exec_module = advanced_exec_module(NotebookLoader.exec_module)
 
-    def visit(self, node):
-        return ast.fix_missing_locations(super().visit(node))
 
 def load_ipython_extension(ip=None):
     add_path_hooks(Notebook, Notebook.EXTENSION_SUFFIXES)
@@ -256,12 +289,23 @@ def load_ipython_extension(ip=None):
 def unload_ipython_extension(ip=None):
     remove_one_path_hook(Notebook)
 
+
+"""# Developer
+"""
+
 if __name__ == "__main__":
     try:
         from utils.export import export
     except:
         from .utils.export import export
-    export("loader.ipynb", "../loader.py")
+    #         export('loader.ipynb', '../loader.py')
     m = Notebook().from_filename("loader.ipynb")
     print(__import__("doctest").testmod(m))
 
+"""   !jupyter nbconvert --to python --stdout loader.ipynb > ../loader.py
+"""
+
+"""# More Information
+
+The `importnb.loader` module recreates basic Python importing abilities.  Have a look at [`execute.ipynb`](execute.ipynb) for more advanced usages.
+"""

@@ -10,9 +10,8 @@ try:
         unload_ipython_extension,
         reload,
     )
-    from .parameterize import Parameterize
     from .nbtest import NotebookTest, testmod
-    from .execute import Execute
+    from .execute import Execute, Parameterize
     
 except:
     from loader import (
@@ -21,6 +20,5 @@ except:
         unload_ipython_extension,
         reload,
     )
-    from parameterize import Parameterize
-    from execute import Execute
+    from execute import Execute, Parameterize
     from nbtest import NotebookTest, testmod

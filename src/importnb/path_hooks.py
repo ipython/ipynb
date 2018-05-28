@@ -1,10 +1,15 @@
 # coding: utf-8
+"""# `sys.path_hook` modifiers
+
+Many suggestions for importing notebooks use `sys.meta_paths`, but `importnb` relies on the `sys.path_hooks` to load any notebook in the path. `PathHooksContext` is a base class for the `importnb.Notebook` `SourceFileLoader`.
+"""
+
 try:
     from .capture import capture_output, CapturedIO
-    from .decoder import identity, loads, dedent, cell_to_ast
+    from .decoder import identity, loads, dedent
 except:
     from capture import capture_output, CapturedIO
-    from decoder import identity, loads, dedent, cell_to_ast
+    from decoder import identity, loads, dedent
 
 import inspect, sys, ast
 from pathlib import Path
@@ -16,6 +21,7 @@ except:
     from importlib.machinery import FileFinder
 
 from contextlib import contextmanager
+
 
 @contextmanager
 def modify_file_finder_details():
@@ -37,6 +43,11 @@ def modify_file_finder_details():
     sys.path_hooks.insert(id, FileFinder.path_hook(*details))
     sys.path_importer_cache.clear()
 
+
+"""Update the file_finder details with functions to append and remove the [loader details](https://docs.python.org/3.7/library/importlib.html#importlib.machinery.FileFinder).
+"""
+
+
 def add_path_hooks(loader, extensions, *, position=0):
     """Update the FileFinder loader in sys.path_hooks to accomodate a {loader} with the {extensions}"""
     with modify_file_finder_details() as details:
@@ -53,12 +64,14 @@ def remove_one_path_hook(loader):
                 details.pop(ct)
                 break
 
+
 def lazy_loader_cls(loader):
     """Extract the loader contents of a lazy loader in the import path."""
     try:
         return inspect.getclosurevars(loader).nonlocals.get("cls", loader)
     except:
         return loader
+
 
 class PathHooksContext:
 
@@ -80,6 +93,7 @@ class PathHooksContext:
                 ImportWarning("""LazyLoading is only available in > Python 3.5""")
         return loader
 
+
 @contextmanager
 def modify_sys_path(file):
     """This is only invoked when using from_resource."""
@@ -89,6 +103,10 @@ def modify_sys_path(file):
         sys.path = [object for object in sys.path if str(Path(object)) != path]
     else:
         yield
+
+
+"""# Developer
+"""
 
 if __name__ == "__main__":
     try:
