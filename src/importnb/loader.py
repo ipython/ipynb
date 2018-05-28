@@ -169,7 +169,7 @@ class NotebookLoader(SourceFileLoader, PathHooksContext, NodeTransformer):
     __slots__ = "name", "path",
 
     def __init__(self, fullname=None, path=None):
-        super().__init__(fullname, path)
+        super().__init__(fullname, path), PathHooksContext.__init__(self)
 
     format = staticmethod(dedent)
     from_filename = from_resource
@@ -207,6 +207,9 @@ class NotebookLoader(SourceFileLoader, PathHooksContext, NodeTransformer):
                 node = ast.Module(body=[])
         return ast.fix_missing_locations(super().visit(node))
 
+
+"""## As a context manager
+"""
 
 """## An advanced `exec_module` decorator.
 """
@@ -298,7 +301,7 @@ if __name__ == "__main__":
         from utils.export import export
     except:
         from .utils.export import export
-    #         export('loader.ipynb', '../loader.py')
+    export("loader.ipynb", "../loader.py")
     m = Notebook().from_filename("loader.ipynb")
     print(__import__("doctest").testmod(m))
 
