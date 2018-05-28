@@ -8,6 +8,7 @@ try:
 except:
     from importnb import Notebook
 
+
 def _test():
     parser = argparse.ArgumentParser(description="doctest runner")
     parser.add_argument(
@@ -65,6 +66,7 @@ def _test():
         if failures:
             return 1
     return 0
+
 
 if __name__ == "__main__":
     _test()

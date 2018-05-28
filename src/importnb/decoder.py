@@ -17,8 +17,10 @@ try:
 except:
     from textwrap import dedent
 
+
 def identity(*x):
     return x[0]
+
 
 class LineNumberDecoder(JSONDecoder):
     """A JSON Decoder to return a NotebookNode with lines numbers in the metadata."""
@@ -65,73 +67,14 @@ class LineNumberDecoder(JSONDecoder):
                 {"lineno": len(s_and_end[0][:next].rsplit('"source":', 1)[0].splitlines())}
             )
 
-            if object["cell_type"] == "markdown":
-                object["source"] = codify_markdown(object["source"])
-                object["outputs"] = []
-                object["cell_type"] = "code"
-                object["execution_count"] = None
-
         for key in ("source", "text"):
             if key in object:
                 object[key] = "".join(object[key])
 
         return object, next
 
-@singledispatch
-def codify_markdown(string_or_list):
-    raise TypeError("Markdown must be a string or a list.")
 
-
-@codify_markdown.register(str)
-def codify_markdown_string(str):
-    if '"""' in str:
-        str = "'''{}\n'''".format(str)
-    else:
-        str = '"""{}\n"""'.format(str)
-    return str
-
-
-@codify_markdown.register(list)
-def codify_markdown_list(str):
-    return list(map("{}\n".format, codify_markdown_string("".join(str)).splitlines()))
-
-
-load = partial(_load, cls=LineNumberDecoder)
 loads = partial(_loads, cls=LineNumberDecoder)
-
-def cell_to_ast(object, transform=identity, prefix=False):
-    module = ast.increment_lineno(
-        ast.parse(transform("".join(object["source"]))), object["metadata"].get("lineno", 1)
-    )
-    prefix and module.body.insert(0, ast.Expr(ast.Ellipsis()))
-    return module
-
-def transform_cells(object, transform=dedent):
-    for cell in object["cells"]:
-        if "source" in cell:
-            cell["source"] = transform("".join(cell["source"]))
-    return object
-
-
-def ast_from_cells(object, transform=identity):
-    import ast
-
-    module = ast.Module(body=[])
-    for cell in object["cells"]:
-        module.body.extend(
-            ast.fix_missing_locations(
-                ast.increment_lineno(
-                    ast.parse("".join(cell["source"])), cell["metadata"].get("lineno", 1)
-                )
-            ).body
-        )
-    return module
-
-def loads_ast(object, loads=loads, transform=dedent, ast_transform=identity):
-    if isinstance(object, str):
-        object = loads(object)
-    object = transform_cells(object, transform)
-    return ast_from_cells(object, ast_transform)
 
 if __name__ == "__main__":
     try:
@@ -141,4 +84,3 @@ if __name__ == "__main__":
     export("decoder.ipynb", "../decoder.py")
 
     __import__("doctest").testmod()
-

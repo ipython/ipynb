@@ -17,6 +17,7 @@ from doctest import DocTestSuite
 
 __file__ = globals().get("__file__", "nbtest.ipynb")
 
+
 def attach_doctest(module):
     """A function to include doctests in a unittest suite.
     """
@@ -27,6 +28,7 @@ def attach_doctest(module):
 
     module.load_tests = load_tests
     return module
+
 
 def testmod(
     module, extras="", doctest=True, exit=True, verbosity=1, failfast=None, catchbreak=None
@@ -47,20 +49,22 @@ def testmod(
         ...
     return module
 
+
 class NotebookTest(Notebook):
 
     def exec_module(self, module):
         super().exec_module(module)
         testmod(module)
 
+
 class _test(TestCase):
 
     def test_importnb_test(self):
         assert True
+
 
 if __name__ == "__main__":
     export("nbtest.ipynb", "../nbtest.py")
     __import__("doctest").testmod(Notebook().from_filename("nbtest.ipynb"))
     m = NotebookTest().from_filename(__file__)
     testmod(m, "-f")
-
