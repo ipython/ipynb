@@ -131,7 +131,7 @@ These functions are attached to the loaders.s
 """
 
 
-def from_resource(loader, file=None, resource=None, exec=True, dir=None, **globals):
+def from_resource(loader, file=None, resource=None, exec=True, **globals):
     """Load a python module or notebook from a file location.
 
     from_filename is not reloadable because it is not in the sys.modules.
@@ -162,7 +162,7 @@ def from_resource(loader, file=None, resource=None, exec=True, dir=None, **globa
 
         module = module_from_spec(spec_from_loader(name, loader))
         if exec:
-            stack.enter_context(change_dir(dir or loader.dir or file.parent))
+            stack.enter_context(modify_sys_path(file))
             module.__loader__.exec_module(module, **globals)
     return module
 

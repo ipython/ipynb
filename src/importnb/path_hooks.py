@@ -100,8 +100,11 @@ class PathHooksContext(ExitStack):
 @contextmanager
 def change_dir(dir):
     next = Path().absolute()
-    yield os.chdir(str(dir))
-    os.chdir(str(next))
+    if dir.absolute() != next:
+        yield os.chdir(str(dir))
+        os.chdir(str(next))
+    else:
+        yield None
 
 
 @contextmanager
