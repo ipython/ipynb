@@ -48,11 +48,23 @@ if globals().get("show", None):
 try:
     from .capture import capture_output, CapturedIO
     from .decoder import identity, loads, dedent
-    from .path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
+    from .path_hooks import (
+        PathHooksContext,
+        modify_sys_path,
+        add_path_hooks,
+        remove_one_path_hook,
+        change_dir,
+    )
 except:
     from capture import capture_output, CapturedIO
     from decoder import identity, loads, dedent
-    from path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
+    from path_hooks import (
+        PathHooksContext,
+        modify_sys_path,
+        add_path_hooks,
+        remove_one_path_hook,
+        change_dir,
+    )
 
 import inspect, sys, ast
 from copy import copy
@@ -119,7 +131,7 @@ These functions are attached to the loaders.s
 """
 
 
-def from_resource(loader, file=None, resource=None, exec=True, **globals):
+def from_resource(loader, file=None, resource=None, exec=True, dir=None, **globals):
     """Load a python module or notebook from a file location.
 
     from_filename is not reloadable because it is not in the sys.modules.
@@ -139,7 +151,7 @@ def from_resource(loader, file=None, resource=None, exec=True, **globals):
         else:
             loader = SourceFileLoader(name, str(file))
 
-        lazy = getattr(loader, "_lazy", False)
+        lazy = getattr(loader, "lazy", False)
         if lazy:
             try:
                 from importlib.util import LazyLoader
@@ -150,7 +162,7 @@ def from_resource(loader, file=None, resource=None, exec=True, **globals):
 
         module = module_from_spec(spec_from_loader(name, loader))
         if exec:
-            stack.enter_context(modify_sys_path(file))
+            stack.enter_context(change_dir(dir or loader.dir or file.parent))
             module.__loader__.exec_module(module, **globals)
     return module
 
@@ -169,7 +181,8 @@ class NotebookLoader(SourceFileLoader, PathHooksContext, NodeTransformer):
     __slots__ = "name", "path",
 
     def __init__(self, fullname=None, path=None):
-        super().__init__(fullname, path), PathHooksContext.__init__(self)
+        super().__init__(fullname, path)
+        PathHooksContext.__init__(self)
 
     format = staticmethod(dedent)
     from_filename = from_resource
@@ -197,7 +210,7 @@ class NotebookLoader(SourceFileLoader, PathHooksContext, NodeTransformer):
 
             elif "source" in node:
                 source = "".join(node["source"])
-                if node["cell_type"] == "markdown":
+                if getattr(self, "no_docs", False) and node["cell_type"] == "markdown":
                     node = ast.Expr(ast.Str(s=source))
                 elif node["cell_type"] == "code":
                     node = ast.parse(
@@ -206,6 +219,11 @@ class NotebookLoader(SourceFileLoader, PathHooksContext, NodeTransformer):
             else:
                 node = ast.Module(body=[])
         return ast.fix_missing_locations(super().visit(node))
+
+    visit_Module = NodeTransformer.generic_visit
+
+    def generic_visit(self, node):
+        return node
 
 
 """## As a context manager
@@ -256,7 +274,7 @@ class Notebook(NotebookLoader):
 
     format = _transform = staticmethod(dedent)
 
-    __slots__ = "stdout", "stderr", "display", "_lazy", "exceptions", "globals"
+    __slots__ = "stdout", "stderr", "display", "lazy", "exceptions", "globals", "dir", "no_docs"
 
     def __init__(
         self,
@@ -268,15 +286,19 @@ class Notebook(NotebookLoader):
         display=False,
         lazy=False,
         globals=None,
-        exceptions=ImportNbException
+        exceptions=ImportNbException,
+        dir=None,
+        no_docs=True
     ):
         super().__init__(fullname, path)
         self.stdout = stdout
         self.stderr = stderr
         self.display = display
-        self._lazy = lazy
+        self.lazy = lazy
         self.globals = {} if globals is None else globals
         self.exceptions = exceptions
+        self.dir = dir
+        self.no_docs = no_docs
 
     def create_module(self, spec):
         module = _new_module(spec.name)

@@ -11,7 +11,7 @@ except:
     from capture import capture_output, CapturedIO
     from decoder import identity, loads, dedent
 
-import inspect, sys, ast
+import inspect, sys, ast, os
 from pathlib import Path
 
 try:
@@ -20,7 +20,7 @@ except:
     # python 3.4
     from importlib.machinery import FileFinder
 
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 
 
 @contextmanager
@@ -73,25 +73,35 @@ def lazy_loader_cls(loader):
         return loader
 
 
-class PathHooksContext:
+class PathHooksContext(ExitStack):
 
     def __enter__(self, position=0):
+        self = super().__enter__()
         add_path_hooks(self.prepare(self), self.EXTENSION_SUFFIXES, position=position)
+        if getattr(self, "dir", None):
+            self.enter_context(change_dir(self.dir))
         return self
 
     def __exit__(self, *excepts):
-        remove_one_path_hook(self)
+        remove_one_path_hook(self), super().__exit__(*excepts)
 
     def prepare(self, loader):
-        if getattr(self, "_lazy", None):
+        if getattr(self, "lazy", None):
             try:
                 from importlib.util import LazyLoader
 
-                if self._lazy:
+                if self.lazy:
                     loader = LazyLoader.factory(loader)
             except:
                 ImportWarning("""LazyLoading is only available in > Python 3.5""")
         return loader
+
+
+@contextmanager
+def change_dir(dir):
+    next = Path().absolute()
+    yield os.chdir(str(dir))
+    os.chdir(str(next))
 
 
 @contextmanager

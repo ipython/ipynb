@@ -65,23 +65,6 @@ def loader_include_notebook(loader, module):
         module._notebook = loads(loader.get_data(loader.path).decode("utf-8"))
 
 
-class NotebookCells(Notebook):
-    """The NotebookCells loader's contain a _notebook attributes containing a state of the notebook.
-    
-    >>> assert NotebookCells().from_filename('execute.ipynb', 'importnb.notebooks')._notebook
-    """
-
-    @advanced_exec_module
-    def exec_module(self, module, **globals):
-        loader_include_notebook(self, module)
-        _call_with_frames_removed(
-            exec, self.source_to_code(module._notebook), module.__dict__, module.__dict__
-        )
-
-
-if __name__ == "__main__":
-    nb = NotebookCells().from_filename("execute.ipynb", "importnb.notebooks")
-
 """## Recreating IPython output objectss
 """
 
@@ -107,7 +90,69 @@ def new_display(object):
 """
 
 
-class Execute(Notebook):
+class Interactive(Notebook):
+    """The Execute loader reproduces outputs in the module._notebook attribute.
+
+        >>> nb_raw = Notebook(display=True, stdout=True).from_filename('execute.ipynb', 'importnb.notebooks')
+        >>> with Execute(display=True, stdout=True) as loader:
+        ...    nb = loader.from_filename('execute.ipynb', 'importnb.notebooks', show=True)
+
+        The loader includes the first markdown cell or leading block string as the docstring.
+
+        >>> assert nb.__doc__ and nb_raw.__doc__ 
+        >>> assert nb.__doc__ == nb_raw.__doc__
+
+        Nothing should have been executed.
+
+        >>> assert any(cell.get('outputs', None) for cell in nb._notebook['cells'])        
+        """
+
+    @advanced_exec_module
+    def exec_module(self, module, **globals):
+        loader_include_notebook(self, module)
+        for i, cell in enumerate(module._notebook["cells"]):
+            if module._exception:
+                break
+            self.exec_cell(module, cell, index=i)
+
+    def exec_cell(self, module, cell, index=0):
+        """Returns an error if there was one."""
+        _call_with_frames_removed(
+            exec,
+            self.source_to_code(cell, interactive=bool(index)),
+            module.__dict__,
+            module.__dict__,
+        )
+
+    def visit_Module(self, node):
+        return ast.Interactive(body=super().visit_Module(node).body)
+
+    def source_to_code(loader, cell, path=None, interactive=True):
+        """Transform ast modules into Interactive and Expression nodes. This 
+            will allow the cell outputs to be captured.  `interactive` is only true for
+            the first markdown cell.
+            """
+
+        node = loader.visit(cell)
+
+        if isinstance(node, ast.Expr):
+            node = ast.Expression(body=node.value) if interactive else ast.Module(body=[node])
+
+        if isinstance(node, ast.Expression):
+            mode = "eval"
+        if isinstance(node, ast.Interactive):
+            mode = "single"
+        if isinstance(node, ast.Module):
+            mode = "exec"
+
+        return compile(node, path or "<importnb>", mode)
+
+
+if __name__ == "__main__":
+    nb = Interactive(exceptions=BaseException).from_filename("execute.ipynb", "importnb.notebooks")
+
+
+class Execute(Interactive):
     """The Execute loader reproduces outputs in the module._notebook attribute.
 
     >>> nb_raw = Notebook(display=True, stdout=True).from_filename('execute.ipynb', 'importnb.notebooks')
@@ -125,71 +170,31 @@ class Execute(Notebook):
     """
 
     @advanced_exec_module
-    def exec_module(self, module, **globals):
-        # Remove the outputs
+    def exec_module(self, module):
         loader_include_notebook(self, module)
         for cell in module._notebook["cells"]:
             if "outputs" in cell:
                 cell["outputs"] = []
-        for i, cell in enumerate(module._notebook["cells"]):
-            error = None
-            with capture_output() as out:
-                try:
-                    _call_with_frames_removed(
-                        exec,
-                        self.source_to_code(cell, interactive=bool(i)),
-                        module.__dict__,
-                        module.__dict__,
-                    )
-                except BaseException as Exception:
-                    error = new_error(Exception)
-                    try:
-                        module.__exception__ = Exception
-                        raise Exception
-                    except self.exceptions:
-                        ...
-                    break
-                finally:
-                    if "outputs" in cell:
-                        if out.outputs:
-                            cell["outputs"] += [new_display(object) for object in out.outputs]
-                        if out.stdout:
-                            cell["outputs"] += [new_stream(out.stdout)]
-                        if error:
-                            cell["outputs"] += [error]
-                        if out.stderr:
-                            cell["outputs"] += [new_stream(out.stderr, "stderr")]
-            out.show()
+        super().exec_module(module)
 
-    def source_to_code(loader, object, path=None, interactive=True):
-        """Transform ast modules into Interactive and Expression nodes. This 
-        will allow the cell outputs to be captured.  `interactive` is only true for
-        the first markdown cell.
-        """
-
-        node = loader.visit(object)
-
-        if isinstance(node, ast.Expr):
-            """An expression is a special case where a markdown cell was 
-            turned into a docstring
-            """
-            if interactive:
-                """An expression will not print to the stdout."""
-                node = ast.Expression(body=node.value)
-                mode = "eval"
-            else:
-                """This tree replaces the docstring"""
-                node = ast.Module(body=[node])
-                mode = "exec"
-        elif isinstance(node, ast.Module):
-            """In the exectuion mode we use interactive nodes to capture stdouts."""
-            node = ast.Interactive(body=node.body)
-            mode = "single"
-        return compile(node, path or "<importnb>", mode)
+    def exec_cell(self, module, cell, index=0):
+        error = None
+        with capture_output() as out:
+            exception = super().exec_cell(module, cell, index=index)
+            if "outputs" in cell:
+                if out.outputs:
+                    cell["outputs"] += [new_display(object) for object in out.outputs]
+                if out.stdout:
+                    cell["outputs"] += [new_stream(out.stdout)]
+                if error:
+                    cell["outputs"] += [error]
+                if out.stderr:
+                    cell["outputs"] += [new_stream(out.stderr, "stderr")]
+        out.show()
 
 
 if __name__ == "__main__":
-    nb = Execute().from_filename("execute.ipynb", "importnb.notebooks")
+    nb = Execute(display=True).from_filename("execute.ipynb", "importnb.notebooks")
 
 """# Parameterizing notebooks
 """
@@ -218,7 +223,7 @@ class AssignmentIgnore(AssignmentFinder):
             return ast.Expr(ast.NameConstant(value=None))
         return node
 
-    generic_visit = NodeTransformer.generic_visit
+    generic_visit = Execute.generic_visit
 
 
 class Parameterize(Execute):
@@ -285,8 +290,8 @@ def vars_to_sig(**vars):
 
 
 if __name__ == "__main__":
-    f = Parameterize(display=True).from_filename("execute.ipynb", "importnb.notebooks")
-    print(f(a_variable_to_parameterize=1000).a_variable_to_parameterize)
+    f = Parameterize(exceptions=BaseException).from_filename("execute.ipynb", "importnb.notebooks")
+    m = f(a_variable_to_parameterize=1000)
 
 a_variable_to_parameterize = 42
 
