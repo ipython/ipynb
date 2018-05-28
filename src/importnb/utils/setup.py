@@ -81,10 +81,10 @@ class build_ipynb(build_py):
 
         return modules
 
+
 if __name__ == "__main__":
     try:
         from ..loader import export
     except:
         from importnb.loader import export
     export("setup.ipynb", "../../utils/setup.py")
-

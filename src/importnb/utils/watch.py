@@ -13,6 +13,7 @@ Creates a module path from a source file to watch and execute file changes.
 import os
 from watchdog.tricks import ShellCommandTrick
 
+
 class ModuleTrick(ShellCommandTrick):
     """ModuleTrick is a watchdog trick that """
 
@@ -32,10 +33,10 @@ class ModuleTrick(ShellCommandTrick):
         except AttributeError:
             ...
 
+
 if __name__ == "__main__":
     try:
         from ..loader import export
     except:
         from importnb.loader import export
     export("watch.ipynb", "../../utils/watch.py")
-
