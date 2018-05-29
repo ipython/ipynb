@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-__all__ = "Notebook", "reload", "Parameterize", "NotebookTest", "testmod", "Execute"
+__all__ = "Notebook", "reload", "Parameterize", "NotebookTest", "testmod", "Execute", "Interactive"
 
 try:
     from .loader import (
@@ -11,7 +11,7 @@ try:
         reload,
     )
     from .nbtest import NotebookTest, testmod
-    from .execute import Execute, Parameterize
+    from .execute import Execute, Parameterize, Interactive
     
 except:
     from loader import (
@@ -20,5 +20,5 @@ except:
         unload_ipython_extension,
         reload,
     )
-    from execute import Execute, Parameterize
+    from execute import Execute, Parameterize, Interactive
     from nbtest import NotebookTest, testmod
