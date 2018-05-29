@@ -80,6 +80,7 @@ class PathHooksContext(ExitStack):
         add_path_hooks(self.prepare(self), self.EXTENSION_SUFFIXES, position=position)
         if getattr(self, "dir", None):
             self.enter_context(change_dir(self.dir))
+            self.enter_context(modify_sys_path(self.dir))
         return self
 
     def __exit__(self, *excepts):
