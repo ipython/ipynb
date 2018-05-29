@@ -226,6 +226,12 @@ class AssignmentIgnore(AssignmentFinder):
     generic_visit = Execute.generic_visit
 
 
+def copy_module(module):
+    new = type(module)(module.__name__)
+    new.__dict__.update(module.__dict__)
+    return new
+
+
 class Parameterize(Execute):
     """Discover any literal ast expression and create parameters from them. 
     
@@ -270,7 +276,7 @@ class Parameterize(Execute):
         def recall(**kwargs):
             nonlocal module, globals
             module.__loader__.exec_module(module, **ChainMap(kwargs, globals))
-            return module
+            return copy_module(module)
 
         recall.__signature__ = vars_to_sig(
             **{k: v for k, v in module.__dict__.items() if not k.startswith("_")}
