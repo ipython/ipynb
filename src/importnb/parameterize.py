@@ -1,23 +1,15 @@
 # coding: utf-8
-'''# The `Execute` importer
+"""# `Parameterize` notebooks.
 
 The execute importer maintains an attribute that includes the notebooks inputs and outputs.
 
-    >>> import importnb    
-    >>> from importnb import notebooks
-    >>> with Execute(stdout=True):
-    ...      from importnb.notebooks import execute as nb
-    
-An executed notebook contains a `__notebook__` attributes that is populated with cell outputs.
+    >>> f = Parameterize().from_filename('parameterize.ipynb', 'importnb.notebooks')
+    >>> assert 'a_variable_to_parameterize' in f.__signature__.parameters
+    >>> assert f(a_variable_to_parameterize=100)
 
-    >>> assert nb._notebook
-    
-The `__notebook__` attribute complies with `nbformat`
+"""
 
-    >>> from nbformat.v4 import new_notebook
-    >>> assert new_notebook(**nb._notebook), """The notebook is not a valid nbformat"""
-    
-'''
+a_variable_to_parameterize = 42
 
 if globals().get("show", None):
     print("I am tested.")
@@ -92,11 +84,7 @@ def copy_module(module):
 
 class Parameterize(Execute):
     """Discover any literal ast expression and create parameters from them. 
-    
-    >>> f = Parameterize().from_filename('parameterize.ipynb', 'importnb.notebooks')
-    >>> assert 'a_variable_to_parameterize' in f.__signature__.parameters
-    >>> assert f(a_variable_to_parameterize=100)
-    
+            
     Parametize is a NodeTransformer that import any nodes return by Parameterize Node.
     """
 
@@ -155,8 +143,6 @@ def vars_to_sig(**vars):
 if __name__ == "__main__":
     f = Parameterize(exceptions=BaseException).from_filename("execute.ipynb", "importnb.notebooks")
     m = f(a_variable_to_parameterize=10)
-
-a_variable_to_parameterize = 42
 
 """# Developer
 """
