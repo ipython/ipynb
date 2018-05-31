@@ -71,6 +71,7 @@ from copy import copy
 from importlib.machinery import SourceFileLoader
 from importlib.util import spec_from_loader
 
+from importlib._bootstrap_external import decode_source
 from importlib._bootstrap import _call_with_frames_removed, _new_module
 
 try:
@@ -171,7 +172,15 @@ def from_resource(loader, file=None, resource=None, exec=True, **globals):
 """
 
 
-class NotebookLoader(SourceFileLoader, PathHooksContext, NodeTransformer):
+def assign_line_numbers(cell, node):
+    return ast.fix_missing_locations(ast.increment_lineno(node, cell["metadata"].get("lineno", 1)))
+
+
+def markdown_string_expression(cell):
+    return ast.Module(body=[ast.Expr(ast.Str(s="".join(cell["source"])))])
+
+
+class NotebookLoader(SourceFileLoader, PathHooksContext):
     """The simplest implementation of a Notebook Source File Loader.
     >>> with NotebookLoader():
     ...    from importnb.notebooks import decoder
@@ -184,47 +193,91 @@ class NotebookLoader(SourceFileLoader, PathHooksContext, NodeTransformer):
         super().__init__(fullname, path)
         PathHooksContext.__init__(self)
 
-    format = staticmethod(dedent)
+    @property
+    def format(self):
+        return dedent
+
     from_filename = from_resource
 
     def __call__(self, fullname=None, path=None):
         self = copy(self)
         return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
 
-    def source_to_code(loader, object, path=None):
-        node = loader.visit(object)
-        return compile(node, path or "<importnb>", "exec")
+    def _iter_cells(self, nb):
+        for i, cell in enumerate(nb["cells"]):
+            node = None
+            if i == 0 and cell["cell_type"] == "markdown":
+                node = markdown_string_expression(cell)
+            if cell["cell_type"] == "code":
+                node = ast.parse(self.format("".join(cell["source"])))
+            if node is not None:
+                yield cell, assign_line_numbers(cell, node)
 
-    def visit(self, node, **opts):
-        if isinstance(node, bytes):
-            node = loads(node.decode("utf-8"))
+    def nb_to_ast(self, nb):
+        module = ast.Module(body=[])
+        for i, (cell, node) in enumerate(self._iter_cells(nb)):
+            module.body.extend(node.body)
+        return module
 
-        if isinstance(node, dict):
-            if "cells" in node:
-                body = []
-                for cell in node["cells"]:
-                    _node = self.visit(cell)
-                    _node = ast.increment_lineno(_node, cell["metadata"].get("lineno", 1))
-                    body.extend(getattr(_node, "body", [_node]))
-                node = ast.Module(body=body)
+    def source_to_code(self, object, path=None):
+        nb = loads(decode_source(object))
+        module = self.nb_to_ast(nb)
+        return compile(module, path or "<importnb>", "exec")
 
-            elif "source" in node:
-                source = "".join(node["source"])
-                if getattr(self, "no_docs", False) and node["cell_type"] == "markdown":
-                    node = ast.Expr(ast.Str(s=source))
-                elif node["cell_type"] == "code":
-                    node = ast.parse(
-                        self.format(source), self.path or "<notebook_node_visitor>", "exec"
-                    )
-            else:
-                node = ast.Module(body=[])
-        return ast.fix_missing_locations(super().visit(node))
 
-    visit_Module = NodeTransformer.generic_visit
+'''    class NotebookLoader(SourceFileLoader, PathHooksContext, NodeTransformer):
+        """The simplest implementation of a Notebook Source File Loader.
+        >>> with NotebookLoader():
+        ...    from importnb.notebooks import decoder
+        >>> assert decoder.__file__.endswith('.ipynb')
+        """
+        EXTENSION_SUFFIXES = '.ipynb',
+        __slots__ = 'name', 'path',
+        
+        def __init__(self, fullname=None, path=None): 
+            super().__init__(fullname, path)
+            PathHooksContext.__init__(self)
+        
+        format = staticmethod(dedent)
+        from_filename = from_resource
+    
+        def __call__(self, fullname=None, path=None): 
+            self= copy(self)
+            return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
 
-    def generic_visit(self, node):
-        return node
+        def source_to_code(loader, object, path=None):
+            node = loader.visit(object)
+            return compile(node, path or "<importnb>", 'exec')
+        
+        def visit(self, node, **opts): 
+            if isinstance(node, bytes):
+                node = loads(node.decode('utf-8'))
 
+            if isinstance(node, dict):
+                if 'cells' in node:                
+                    body = []
+                    for cell in node['cells']:
+                        _node = self.visit(cell)
+                        _node = ast.increment_lineno(
+                            _node, cell["metadata"].get("lineno", 1))
+                        body.extend(getattr(_node, 'body', [_node]))
+                    node = ast.Module(body=body)
+
+                elif 'source' in node:
+                    source = "".join(node["source"])
+                    if getattr(self, 'no_docs', False) and node['cell_type'] == 'markdown':
+                        node = ast.Expr(ast.Str(s=source))
+                    elif node['cell_type'] == 'code':
+                        node = ast.parse(
+                            self.format(source), self.path or '<notebook_node_visitor>', 'exec')
+                else: 
+                    node = ast.Module(body=[])
+            return ast.fix_missing_locations(super().visit(node))        
+        
+        visit_Module = NodeTransformer.generic_visit
+        
+        def generic_visit(self, node): return node
+'''
 
 """## As a context manager
 """
@@ -327,7 +380,7 @@ if __name__ == "__main__":
         from .utils.export import export
     export("loader.ipynb", "../loader.py")
     m = Notebook().from_filename("loader.ipynb")
-    print(__import__("doctest").testmod(m))
+    print(__import__("doctest").testmod(m, verbose=2))
 
 """   !jupyter nbconvert --to python --stdout loader.ipynb > ../loader.py
 """
