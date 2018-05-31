@@ -7,8 +7,8 @@ __importnb__ imports notebooks as modules & packages.
 
 
 
-    pip install importnb 
-
+    pip install importnb
+    
 ---
 
     conda install -c conda-forge importnb
@@ -23,16 +23,16 @@ Use the `Notebook` context manager.
 
 
 ```python
-    with __import__('importnb').Notebook():
+    with __import__('importnb').Notebook(): 
         import readme
 ```
 
-#### or explicity
+#### or explicity 
 
 
 ```python
     from importnb import Notebook
-    with Notebook():
+    with Notebook(): 
         import readme
 ```
 
@@ -44,7 +44,7 @@ Use the `Notebook` context manager.
     assert readme.__file__.endswith('.ipynb')
 ```
 
-### Modules may be reloaded
+### Modules may be reloaded 
 
 The context manager is required to `reload` a module.
 
@@ -104,9 +104,9 @@ The first cell is the module docstring.
 Notebook names may not be valid Python paths.  In this case, use `Notebook.from_filename`.
 
        Notebook.from_filename('readme.ipynb')
-
+       
 Import under the `__main__` context.
-
+       
        Notebook.from_filename('readme.ipynb', main=True)
 
 # Parameterize Notebooks
@@ -117,9 +117,9 @@ In `readme`, `foo` is a parameter because it may be evaluated with ast.literal_v
 
 
 ```python
-    from importnb.execute import Parameterize
+    from importnb import Parameterize
     f = Parameterize().from_filename(readme.__file__)
-
+    
 ```
 
 The parameterized module is a callable that evaluates with different literal statements.
@@ -150,15 +150,15 @@ The parameterized module is a callable that evaluates with different literal sta
 Avoid the use of the context manager using loading importnb as IPython extension.
 
     %load_ext importnb
-
+    
 `%unload_ext importnb` will unload the extension.
 
 #### Default Extension
 
-`importnb` may allow notebooks to import by default with
+`importnb` may allow notebooks to import by default with 
 
     importnb-install
-
+    
 This extension will install a script into the default IPython profile startup that is called each time an IPython session is created.  
 
 Uninstall the extension with `importnb-install`.
@@ -168,7 +168,7 @@ Uninstall the extension with `importnb-install`.
 When the default extension is loaded any notebook can be run from the command line. After the `importnb` extension is created notebooks can be execute from the command line.
 
     ipython -m readme
-
+    
 > See the [deploy step in the travis build](https://github.com/deathbeds/importnb/blob/docs/.travis.yml#L19).
 
 ### py.test
@@ -193,11 +193,11 @@ For example, create a file called `tricks.yaml` containing
     - importnb.utils.watch.ModuleTrick:
           patterns: ['*.ipynb']
           shell_command: ipython -m ${watch_dest_path}
-
+      
 #### Run the watcher in a terminal
 
     watchmedo tricks tricks.yaml
-
+      
 > [`tricks.yaml`](tricks.yaml) is a concrete implementation of `tricks.yaml`
 
 ## Developer
@@ -222,24 +222,24 @@ For example, create a file called `tricks.yaml` containing
         for path in Path(root).rglob("""*.ipynb"""):                
             if 'checkpoint' not in str(path):
                 export(path, Path('src/importnb') / path.with_suffix('.py').relative_to(root))
-
-
-        __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False)
+                
+            
+        __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False) 
 
 ```
 
     test_import (src.importnb.tests.test_unittests.TestContext) ... ok
     test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
-    test_failure (src.importnb.tests.test_unittests.TestExtension) ... unexpected success
+    test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
     test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
     test_exception (src.importnb.tests.test_unittests.TestPartial) ... ok
     test_traceback (src.importnb.tests.test_unittests.TestPartial) ... ok
     test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
-
+    
     ----------------------------------------------------------------------
-    Ran 7 tests in 1.011s
-
-    FAILED (skipped=1, unexpected successes=1)
+    Ran 7 tests in 2.019s
+    
+    OK (skipped=1, expected failures=1)
 
 
 
@@ -247,13 +247,6 @@ For example, create a file called `tricks.yaml` containing
     if __name__ == '__main__':
         !jupyter nbconvert --to markdown readme.ipynb
 ```
-
-    [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Support files will be in readme_files/
-    [NbConvertApp] Making directory readme_files
-    [NbConvertApp] Making directory readme_files
-    [NbConvertApp] Writing 8946 bytes to readme.md
-
 
     if __name__ == '__main__':
         from IPython.display import display, Image
