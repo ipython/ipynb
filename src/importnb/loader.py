@@ -71,17 +71,19 @@ from copy import copy
 from importlib.machinery import SourceFileLoader
 from importlib.util import spec_from_loader
 
-from importlib._bootstrap_external import decode_source
+
 from importlib._bootstrap import _call_with_frames_removed, _new_module
 
 try:
     from importlib._bootstrap import _init_module_attrs, _call_with_frames_removed
     from importlib._bootstrap_external import FileFinder
+    from importlib._bootstrap_external import decode_source
     from importlib.util import module_from_spec
 except:
     # python 3.4
     from importlib.machinery import FileFinder
     from importlib._bootstrap import _SpecMethods
+    from importlib.util import decode_source
 
     def module_from_spec(spec):
         return _SpecMethods(spec).create()
