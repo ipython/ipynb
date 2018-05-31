@@ -9,54 +9,31 @@ The execute importer maintains an attribute that includes the notebooks inputs a
 
 """
 
+try:
+    from .execute import Execute, loader_include_notebook
+except:
+    from execute import Execute, loader_include_notebook
+
+import ast
+
+from collections import ChainMap
+
+__all__ = "Parameterize",
+
 a_variable_to_parameterize = 42
 
 if globals().get("show", None):
     print("I am tested.")
 
-try:
-    from .capture import capture_output
-    from .execute import Execute, loader_include_notebook
-    from .decoder import identity, loads, dedent
-except:
-    from capture import capture_output
-    from execute import Execute, loader_include_notebook
-    from decoder import identity, loads, dedent
 
-import inspect, sys, ast
-from functools import partialmethod, partial
-from importlib import reload, _bootstrap
-from importlib._bootstrap import _call_with_frames_removed, _new_module
-
-import traceback
-from traceback import print_exc, format_exc, format_tb
-from pathlib import Path
-
-from ast import (
-    NodeTransformer,
-    parse,
-    Assign,
-    literal_eval,
-    dump,
-    fix_missing_locations,
-    Str,
-    Tuple,
-    Ellipsis,
-    Interactive,
-)
-from collections import ChainMap
-
-__all__ = "Notebook", "Partial", "reload", "Lazy"
-
-
-class AssignmentFinder(NodeTransformer):
-    visit_Module = NodeTransformer.generic_visit
+class AssignmentFinder(ast.NodeTransformer):
+    visit_Module = ast.NodeTransformer.generic_visit
 
     def visit_Assign(self, node):
         if len(node.targets):
             try:
                 if not getattr(node.targets[0], "id", "_").startswith("_"):
-                    literal_eval(node.value)
+                    ast.literal_eval(node.value)
                     return node
             except:
                 ...
@@ -143,6 +120,7 @@ def vars_to_sig(**vars):
 if __name__ == "__main__":
     f = Parameterize(exceptions=BaseException).from_filename("execute.ipynb", "importnb.notebooks")
     m = f(a_variable_to_parameterize=10)
+
 
 """# Developer
 """

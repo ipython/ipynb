@@ -1,7 +1,7 @@
 # coding: utf-8
 '''# The `Execute` importer
 
-The execute importer maintains an attribute that includes the notebooks inputs and outputs.
+`Interactive` and `Execute` contain the notebook as an object.  The execute importer maintains an attribute that includes the notebooks inputs and outputs.
 
     >>> import importnb    
     >>> from importnb import notebooks
@@ -25,36 +25,18 @@ if globals().get("show", None):
 try:
     from .capture import capture_output
     from .loader import Notebook, advanced_exec_module
-    from .decoder import identity, loads, dedent
+    from .decoder import loads
 except:
     from capture import capture_output
     from loader import Notebook, advanced_exec_module
-    from decoder import identity, loads, dedent
+    from decoder import loads
 
-import inspect, sys, ast
-from functools import partialmethod, partial
-from importlib import reload, _bootstrap
-from importlib._bootstrap import _call_with_frames_removed, _new_module
+import ast
+from importlib._bootstrap import _call_with_frames_removed
 
-import traceback
-from traceback import print_exc, format_exc, format_tb
-from pathlib import Path
+from traceback import format_tb
 
-from ast import (
-    NodeTransformer,
-    parse,
-    Assign,
-    literal_eval,
-    dump,
-    fix_missing_locations,
-    Str,
-    Tuple,
-    Ellipsis,
-    Interactive,
-)
-from collections import ChainMap
-
-__all__ = "Notebook", "Partial", "reload", "Lazy"
+__all__ = "Interactive", "Execute"
 
 """# Loaders that reproduce notebook outputs
 """

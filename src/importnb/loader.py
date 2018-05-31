@@ -46,42 +46,28 @@ if globals().get("show", None):
     print("Catch me if you can")
 
 try:
-    from .capture import capture_output, CapturedIO
+    from .capture import capture_output
     from .decoder import identity, loads, dedent
-    from .path_hooks import (
-        PathHooksContext,
-        modify_sys_path,
-        add_path_hooks,
-        remove_one_path_hook,
-        change_dir,
-    )
+    from .path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
 except:
-    from capture import capture_output, CapturedIO
+    from capture import capture_output
     from decoder import identity, loads, dedent
-    from path_hooks import (
-        PathHooksContext,
-        modify_sys_path,
-        add_path_hooks,
-        remove_one_path_hook,
-        change_dir,
-    )
+    from path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
 
-import inspect, sys, ast
+import ast
 from copy import copy
 from importlib.machinery import SourceFileLoader
 from importlib.util import spec_from_loader
 
 
-from importlib._bootstrap import _call_with_frames_removed, _new_module
+from importlib._bootstrap import _new_module
 
 try:
-    from importlib._bootstrap import _init_module_attrs, _call_with_frames_removed
-    from importlib._bootstrap_external import FileFinder
+    from importlib._bootstrap import _init_module_attrs
     from importlib._bootstrap_external import decode_source
     from importlib.util import module_from_spec
 except:
     # python 3.4
-    from importlib.machinery import FileFinder
     from importlib._bootstrap import _SpecMethods
     from importlib.util import decode_source
 
@@ -92,10 +78,7 @@ except:
         return _SpecMethods(spec).init_module_attrs(module)
 
 
-from io import StringIO
-from functools import partialmethod, partial, wraps, singledispatch
 from importlib import reload
-from traceback import print_exc, format_exc, format_tb
 from contextlib import contextmanager, ExitStack
 from pathlib import Path
 
@@ -104,21 +87,7 @@ try:
 except:
     from importlib_resources import path
 
-from ast import (
-    NodeTransformer,
-    parse,
-    Assign,
-    literal_eval,
-    dump,
-    fix_missing_locations,
-    Str,
-    Tuple,
-    Ellipsis,
-    Interactive,
-)
-from collections import ChainMap
-
-__all__ = "Notebook", "Partial", "reload", "Lazy"
+__all__ = "Notebook", "reload",
 
 
 class ImportNbException(BaseException):
@@ -226,60 +195,6 @@ class NotebookLoader(SourceFileLoader, PathHooksContext):
         module = self.nb_to_ast(nb)
         return compile(module, path or "<importnb>", "exec")
 
-
-'''    class NotebookLoader(SourceFileLoader, PathHooksContext, NodeTransformer):
-        """The simplest implementation of a Notebook Source File Loader.
-        >>> with NotebookLoader():
-        ...    from importnb.notebooks import decoder
-        >>> assert decoder.__file__.endswith('.ipynb')
-        """
-        EXTENSION_SUFFIXES = '.ipynb',
-        __slots__ = 'name', 'path',
-        
-        def __init__(self, fullname=None, path=None): 
-            super().__init__(fullname, path)
-            PathHooksContext.__init__(self)
-        
-        format = staticmethod(dedent)
-        from_filename = from_resource
-    
-        def __call__(self, fullname=None, path=None): 
-            self= copy(self)
-            return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
-
-        def source_to_code(loader, object, path=None):
-            node = loader.visit(object)
-            return compile(node, path or "<importnb>", 'exec')
-        
-        def visit(self, node, **opts): 
-            if isinstance(node, bytes):
-                node = loads(node.decode('utf-8'))
-
-            if isinstance(node, dict):
-                if 'cells' in node:                
-                    body = []
-                    for cell in node['cells']:
-                        _node = self.visit(cell)
-                        _node = ast.increment_lineno(
-                            _node, cell["metadata"].get("lineno", 1))
-                        body.extend(getattr(_node, 'body', [_node]))
-                    node = ast.Module(body=body)
-
-                elif 'source' in node:
-                    source = "".join(node["source"])
-                    if getattr(self, 'no_docs', False) and node['cell_type'] == 'markdown':
-                        node = ast.Expr(ast.Str(s=source))
-                    elif node['cell_type'] == 'code':
-                        node = ast.parse(
-                            self.format(source), self.path or '<notebook_node_visitor>', 'exec')
-                else: 
-                    node = ast.Module(body=[])
-            return ast.fix_missing_locations(super().visit(node))        
-        
-        visit_Module = NodeTransformer.generic_visit
-        
-        def generic_visit(self, node): return node
-'''
 
 """## As a context manager
 """
