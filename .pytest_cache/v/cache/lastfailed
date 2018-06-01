@@ -1,4 +1,0 @@
-{
-  "benchmarks/ThinkDSP/code/thinkdsp_test.py::Test::testImpulses": true,
-  "src/importnb/tests/test_module.ipynb": true
-}
