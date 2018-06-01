@@ -47,23 +47,20 @@ if globals().get("show", None):
 
 try:
     from .capture import capture_output
-    from .decoder import identity, loads, dedent
+    from .decoder import loads, dedent
     from .path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
 except:
     from capture import capture_output
-    from decoder import identity, loads, dedent
+    from decoder import loads, dedent
     from path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
 
-import ast
+import ast, sys
 from copy import copy
 from importlib.machinery import SourceFileLoader
 from importlib.util import spec_from_loader
 
 
-from importlib._bootstrap import _new_module
-
 try:
-    from importlib._bootstrap import _init_module_attrs
     from importlib._bootstrap_external import decode_source
     from importlib.util import module_from_spec
 except:
@@ -73,9 +70,6 @@ except:
 
     def module_from_spec(spec):
         return _SpecMethods(spec).create()
-
-    def _init_module_attrs(spec, module):
-        return _SpecMethods(spec).init_module_attrs(module)
 
 
 from importlib import reload
@@ -177,7 +171,7 @@ class NotebookLoader(SourceFileLoader, PathHooksContext):
     def _iter_cells(self, nb):
         for i, cell in enumerate(nb["cells"]):
             node = None
-            if i == 0 and cell["cell_type"] == "markdown":
+            if cell["cell_type"] == "markdown":
                 node = markdown_string_expression(cell)
             if cell["cell_type"] == "code":
                 node = ast.parse(self.format("".join(cell["source"])))
@@ -196,9 +190,6 @@ class NotebookLoader(SourceFileLoader, PathHooksContext):
         return compile(module, path or "<importnb>", "exec")
 
 
-"""## As a context manager
-"""
-
 """## An advanced `exec_module` decorator.
 """
 
@@ -214,6 +205,7 @@ def advanced_exec_module(exec_module):
 
     def _exec_module(loader, module, **globals):
         module._exception = None
+        module.__dict__.update(getattr(loader, "globals", {}))
         module.__dict__.update(globals)
         with capture_output(
             stdout=loader.stdout, stderr=loader.stderr, display=loader.display
@@ -270,12 +262,6 @@ class Notebook(NotebookLoader):
         self.dir = dir
         self.no_docs = no_docs
 
-    def create_module(self, spec):
-        module = _new_module(spec.name)
-        _init_module_attrs(spec, module)
-        module.__dict__.update(self.globals)
-        return module
-
     exec_module = advanced_exec_module(NotebookLoader.exec_module)
 
 
@@ -285,6 +271,13 @@ def load_ipython_extension(ip=None):
 
 def unload_ipython_extension(ip=None):
     remove_one_path_hook(Notebook)
+
+
+def main(*files):
+    loader = Notebook("__main__")
+    if not files:
+        files = sys.argv[1:]
+    return {file: loader.from_filename(file) for file in files}
 
 
 """# Developer

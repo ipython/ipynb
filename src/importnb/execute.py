@@ -5,8 +5,7 @@
 
     >>> import importnb    
     >>> from importnb import notebooks
-    >>> with Execute(stdout=True):
-    ...      from importnb.notebooks import execute as nb
+    >>> nb = Execute(stdout=True).from_filename('execute.ipynb', 'importnb.notebooks')
     
 An executed notebook contains a `__notebook__` attributes that is populated with cell outputs.
 
@@ -24,11 +23,11 @@ if globals().get("show", None):
 
 try:
     from .capture import capture_output
-    from .loader import Notebook, advanced_exec_module
+    from .loader import Notebook, advanced_exec_module, reload
     from .decoder import loads
 except:
     from capture import capture_output
-    from loader import Notebook, advanced_exec_module
+    from loader import Notebook, advanced_exec_module, reload
     from decoder import loads
 
 import ast
@@ -98,41 +97,63 @@ class Interactive(Notebook):
         >>> assert any(cell.get('outputs', None) for cell in nb._notebook['cells'])        
         """
 
-    def _exec_cell(self, cell, node, module, index=0):
-        node_ct = 0
-        while node.body:
-            expression = node.body.pop(0)
-            if node_ct == index == 0 and cell["cell_type"] == "markdown":
-                expression = ast.Module([expression])
-            else:
-                if not node.body:
-                    expression = ast.Interactive([expression])
+    def _exec_cell(self, cell, node, module, prev=None):
+        if cell["cell_type"] == "markdown":
+            if prev is None:
+                self._call_exec(node, module)
+                node.body.clear()
+                return cell, node
+
+        _cell, _node = prev or ({}, {})
+
+        if cell["cell_type"] == "markdown":
+            if _cell.get("cell_type", None) == "markdown":
+                self._call_exec(ast.Expression(_node.body[0].value), module)
+
+        if cell["cell_type"] == "code":
+            if _cell.get("cell_type", None) == "markdown":
+                if (
+                    isinstance(node.body[0], (ast.FunctionDef, ast.ClassDef))
+                    and not ast.get_docstring(node.body[0])
+                ):
+                    node.body[0].body = _node.body + node.body[0].body
+            for expression in node.body:
+                """Evaluate one node at a time."""
+                if expression == node.body[-1]:
+                    """The last node is interactive."""
+                    expression = ast.Interactive(body=[expression])
                 else:
+                    """Execute Expr as Expressions so the docstring doesn't change."""
                     if isinstance(expression, ast.Expr):
                         expression = ast.Expression(expression.value)
                     else:
+                        """Everything else must a module."""
                         expression = ast.Module([expression])
+                self._call_exec(expression, module)
+        return cell, node
 
-            _call_with_frames_removed(
-                exec,
-                compile(expression, module.__name__, exec_modes(expression)),
-                module.__dict__,
-                module.__dict__,
-            )
-
-            node_ct += 1
+    def _call_exec(self, expression, module):
+        _call_with_frames_removed(
+            exec,
+            compile(expression, module.__name__, exec_modes(expression)),
+            module.__dict__,
+            module.__dict__,
+        )
 
     @advanced_exec_module
     def exec_module(self, module, **globals):
         loader_include_notebook(self, module)
-        for index, (cell, node) in enumerate(self._iter_cells(module._notebook)):
+        prev = None
+        for cell, node in self._iter_cells(module._notebook):
             if module._exception:
                 break
-            self._exec_cell(cell, node, module, index=index)
+
+            self._exec_cell(cell, node, module, prev=prev)
+            prev = cell, node
 
 
 if __name__ == "__main__":
-    nb = Interactive(exceptions=BaseException).from_filename("execute.ipynb", "importnb.notebooks")
+    nb = Interactive().from_filename("execute.ipynb", "importnb.notebooks")
 
 
 class Execute(Interactive):
@@ -152,10 +173,10 @@ class Execute(Interactive):
     >>> assert any(cell.get('outputs', None) for cell in nb._notebook['cells'])        
     """
 
-    def _exec_cell(self, cell, node, module, index=0):
+    def _exec_cell(self, cell, node, module, prev=None):
         error = None
         with capture_output() as out:
-            super()._exec_cell(cell, node, module, index)
+            super()._exec_cell(cell, node, module, prev=prev)
             if out.outputs:
                 cell["outputs"] += [new_display(object) for object in out.outputs]
             if out.stdout:

@@ -12,11 +12,23 @@ The execute importer maintains an attribute that includes the notebooks inputs a
 try:
     from .execute import Execute, loader_include_notebook
 except:
-    from execute import Execute, loader_include_notebook
+    from importnb.execute import Execute, loader_include_notebook
 
 import ast
 
 from collections import ChainMap
+
+from importlib._bootstrap import _new_module
+
+try:
+    from importlib._bootstrap import _init_module_attrs
+except:
+    # python 3.4
+    from importlib._bootstrap import _SpecMethods
+
+    def _init_module_attrs(spec, module):
+        return _SpecMethods(spec).init_module_attrs(module)
+
 
 __all__ = "Parameterize",
 
@@ -27,6 +39,10 @@ if globals().get("show", None):
 
 
 class AssignmentFinder(ast.NodeTransformer):
+    """Find an ast assignments that ast.literal_eval
+    
+    >>> assert len(AssignmentFinder().visit(ast.parse("a = 10; print(a);")).body) == 1
+    """
     visit_Module = ast.NodeTransformer.generic_visit
 
     def visit_Assign(self, node):
@@ -66,7 +82,8 @@ class Parameterize(Execute):
     """
 
     def create_module(self, spec):
-        module = super().create_module(spec)
+        module = _new_module(spec.name)
+        _init_module_attrs(spec, module)
 
         # Import the notebook when parameterize is imported
         loader_include_notebook(self, module)
@@ -104,10 +121,10 @@ class Parameterize(Execute):
         recall.__doc__ = module.__doc__
         return recall
 
-    def _exec_cell(self, cell, node, module, index=0):
+    def _exec_cell(self, cell, node, module, prev=None):
         node = AssignmentIgnore().visit(node)
 
-        super()._exec_cell(cell, node, module, index)
+        super()._exec_cell(cell, node, module, prev=prev)
 
 
 def vars_to_sig(**vars):
@@ -120,7 +137,6 @@ def vars_to_sig(**vars):
 if __name__ == "__main__":
     f = Parameterize(exceptions=BaseException).from_filename("execute.ipynb", "importnb.notebooks")
     m = f(a_variable_to_parameterize=10)
-
 
 """# Developer
 """
