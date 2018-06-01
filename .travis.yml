@@ -16,7 +16,7 @@ script:
 - tox
 
 before_deploy:
-- pip install ipython
+- pip install ipython black
 - ipython -m importnb readme.ipynb
 
 deploy:
