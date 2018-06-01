@@ -218,28 +218,80 @@ For example, create a file called `tricks.yaml` containing
     if __name__ == '__main__':
         from pathlib import Path
         from importnb.utils.export import export
+        from importnb.capture import capture_output
         root = 'src/importnb/notebooks/'
         for path in Path(root).rglob("""*.ipynb"""):                
             if 'checkpoint' not in str(path):
                 export(path, Path('src/importnb') / path.with_suffix('.py').relative_to(root))
-                
-            
-        __import__('unittest').main(module='src.importnb.tests.test_unittests', argv="discover --verbose".split(), exit=False) 
-
+        with capture_output() as out:
+            !ipython -m pytest -- src 
+        print('plugins'+out.stdout.split('plugins', 1)[-1])
 ```
 
-    test_import (src.importnb.tests.test_unittests.TestContext) ... ok
-    test_reload_with_context (src.importnb.tests.test_unittests.TestContext) ... ok
-    test_failure (src.importnb.tests.test_unittests.TestExtension) ... expected failure
-    test_import (src.importnb.tests.test_unittests.TestExtension) ... ok
-    test_exception (src.importnb.tests.test_unittests.TestPartial) ... ok
-    test_traceback (src.importnb.tests.test_unittests.TestPartial) ... ok
-    test_imports (src.importnb.tests.test_unittests.TestRemote) ... skipped 'requires IP'
+    plugins: ignore-flaky-0.1.1, forked-0.2, cov-2.5.1, benchmark-3.1.1, importnb-0.3.0
+    collected 24 items                                                             [0m
     
-    ----------------------------------------------------------------------
-    Ran 7 tests in 2.019s
+    src/importnb/tests/test_importnb.ipynb::test_single_file_with_context [32mPASSED[0m[36m [  4%][0m
+    src/importnb/tests/test_importnb.ipynb::test_from_filename [32mPASSED[0m[36m        [  8%][0m
+    src/importnb/tests/test_importnb.ipynb::test_from_execute [32mPASSED[0m[36m         [ 12%][0m
+    src/importnb/tests/test_importnb.ipynb::test_with_doctest [32mPASSED[0m[36m         [ 16%][0m
+    src/importnb/tests/test_importnb.ipynb::test_from_filename_main [32mPASSED[0m[36m   [ 20%][0m
+    src/importnb/tests/test_importnb.ipynb::test_parameterize [32mPASSED[0m[36m         [ 25%][0m
+    src/importnb/tests/test_importnb.ipynb::test_python_file [32mPASSED[0m[36m          [ 29%][0m
+    src/importnb/tests/test_importnb.ipynb::test_single_file_with_capture [32mPASSED[0m[36m [ 33%][0m
+    src/importnb/tests/test_importnb.ipynb::test_capturer [32mPASSED[0m[36m             [ 37%][0m
+    src/importnb/tests/test_importnb.ipynb::test_single_file_with_lazy [32mPASSED[0m[36m [ 41%][0m
+    src/importnb/tests/test_importnb.ipynb::test_single_file_without_context [33mXPASS[0m[36m [ 45%][0m
+    src/importnb/tests/test_importnb.ipynb::test_single_file_relative 42
+    [33mxfail[0m[36m  [ 50%][0m
+    src/importnb/tests/test_importnb.ipynb::test_single_with_extension [32mPASSED[0m[36m [ 54%][0m
+    src/importnb/tests/test_importnb.ipynb::test_package [32mPASSED[0m[36m              [ 58%][0m
+    src/importnb/tests/test_importnb.ipynb::test_package_failure [33mxfail[0m[36m       [ 62%][0m
+    src/importnb/tests/test_importnb.ipynb::test_package_failure_partial [32mPASSED[0m[36m [ 66%][0m
+    src/importnb/tests/test_importnb.ipynb::test_tmp_dir [32mPASSED[0m[36m              [ 70%][0m
+    src/importnb/tests/test_unittests.ipynb::TestPartial::test_exception [32mPASSED[0m[36m [ 75%][0m
+    src/importnb/tests/test_unittests.ipynb::TestPartial::test_traceback [32mPASSED[0m[36m [ 79%][0m
+    src/importnb/tests/test_unittests.ipynb::TestContext::test_import [32mPASSED[0m[36m [ 83%][0m
+    src/importnb/tests/test_unittests.ipynb::TestContext::test_reload_with_context [32mPASSED[0m[36m [ 87%][0m
+    src/importnb/tests/test_unittests.ipynb::TestRemote::test_imports [33mSKIPPED[0m[36m [ 91%][0m
+    src/importnb/tests/test_unittests.ipynb::TestExtension::test_failure [33mxfail[0m[36m [ 95%][0m
+    src/importnb/tests/test_unittests.ipynb::TestExtension::test_import [32mPASSED[0m[36m [100%][0m
     
-    OK (skipped=1, expected failures=1)
+    ---------- coverage: platform darwin, python 3.5.4-final-0 -----------
+    Name                                    Stmts   Miss  Cover
+    -----------------------------------------------------------
+    src/importnb/__init__                      11     11     0%
+    src/importnb/__main__                       3      3     0%
+    src/importnb/_version                       1      1     0%
+    src/importnb/capture                       59     59     0%
+    src/importnb/decoder                       35     24    31%
+    src/importnb/execute                       90     48    47%
+    src/importnb/loader                       132     78    41%
+    src/importnb/nbtest                        34     34     0%
+    src/importnb/notebooks/__init__             0      0   100%
+    src/importnb/notebooks/utils/__init__       0      0   100%
+    src/importnb/nunittest                     44     44     0%
+    src/importnb/parameterize                  81     44    46%
+    src/importnb/path_hooks                    84     35    58%
+    src/importnb/tests/failure                  1      0   100%
+    src/importnb/tests/import_this              1      0   100%
+    src/importnb/tests/pyimport                 3      0   100%
+    src/importnb/tests/test_importnb            1      0   100%
+    src/importnb/tests/test_unittests           1      0   100%
+    src/importnb/usage/__init__                 0      0   100%
+    src/importnb/utils/__init__                 0      0   100%
+    src/importnb/utils/export                  33     33     0%
+    src/importnb/utils/ipython                 41     41     0%
+    src/importnb/utils/nbdoctest               36     36     0%
+    src/importnb/utils/pytest_plugin           24     15    38%
+    src/importnb/utils/setup                   52     52     0%
+    src/importnb/utils/watch                   20     20     0%
+    -----------------------------------------------------------
+    TOTAL                                     787    578    27%
+    
+    
+    [32m[1m========== 19 passed, 1 skipped, 3 xfailed, 1 xpassed in 3.98 seconds ==========[0m
+    
 
 
 
@@ -247,6 +299,10 @@ For example, create a file called `tricks.yaml` containing
     if __name__ == '__main__':
         !jupyter nbconvert --to markdown readme.ipynb
 ```
+
+    [NbConvertApp] Converting notebook readme.ipynb to markdown
+    [NbConvertApp] Writing 11209 bytes to readme.md
+
 
     if __name__ == '__main__':
         from IPython.display import display, Image

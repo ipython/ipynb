@@ -17,8 +17,7 @@ script:
 
 before_deploy:
 - pip install ipython
-- importnb-install
-- ipython -m readme
+- ipython -m importnb readme.ipynb
 
 deploy:
 - provider: pypi
