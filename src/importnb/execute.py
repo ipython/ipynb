@@ -111,12 +111,7 @@ class Interactive(Notebook):
                 self._call_exec(ast.Expression(_node.body[0].value), module)
 
         if cell["cell_type"] == "code":
-            if _cell.get("cell_type", None) == "markdown":
-                if (
-                    isinstance(node.body[0], (ast.FunctionDef, ast.ClassDef))
-                    and not ast.get_docstring(node.body[0])
-                ):
-                    node.body[0].body = _node.body + node.body[0].body
+            # This is where we could assign function and class docstrings
             for expression in node.body:
                 """Evaluate one node at a time."""
                 if expression == node.body[-1]:
