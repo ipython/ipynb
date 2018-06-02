@@ -6,10 +6,8 @@ Many suggestions for importing notebooks use `sys.meta_paths`, but `importnb` re
 
 try:
     from .capture import capture_output, CapturedIO
-    from .decoder import identity, loads, dedent
 except:
     from capture import capture_output, CapturedIO
-    from decoder import identity, loads, dedent
 
 import inspect, sys, ast, os
 from pathlib import Path
