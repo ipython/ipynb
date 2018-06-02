@@ -23,12 +23,10 @@ if globals().get("show", None):
 
 try:
     from .capture import capture_output
-    from .loader import Notebook, advanced_exec_module, reload
-    from .decoder import loads
+    from .loader import Notebook, advanced_exec_module, reload, loads
 except:
     from capture import capture_output
-    from loader import Notebook, advanced_exec_module, reload
-    from decoder import loads
+    from loader import Notebook, advanced_exec_module, reload, loads
 
 import ast
 from importlib._bootstrap import _call_with_frames_removed
