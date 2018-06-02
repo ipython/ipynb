@@ -6,6 +6,7 @@
 """
 
 from unittest import main as _main, TestCase
+from types import ModuleType
 import sys, inspect, copy
 
 __file__ = globals().get("__file__", None)
@@ -34,7 +35,6 @@ class DoctestModule(Notebook):
 
     def exec_module(self, module, **kwargs):
         super().exec_module(module)
-        attach_doctest(module)
 
 
 class UnittestModule(Notebook):
@@ -44,7 +44,7 @@ class UnittestModule(Notebook):
         _main(module=module, argv=module.__file__.split())
 
 
-def main(*args, doctest=True, exit=False, argv="--doctest", **dict):
+def main(module=None, *args, doctest=True, exit=False, argv="--doctest", **dict):
     """In interactive mode we do not want to raise SystemExit"""
 
     dict.update(exit=exit, argv=argv)
@@ -64,12 +64,15 @@ def main(*args, doctest=True, exit=False, argv="--doctest", **dict):
         doctest = True
 
     if doctest:
-        loader = DoctestModule
+        if isinstance(module, ModuleType):
+            attach_doctest(module)
+        else:
+            loader = DoctestModule
 
     dict.update(argv=argv)
 
     with loader():
-        _main(*args, **dict)
+        _main(module, *args, **dict)
 
 
 main.__signature__ = inspect.signature(_main)
@@ -91,5 +94,5 @@ if __name__ == "__main__":
         except:
             from utils.export import export
         export("test.ipynb", "../test.py")
-        module = DoctestModule().from_filename("test.ipynb", "importnb.notebooks")
+        module = Notebook().from_filename("test.ipynb", "importnb.notebooks")
         main(module)
