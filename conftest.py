@@ -1,5 +1,7 @@
 collect_ignore = [
     "benchmarks",
+    "src/importnb/test.py",
+    "src/importnb/notebooks/test.ipynb"
 ]
 try:
     from IPython import get_ipython
