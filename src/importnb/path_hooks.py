@@ -49,6 +49,8 @@ def modify_file_finder_details():
 def add_path_hooks(loader, extensions, *, position=0):
     """Update the FileFinder loader in sys.path_hooks to accomodate a {loader} with the {extensions}"""
     with modify_file_finder_details() as details:
+        if position == -1:
+            position = len(details)
         details.insert(position, (loader, extensions))
 
 

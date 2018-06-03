@@ -12,7 +12,7 @@ try:
     )
     from .execute import Execute, Interactive
     from .parameterize import Parameterize
-
+    from . import test
 except:
     from loader import (
         Notebook,
@@ -22,3 +22,4 @@ except:
     )
     from execute import Execute, Interactive
     from parameterize import Parameterize
+    import test
