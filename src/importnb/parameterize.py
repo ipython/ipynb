@@ -14,7 +14,7 @@ try:
 except:
     from importnb.execute import Execute, loader_include_notebook
 
-import ast
+import ast, sys, inspect
 
 from collections import ChainMap
 
@@ -135,17 +135,51 @@ def vars_to_sig(**vars):
 
 
 if __name__ == "__main__":
-    f = Parameterize(exceptions=BaseException).from_filename("execute.ipynb", "importnb.notebooks")
+    f = Parameterize(exceptions=BaseException).from_filename(
+        "parameterize.ipynb", "importnb.notebooks"
+    )
     m = f(a_variable_to_parameterize=10)
+
+
+def literal_eval_or_string(object):
+    try:
+        return ast.literal_eval(object)
+    except:
+        return str(object)
+
+
+def signature_to_argparse(object):
+    import argparse
+
+    module = inspect.getclosurevars(object).nonlocals["module"]
+    parser = argparse.ArgumentParser(prog=module.__file__, description=inspect.getdoc(module))
+    for key, parameter in inspect.signature(object).parameters.items():
+        parser.add_argument(
+            "--%s" % key, type=literal_eval_or_string, default=getattr(parameter, "default", None)
+        )
+    return parser
+
 
 """# Developer
 """
 
+
+def main():
+    file = sys.argv.pop(1)
+    f = Parameterize("__main__").from_filename(file)
+    parser = signature_to_argparse(f)
+    f(**vars(parser.parse_args()))
+
+
 if __name__ == "__main__":
-    try:
-        from utils.export import export
-    except:
-        from .utils.export import export
-    export("parameterize.ipynb", "../parameterize.py")
-    module = Execute().from_filename("parameterize.ipynb")
-    __import__("doctest").testmod(module, verbose=2)
+    if sys.argv[0] == globals().get("__file__", None):
+        main()
+    else:
+        try:
+            from utils.export import export
+        except:
+            from .utils.export import export
+        export("parameterize.ipynb", "../parameterize.py")
+        module = Execute().from_filename("parameterize.ipynb")
+
+        __import__("doctest").testmod(module, verbose=2)
