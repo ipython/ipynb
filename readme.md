@@ -23,11 +23,6 @@ Use the `Notebook` context manager.
 
 
 ```python
-    from importnb.usage import notebook
-```
-
-
-```python
     with __import__('importnb').Notebook(): 
         import readme
 ```
@@ -153,6 +148,18 @@ The parameterized module is a callable that evaluates with different literal sta
     assert f().foo == 42
     assert f(foo='importnb').foo == 'importnb'
 
+# Run Notebooks from the command line
+
+Run any notebook from the command line with importnb.  Any parameterized expressions are available as parameters on the command line.
+
+    !ipython -m importnb -- readme.ipynb --foo "I'm the new foo"
+    !python -m importnb readme.ipynb --foo "No I am!"
+    
+After installing the IPython Extension any notebook may be run as any a command line script
+
+    !ipython -m readme -- --foo "look at me"
+
+
 ## Integrations
 
 
@@ -182,17 +189,23 @@ When the default extension is loaded any notebook can be run from the command li
 
     ipython -m readme
     
+In the command line context, `__file__ == sys.arv[0] and __name__ == '__main__'` .
+    
 > See the [deploy step in the travis build](https://github.com/deathbeds/importnb/blob/docs/.travis.yml#L19).
 
 ### py.test
 
 `importnb` installs a pytest plugin when it is setup.  Any notebook obeying the py.test discovery conventions can be used in to pytest.  _This is great because notebooks are generally your first test._
 
+    !ipython -m pytest -- src 
+    
+Will find all the test notebooks and configurations as pytest would any Python file.
+
 ### Setup
 
 To package notebooks add `recursive-include package_name *.ipynb`
 
-### [Watchdog](https://github.com/gorakhargosh/watchdog/tree/master/src/watchdog/tricks)
+### [Watchdog](https://github.com/gorakhargosh/watchdog/tree/master/src/watchdog/tricks) _Experimental_
 
     pip install importnb[watch]
 
@@ -223,95 +236,29 @@ For example, create a file called `tricks.yaml` containing
 
 
 ```python
-    from IPython import get_ipython
-```
-
-
-```python
     if __name__ == '__main__':
-        from pathlib import Path
-        from importnb.utils.export import export
-        from importnb.capture import capture_output
-        root = 'src/importnb/notebooks/'
-        for path in Path(root).rglob("""*.ipynb"""):                
-            if 'checkpoint' not in str(path):
-                export(path, Path('src/importnb') / path.with_suffix('.py').relative_to(root))
-        with capture_output() as out:
-            !ipython -m pytest -- src 
-        print('plugins'+out.stdout.split('plugins', 1)[-1])
-```
+        try:
+            from subprocess import call
+            from importnb.capture import capture_output
+            with capture_output() as out: 
+                call("ipython -m pytest -- src ".split())
+            print('plugins'+out.stdout.split('plugins', 1)[-1])
+        except:
+            ...
+            print(foo)
+            
+        if 'kernel' in __import__('sys').argv[0]:
+            """Formatting"""
+            from pathlib import Path
+            from importnb.utils.export import export
+            root = 'src/importnb/notebooks/'
+            for path in Path(root).rglob("""*.ipynb"""):                
+                if 'checkpoint' not in str(path):
+                    export(path, Path('src/importnb') / path.with_suffix('.py').relative_to(root))
+            call("jupyter nbconvert --to markdown readme.ipynb".split())
+                    
+        
 
-    plugins: ignore-flaky-0.1.1, forked-0.2, cov-2.5.1, benchmark-3.1.1, importnb-0.3.0
-    collected 24 items                                                             [0m
-    
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_context [32mPASSED[0m[36m [  4%][0m
-    src/importnb/tests/test_importnb.ipynb::test_from_filename [32mPASSED[0m[36m        [  8%][0m
-    src/importnb/tests/test_importnb.ipynb::test_from_execute [32mPASSED[0m[36m         [ 12%][0m
-    src/importnb/tests/test_importnb.ipynb::test_with_doctest [32mPASSED[0m[36m         [ 16%][0m
-    src/importnb/tests/test_importnb.ipynb::test_from_filename_main [32mPASSED[0m[36m   [ 20%][0m
-    src/importnb/tests/test_importnb.ipynb::test_parameterize [32mPASSED[0m[36m         [ 25%][0m
-    src/importnb/tests/test_importnb.ipynb::test_python_file [32mPASSED[0m[36m          [ 29%][0m
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_capture [32mPASSED[0m[36m [ 33%][0m
-    src/importnb/tests/test_importnb.ipynb::test_capturer [32mPASSED[0m[36m             [ 37%][0m
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_lazy [32mPASSED[0m[36m [ 41%][0m
-    src/importnb/tests/test_importnb.ipynb::test_single_file_without_context [33mXPASS[0m[36m [ 45%][0m
-    src/importnb/tests/test_importnb.ipynb::test_single_file_relative 42
-    [33mxfail[0m[36m  [ 50%][0m
-    src/importnb/tests/test_importnb.ipynb::test_single_with_extension [32mPASSED[0m[36m [ 54%][0m
-    src/importnb/tests/test_importnb.ipynb::test_package [32mPASSED[0m[36m              [ 58%][0m
-    src/importnb/tests/test_importnb.ipynb::test_package_failure [33mxfail[0m[36m       [ 62%][0m
-    src/importnb/tests/test_importnb.ipynb::test_package_failure_partial [32mPASSED[0m[36m [ 66%][0m
-    src/importnb/tests/test_importnb.ipynb::test_tmp_dir [32mPASSED[0m[36m              [ 70%][0m
-    src/importnb/tests/test_unittests.ipynb::TestExtension::test_failure [33mxfail[0m[36m [ 75%][0m
-    src/importnb/tests/test_unittests.ipynb::TestExtension::test_import [32mPASSED[0m[36m [ 79%][0m
-    src/importnb/tests/test_unittests.ipynb::TestPartial::test_exception [32mPASSED[0m[36m [ 83%][0m
-    src/importnb/tests/test_unittests.ipynb::TestPartial::test_traceback [32mPASSED[0m[36m [ 87%][0m
-    src/importnb/tests/test_unittests.ipynb::TestContext::test_import [32mPASSED[0m[36m [ 91%][0m
-    src/importnb/tests/test_unittests.ipynb::TestContext::test_reload_with_context [32mPASSED[0m[36m [ 95%][0m
-    src/importnb/tests/test_unittests.ipynb::TestRemote::test_imports [33mSKIPPED[0m[36m [100%][0m
-    
-    ---------- coverage: platform darwin, python 3.5.4-final-0 -----------
-    Name                                                   Stmts   Miss  Cover
-    --------------------------------------------------------------------------
-    src/importnb/__init__                                     11     11     0%
-    src/importnb/__main__                                      3      3     0%
-    src/importnb/_version                                      1      1     0%
-    src/importnb/capture                                      59     59     0%
-    src/importnb/execute                                      85     45    47%
-    src/importnb/loader                                      153     88    42%
-    src/importnb/notebooks/__init__                            0      0   100%
-    src/importnb/notebooks/pp                                  1      1     0%
-    src/importnb/notebooks/utils/__init__                      0      0   100%
-    src/importnb/parameterize                                 81     44    46%
-    src/importnb/path_hooks                                   84     34    60%
-    src/importnb/test                                         57     57     0%
-    src/importnb/tests/failure                                 1      0   100%
-    src/importnb/tests/import_this                             1      0   100%
-    src/importnb/tests/pyimport                                3      0   100%
-    src/importnb/tests/test_importnb                           1      0   100%
-    src/importnb/tests/test_unittests                          1      0   100%
-    src/importnb/usage/__init__                                0      0   100%
-    src/importnb/usage/a_project_with_notebooks/__init__       2      2     0%
-    src/importnb/usage/a_project_with_notebooks/foobaz         5      5     0%
-    src/importnb/utils/__init__                                0      0   100%
-    src/importnb/utils/export                                 33     33     0%
-    src/importnb/utils/ipython                                41     41     0%
-    src/importnb/utils/nbdoctest                              36     36     0%
-    src/importnb/utils/pytest_plugin                          24     15    38%
-    src/importnb/utils/setup                                  52     52     0%
-    src/importnb/utils/watch                                  20     20     0%
-    --------------------------------------------------------------------------
-    TOTAL                                                    755    547    28%
-    
-    
-    [1m[32m========== 19 passed, 1 skipped, 3 xfailed, 1 xpassed in 4.05 seconds ==========[0m
-    
-
-
-
-```python
-    if __name__ == '__main__':
-        !jupyter nbconvert --to markdown readme.ipynb
 ```
 
     if __name__ == '__main__':
