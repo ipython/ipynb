@@ -79,7 +79,7 @@ main.__signature__ = inspect.signature(_main)
 main.__doc__ = inspect.getdoc(_main)
 
 
-class _ATest(TestCase):
+class AUnitTestExample(TestCase):
 
     def test_this(self):
         assert True

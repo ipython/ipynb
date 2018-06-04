@@ -17,10 +17,10 @@ def pytest_collect_file(parent, path):
                     break
             else:
                 return
-        return Module(path, parent)
+        return PytestModule(path, parent)
 
 
-class Module(pytest.Module):
+class PytestModule(pytest.Module):
 
     def collect(self):
         global loader
@@ -29,8 +29,6 @@ class Module(pytest.Module):
 
 
 if __name__ == "__main__":
-    try:
-        from ..loader import export
-    except:
-        from importnb.loader import export
+    from importnb.utils.export import export
+
     export("pytest_plugin.ipynb", "../../utils/pytest_plugin.py")
