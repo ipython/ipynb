@@ -5,8 +5,6 @@ __importnb__ imports notebooks as modules & packages.
 ![Conda](https://img.shields.io/conda/pn/conda-forge/importnb.svg)](https://anaconda.org/conda-forge/importnb)[
 ![GitHub tag](https://img.shields.io/github/tag/deathbeds/importnb.svg)](https://github.com/deathbeds/importnb/tree/master/src/importnb)
 
-
-
     pip install importnb
     
 ---
@@ -17,9 +15,16 @@ __importnb__ imports notebooks as modules & packages.
 
 Use the `Notebook` context manager.
 
+    >>> from importnb import Notebook
+
 ### For brevity
 
 [`importnb.loader`](src/notebooks/loader.ipynb) will find notebooks available anywhere along the [`sys.path`](https://docs.python.org/2/library/sys.html#sys.path).
+
+
+```python
+    from importnb.usage import notebook
+```
 
 
 ```python
@@ -57,7 +62,7 @@ The context manager is required to `reload` a module.
 
 ### Partial loading
 
-The [`importnb.loader.Partial`](src/notebooks/loader.ipynb#Partial-Loader) will __import__ a notebook even if there is an exception.  The __exception__ is found on `module.__exception`.
+The [`importnb.loader.Notebook`](src/notebooks/loader.ipynb#Partial-Loader) will __import__ a notebook even if there is an exception by supplying the `exceptions` option.  The __exception__ is found on `module._exception`.
 
 
 ```python
@@ -68,7 +73,7 @@ The [`importnb.loader.Partial`](src/notebooks/loader.ipynb#Partial-Loader) will 
 
 ### Lazy imports
 
-The [`importnb.loader.Lazy`](src/notebooks/loader.ipynb#Lazy-Loader) will delay the evaluation of a module until one of its attributes are accessed the first time.
+The `lazy` option will delay the evaluation of a module until one of its attributes are accessed the first time.
 
 
 ```python
@@ -78,7 +83,7 @@ The [`importnb.loader.Lazy`](src/notebooks/loader.ipynb#Lazy-Loader) will delay 
 
 ## Capture Outputs
 
-`importnb` can capture the `stdout`, `stderr`, and `display` in the context manager.
+`importnb` can capture the `stdout`, `stderr`, and `display` in the context manager.  The arguments are similar to `IPython.util.capture.capture_output`.
 
 
 ```python
@@ -88,7 +93,7 @@ The [`importnb.loader.Lazy`](src/notebooks/loader.ipynb#Lazy-Loader) will delay 
 
 ### Docstring
 
-The first cell is the module docstring.
+The first markdown cell will become the module docstring.
 
 
 ```python
@@ -98,6 +103,14 @@ The first cell is the module docstring.
 
     __importnb__ imports notebooks as modules & packages.
 
+
+Meaning non-code blocks can be executeb by [doctest]().
+
+
+```python
+    if __name__ == '__main__':
+        __import__('doctest').testmod(readme)
+```
 
 # Import notebooks from files
 
@@ -249,48 +262,49 @@ For example, create a file called `tricks.yaml` containing
     src/importnb/tests/test_importnb.ipynb::test_package_failure [33mxfail[0m[36m       [ 62%][0m
     src/importnb/tests/test_importnb.ipynb::test_package_failure_partial [32mPASSED[0m[36m [ 66%][0m
     src/importnb/tests/test_importnb.ipynb::test_tmp_dir [32mPASSED[0m[36m              [ 70%][0m
-    src/importnb/tests/test_unittests.ipynb::TestPartial::test_exception [32mPASSED[0m[36m [ 75%][0m
-    src/importnb/tests/test_unittests.ipynb::TestPartial::test_traceback [32mPASSED[0m[36m [ 79%][0m
-    src/importnb/tests/test_unittests.ipynb::TestContext::test_import [32mPASSED[0m[36m [ 83%][0m
-    src/importnb/tests/test_unittests.ipynb::TestContext::test_reload_with_context [32mPASSED[0m[36m [ 87%][0m
-    src/importnb/tests/test_unittests.ipynb::TestRemote::test_imports [33mSKIPPED[0m[36m [ 91%][0m
-    src/importnb/tests/test_unittests.ipynb::TestExtension::test_failure [33mxfail[0m[36m [ 95%][0m
-    src/importnb/tests/test_unittests.ipynb::TestExtension::test_import [32mPASSED[0m[36m [100%][0m
+    src/importnb/tests/test_unittests.ipynb::TestExtension::test_failure [33mxfail[0m[36m [ 75%][0m
+    src/importnb/tests/test_unittests.ipynb::TestExtension::test_import [32mPASSED[0m[36m [ 79%][0m
+    src/importnb/tests/test_unittests.ipynb::TestPartial::test_exception [32mPASSED[0m[36m [ 83%][0m
+    src/importnb/tests/test_unittests.ipynb::TestPartial::test_traceback [32mPASSED[0m[36m [ 87%][0m
+    src/importnb/tests/test_unittests.ipynb::TestContext::test_import [32mPASSED[0m[36m [ 91%][0m
+    src/importnb/tests/test_unittests.ipynb::TestContext::test_reload_with_context [32mPASSED[0m[36m [ 95%][0m
+    src/importnb/tests/test_unittests.ipynb::TestRemote::test_imports [33mSKIPPED[0m[36m [100%][0m
     
     ---------- coverage: platform darwin, python 3.5.4-final-0 -----------
-    Name                                    Stmts   Miss  Cover
-    -----------------------------------------------------------
-    src/importnb/__init__                      11     11     0%
-    src/importnb/__main__                       3      3     0%
-    src/importnb/_version                       1      1     0%
-    src/importnb/capture                       59     59     0%
-    src/importnb/decoder                       35     24    31%
-    src/importnb/execute                       90     48    47%
-    src/importnb/loader                       132     78    41%
-    src/importnb/nbtest                        34     34     0%
-    src/importnb/notebooks/__init__             0      0   100%
-    src/importnb/notebooks/utils/__init__       0      0   100%
-    src/importnb/nunittest                     44     44     0%
-    src/importnb/parameterize                  81     44    46%
-    src/importnb/path_hooks                    84     35    58%
-    src/importnb/tests/failure                  1      0   100%
-    src/importnb/tests/import_this              1      0   100%
-    src/importnb/tests/pyimport                 3      0   100%
-    src/importnb/tests/test_importnb            1      0   100%
-    src/importnb/tests/test_unittests           1      0   100%
-    src/importnb/usage/__init__                 0      0   100%
-    src/importnb/utils/__init__                 0      0   100%
-    src/importnb/utils/export                  33     33     0%
-    src/importnb/utils/ipython                 41     41     0%
-    src/importnb/utils/nbdoctest               36     36     0%
-    src/importnb/utils/pytest_plugin           24     15    38%
-    src/importnb/utils/setup                   52     52     0%
-    src/importnb/utils/watch                   20     20     0%
-    -----------------------------------------------------------
-    TOTAL                                     787    578    27%
+    Name                                                   Stmts   Miss  Cover
+    --------------------------------------------------------------------------
+    src/importnb/__init__                                     11     11     0%
+    src/importnb/__main__                                      3      3     0%
+    src/importnb/_version                                      1      1     0%
+    src/importnb/capture                                      59     59     0%
+    src/importnb/execute                                      85     45    47%
+    src/importnb/loader                                      153     88    42%
+    src/importnb/notebooks/__init__                            0      0   100%
+    src/importnb/notebooks/pp                                  1      1     0%
+    src/importnb/notebooks/utils/__init__                      0      0   100%
+    src/importnb/parameterize                                 81     44    46%
+    src/importnb/path_hooks                                   84     34    60%
+    src/importnb/test                                         57     57     0%
+    src/importnb/tests/failure                                 1      0   100%
+    src/importnb/tests/import_this                             1      0   100%
+    src/importnb/tests/pyimport                                3      0   100%
+    src/importnb/tests/test_importnb                           1      0   100%
+    src/importnb/tests/test_unittests                          1      0   100%
+    src/importnb/usage/__init__                                0      0   100%
+    src/importnb/usage/a_project_with_notebooks/__init__       2      2     0%
+    src/importnb/usage/a_project_with_notebooks/foobaz         5      5     0%
+    src/importnb/utils/__init__                                0      0   100%
+    src/importnb/utils/export                                 33     33     0%
+    src/importnb/utils/ipython                                41     41     0%
+    src/importnb/utils/nbdoctest                              36     36     0%
+    src/importnb/utils/pytest_plugin                          24     15    38%
+    src/importnb/utils/setup                                  52     52     0%
+    src/importnb/utils/watch                                  20     20     0%
+    --------------------------------------------------------------------------
+    TOTAL                                                    755    547    28%
     
     
-    [32m[1m========== 19 passed, 1 skipped, 3 xfailed, 1 xpassed in 3.98 seconds ==========[0m
+    [1m[32m========== 19 passed, 1 skipped, 3 xfailed, 1 xpassed in 4.05 seconds ==========[0m
     
 
 
@@ -299,10 +313,6 @@ For example, create a file called `tricks.yaml` containing
     if __name__ == '__main__':
         !jupyter nbconvert --to markdown readme.ipynb
 ```
-
-    [NbConvertApp] Converting notebook readme.ipynb to markdown
-    [NbConvertApp] Writing 11209 bytes to readme.md
-
 
     if __name__ == '__main__':
         from IPython.display import display, Image
