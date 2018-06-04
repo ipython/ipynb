@@ -69,9 +69,6 @@ setup_args = dict(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3 :: Only',),
     zip_safe=False,
-    extras_require={
-        'watch': ['watchdog']
-    },
     cmdclass={'test': PyTest,},
     entry_points = {
         'pytest11': ['pytest-importnb = importnb.utils.pytest_plugin',],
