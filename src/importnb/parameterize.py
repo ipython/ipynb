@@ -6,7 +6,11 @@ The execute importer maintains an attribute that includes the notebooks inputs a
     >>> f = Parameterize().from_filename('parameterize.ipynb', 'importnb.notebooks')
     >>> assert 'a_variable_to_parameterize' in f.__signature__.parameters
     >>> assert f(a_variable_to_parameterize=100)
+    
+"""
 
+"""    !python -m importnb.parameterize parameterize.ipynb --a_variable_to_parameterize 100
+    !ipython -m importnb.parameterize a_variable_to_parameterize.ipynb -- --a_variable_to_parameterize 100
 """
 
 try:
@@ -105,6 +109,9 @@ class Parameterize(Execute):
 
         # Supply the literal parameter values as module globals.
         exec(compile(params, "<parameterize>", "exec"), module.__dict__, module.__dict__)
+
+        self.parser = getattr(self, "parser", module_to_argparse(module))
+
         return module
 
     def from_filename(self, filename, path=None, **globals):
@@ -123,8 +130,24 @@ class Parameterize(Execute):
 
     def _exec_cell(self, cell, node, module, prev=None):
         node = AssignmentIgnore().visit(node)
-
         super()._exec_cell(cell, node, module, prev=prev)
+
+
+def literal_eval_or_string(object):
+    try:
+        return ast.literal_eval(object)
+    except:
+        return str(object)
+
+
+def module_to_argparse(object):
+    import argparse
+
+    parser = argparse.ArgumentParser(prog=object.__file__, description=inspect.getdoc(object))
+    for key, parameter in vars(object).items():
+        if key[0] != "_":
+            parser.add_argument("--%s" % key, type=literal_eval_or_string, default=parameter)
+    return parser
 
 
 def vars_to_sig(**vars):
@@ -140,46 +163,31 @@ if __name__ == "__main__":
     )
     m = f(a_variable_to_parameterize=10)
 
-
-def literal_eval_or_string(object):
-    try:
-        return ast.literal_eval(object)
-    except:
-        return str(object)
-
-
-def signature_to_argparse(object):
-    import argparse
-
-    module = inspect.getclosurevars(object).nonlocals["module"]
-    parser = argparse.ArgumentParser(prog=module.__file__, description=inspect.getdoc(module))
-    for key, parameter in inspect.signature(object).parameters.items():
-        parser.add_argument(
-            "--%s" % key, type=literal_eval_or_string, default=getattr(parameter, "default", None)
-        )
-    return parser
-
-
 """# Developer
 """
+
+from functools import partialmethod
+
+
+class Main(Parameterize):
+    __init__ = partialmethod(Parameterize.__init__, "__main__")
+
+    def exec_module(self, module, **globals):
+        globals.update(vars(self.parser.parse_args()))
+        super().exec_module(module, **globals)
 
 
 def main():
     file = sys.argv.pop(1)
-    f = Parameterize("__main__").from_filename(file)
-    parser = signature_to_argparse(f)
-    f(**vars(parser.parse_args()))
+    Main().from_filename(file)()
 
 
 if __name__ == "__main__":
     if sys.argv[0] == globals().get("__file__", None):
         main()
     else:
-        try:
-            from utils.export import export
-        except:
-            from .utils.export import export
+        from importnb.utils.export import export
+
         export("parameterize.ipynb", "../parameterize.py")
         module = Execute().from_filename("parameterize.ipynb")
-
         __import__("doctest").testmod(module, verbose=2)

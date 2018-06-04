@@ -152,13 +152,9 @@ The parameterized module is a callable that evaluates with different literal sta
 
 Run any notebook from the command line with importnb.  Any parameterized expressions are available as parameters on the command line.
 
-    !ipython -m importnb -- readme.ipynb --foo "I'm the new foo"
-    !python -m importnb readme.ipynb --foo "No I am!"
     
-After installing the IPython Extension any notebook may be run as any a command line script
 
-    !ipython -m readme -- --foo "look at me"
-
+    !ipython -m importnb -- readme.ipynb --foo "The new value"
 
 ## Integrations
 
@@ -216,12 +212,13 @@ To package notebooks add `recursive-include package_name *.ipynb`
 
 ```python
     if __name__ == '__main__':
-        from subprocess import call
-        from importnb.capture import capture_output
-        with capture_output() as out:  __import__('pytest').main("src".split())
-        print('plugins'+out.stdout.split('plugins', 1)[-1])
-            
-        if 'kernel' in __import__('sys').argv[0]:
+        if globals().get('__file__', None) == __import__('sys').argv[0]:
+            print(foo, __import__('sys').argv)
+        else:
+            from subprocess import call
+            from importnb.capture import capture_output
+            with capture_output() as out:  __import__('pytest').main("src".split())
+            print('plugins'+out.stdout.split('plugins', 1)[-1])
             """Formatting"""
             from pathlib import Path
             from importnb.utils.export import export
@@ -230,71 +227,8 @@ To package notebooks add `recursive-include package_name *.ipynb`
                 if 'checkpoint' not in str(path):
                     export(path, Path('src/importnb') / path.with_suffix('.py').relative_to(root))
             call("jupyter nbconvert --to markdown --NbConvertApp.output_files_dir=docs/{notebook_name}_files readme.ipynb".split())
-        else:
-            print(foo)
+            
 ```
-
-    plugins: cov-2.5.1, benchmark-3.1.1, hypothesis-3.56.5, importnb-0.3.0
-    collecting ... collected 25 items
-    
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_context PASSED [  4%]
-    src/importnb/tests/test_importnb.ipynb::test_from_filename PASSED      [  8%]
-    src/importnb/tests/test_importnb.ipynb::test_from_execute PASSED       [ 12%]
-    src/importnb/tests/test_importnb.ipynb::test_with_doctest PASSED       [ 16%]
-    src/importnb/tests/test_importnb.ipynb::test_from_filename_main PASSED [ 20%]
-    src/importnb/tests/test_importnb.ipynb::test_parameterize PASSED       [ 24%]
-    src/importnb/tests/test_importnb.ipynb::test_commandline PASSED        [ 28%]
-    src/importnb/tests/test_importnb.ipynb::test_python_file PASSED        [ 32%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_capture PASSED [ 36%]
-    src/importnb/tests/test_importnb.ipynb::test_capturer PASSED           [ 40%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_lazy PASSED [ 44%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_without_context XPASS [ 48%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_relative 42
-    xfail [ 52%]
-    src/importnb/tests/test_importnb.ipynb::test_single_with_extension PASSED [ 56%]
-    src/importnb/tests/test_importnb.ipynb::test_package PASSED            [ 60%]
-    src/importnb/tests/test_importnb.ipynb::test_package_failure xfail     [ 64%]
-    src/importnb/tests/test_importnb.ipynb::test_package_failure_partial PASSED [ 68%]
-    src/importnb/tests/test_importnb.ipynb::test_tmp_dir PASSED            [ 72%]
-    src/importnb/tests/test_unittests.ipynb::TestExtension::test_failure xfail [ 76%]
-    src/importnb/tests/test_unittests.ipynb::TestExtension::test_import PASSED [ 80%]
-    src/importnb/tests/test_unittests.ipynb::TestContext::test_import PASSED [ 84%]
-    src/importnb/tests/test_unittests.ipynb::TestContext::test_reload_with_context PASSED [ 88%]
-    src/importnb/tests/test_unittests.ipynb::TestPartial::test_exception PASSED [ 92%]
-    src/importnb/tests/test_unittests.ipynb::TestPartial::test_traceback PASSED [ 96%]
-    src/importnb/tests/test_unittests.ipynb::TestRemote::test_imports SKIPPED [100%]
-    
-    ---------- coverage: platform darwin, python 3.6.3-final-0 -----------
-    Name                                                      Stmts   Miss  Cover
-    -----------------------------------------------------------------------------
-    src/importnb/Untitled.py                                      3      3     0%
-    src/importnb/__init__.py                                     11     11     0%
-    src/importnb/__main__.py                                      3      3     0%
-    src/importnb/_version.py                                      1      1     0%
-    src/importnb/capture.py                                      59     59     0%
-    src/importnb/execute.py                                      92     49    47%
-    src/importnb/loader.py                                      153     88    42%
-    src/importnb/notebooks/__init__.py                            0      0   100%
-    src/importnb/notebooks/utils/__init__.py                      0      0   100%
-    src/importnb/parameterize.py                                100     63    37%
-    src/importnb/path_hooks.py                                   84     34    60%
-    src/importnb/test.py                                         57     57     0%
-    src/importnb/usage/__init__.py                                0      0   100%
-    src/importnb/usage/a_project_with_notebooks/__init__.py       2      2     0%
-    src/importnb/usage/a_project_with_notebooks/foobaz.py         5      5     0%
-    src/importnb/utils/__init__.py                                0      0   100%
-    src/importnb/utils/export.py                                 33     33     0%
-    src/importnb/utils/ipython.py                                41     41     0%
-    src/importnb/utils/nbdoctest.py                              36     36     0%
-    src/importnb/utils/pytest_plugin.py                          21     12    43%
-    src/importnb/utils/setup.py                                  52     52     0%
-    -----------------------------------------------------------------------------
-    TOTAL                                                       753    549    27%
-    
-    
-    ========= 20 passed, 1 skipped, 3 xfailed, 1 xpassed in 3.93 seconds =========
-    
-
 
 
 ```python

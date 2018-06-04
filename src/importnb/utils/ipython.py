@@ -62,8 +62,6 @@ def load_ipython_extension(ip):
 
 
 if __name__ == "__main__":
-    try:
-        from ..loader import export
-    except:
-        from importnb.loader import export
+    from importnb.utils.export import export
+
     export("ipython.ipynb", "../../utils/ipython.py")
