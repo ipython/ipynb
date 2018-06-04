@@ -21,6 +21,7 @@ except:
 import ast, sys, inspect
 
 from collections import ChainMap
+from functools import partialmethod
 
 from importlib._bootstrap import _new_module
 
@@ -166,8 +167,6 @@ if __name__ == "__main__":
 """# Developer
 """
 
-from functools import partialmethod
-
 
 class Main(Parameterize):
     __init__ = partialmethod(Parameterize.__init__, "__main__")
@@ -178,8 +177,7 @@ class Main(Parameterize):
 
 
 def main():
-    file = sys.argv.pop(1)
-    Main().from_filename(file)()
+    Main().from_filename(sys.argv.pop(1))()
 
 
 if __name__ == "__main__":
