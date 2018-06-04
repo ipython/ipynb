@@ -54,7 +54,7 @@ except:
         def __init__(self, stdout=None, stderr=None, outputs=None):
             self._stdout = stdout
             self._stderr = stderr
-            self.outputs = outputs
+            self._outputs = self.outputs = outputs or []
 
         @property
         def stdout(self):

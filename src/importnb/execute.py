@@ -61,8 +61,13 @@ def new_error(Exception):
     }
 
 
-def new_display(object):
-    return {"data": object.data, "metadata": {}, "output_type": "display_data"}
+def new_display(object, metadata=None):
+    if isinstance(object, tuple):
+        """It came from a repr_mimebundle"""
+        object.metadata = object[0], metadata
+    object = getattr(object, "data", object)
+
+    return {"data": object, "metadata": metadata or {}, "output_type": "display_data"}
 
 
 """# Reproduce notebooks with the `Execute` class.
@@ -105,7 +110,7 @@ class Interactive(Notebook):
         _cell, _node = prev or ({}, {})
 
         if cell["cell_type"] == "markdown":
-            if _cell.get("cell_type", None) == "markdown":
+            if getattr(_node, "body", False) and _cell.get("cell_type", None) == "markdown":
                 self._call_exec(ast.Expression(_node.body[0].value), module)
 
         if cell["cell_type"] == "code":
@@ -114,7 +119,10 @@ class Interactive(Notebook):
                 """Evaluate one node at a time."""
                 if expression == node.body[-1]:
                     """The last node is interactive."""
-                    expression = ast.Interactive(body=[expression])
+                    if hasattr(expression, "body"):
+                        expression = ast.Module([expression])
+                    else:
+                        expression = ast.Interactive(body=[expression])
                 else:
                     """Execute Expr as Expressions so the docstring doesn't change."""
                     if isinstance(expression, ast.Expr):
@@ -170,6 +178,12 @@ class Execute(Interactive):
         error = None
         with capture_output() as out:
             super()._exec_cell(cell, node, module, prev=prev)
+        out._outputs = [
+            dict(zip(("data", "metadata"), object)) if isinstance(object, tuple) else object
+            for object in out._outputs
+        ]
+
+        if "outputs" in cell:
             if out.outputs:
                 cell["outputs"] += [new_display(object) for object in out.outputs]
             if out.stdout:
@@ -182,7 +196,7 @@ class Execute(Interactive):
 
 
 if __name__ == "__main__":
-    nb = Execute(display=False).from_filename("execute.ipynb", "importnb.notebooks")
+    nb = Execute(display=True).from_filename("execute.ipynb", "importnb.notebooks")
 
 """# Developer
 """
