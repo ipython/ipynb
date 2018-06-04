@@ -15,10 +15,6 @@ install:
 script:
 - tox
 
-before_deploy:
-- pip install ipython black
-- ipython -m importnb readme.ipynb
-
 deploy:
 - provider: pypi
   user: docfast
