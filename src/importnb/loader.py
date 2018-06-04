@@ -137,7 +137,6 @@ def from_resource(loader, file=None, resource=None, exec=True, **globals):
 
         module = module_from_spec(spec_from_loader(name, loader))
         if exec:
-            stack.enter_context(modify_sys_path(file))
             module.__loader__.exec_module(module, **globals)
     return module
 
@@ -212,8 +211,8 @@ def markdown_string_expression(cell):
 class NotebookLoader(SourceFileLoader, PathHooksContext):
     """The simplest implementation of a Notebook Source File Loader.
     >>> with NotebookLoader():
-    ...    from importnb.notebooks import decoder
-    >>> assert decoder.__file__.endswith('.ipynb')
+    ...    from importnb.notebooks import loader
+    >>> assert loader.__file__.endswith('.ipynb')
     """
     EXTENSION_SUFFIXES = ".ipynb",
     __slots__ = "name", "path",
