@@ -1,5 +1,2 @@
 pytest
-pytest-cov
 tox
-git+https://github.com/yaml/pyyaml.git
-watchdog
