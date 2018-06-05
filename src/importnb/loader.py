@@ -300,9 +300,9 @@ class Notebook(NotebookLoader):
     """
     EXTENSION_SUFFIXES = ".ipynb",
 
-    format = _transform = staticmethod(dedent)
+    format = staticmethod(dedent)
 
-    __slots__ = "stdout", "stderr", "display", "lazy", "exceptions", "globals", "dir", "no_docs"
+    __slots__ = "stdout", "stderr", "display", "lazy", "exceptions", "globals", "dir"
 
     def __init__(
         self,
@@ -315,8 +315,7 @@ class Notebook(NotebookLoader):
         lazy=False,
         globals=None,
         exceptions=ImportNbException,
-        dir=None,
-        no_docs=True
+        dir=None
     ):
         super().__init__(fullname, path)
         self.stdout = stdout
@@ -326,7 +325,6 @@ class Notebook(NotebookLoader):
         self.globals = {} if globals is None else globals
         self.exceptions = exceptions
         self.dir = dir
-        self.no_docs = no_docs
 
     exec_module = advanced_exec_module(NotebookLoader.exec_module)
 
@@ -357,9 +355,6 @@ if __name__ == "__main__":
     export("loader.ipynb", "../loader.py")
     m = Notebook().from_filename("loader.ipynb")
     print(__import__("doctest").testmod(m, verbose=2))
-
-"""   !jupyter nbconvert --to python --stdout loader.ipynb > ../loader.py
-"""
 
 """# More Information
 
