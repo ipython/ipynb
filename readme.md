@@ -233,6 +233,40 @@ To package notebooks add `recursive-include package_name *.ipynb`
             
 ```
 
+    plugins: cov-2.5.1, benchmark-3.1.1, hypothesis-3.56.5, importnb-0.3.0
+    collecting ... collected 25 items
+    
+    src/importnb/tests/test_importnb.ipynb::test_single_file_with_context PASSED [  4%]
+    src/importnb/tests/test_importnb.ipynb::test_from_filename PASSED        [  8%]
+    src/importnb/tests/test_importnb.ipynb::test_from_execute PASSED         [ 12%]
+    src/importnb/tests/test_importnb.ipynb::test_with_doctest PASSED         [ 16%]
+    src/importnb/tests/test_importnb.ipynb::test_from_filename_main PASSED   [ 20%]
+    src/importnb/tests/test_importnb.ipynb::test_parameterize PASSED         [ 24%]
+    src/importnb/tests/test_importnb.ipynb::test_commandline PASSED          [ 28%]
+    src/importnb/tests/test_importnb.ipynb::test_python_file PASSED          [ 32%]
+    src/importnb/tests/test_importnb.ipynb::test_single_file_with_capture PASSED [ 36%]
+    src/importnb/tests/test_importnb.ipynb::test_capturer PASSED             [ 40%]
+    src/importnb/tests/test_importnb.ipynb::test_single_file_with_lazy PASSED [ 44%]
+    src/importnb/tests/test_importnb.ipynb::test_single_file_without_context XPASS [ 48%]
+    src/importnb/tests/test_importnb.ipynb::test_single_file_relative 42
+    xfail  [ 52%]
+    src/importnb/tests/test_importnb.ipynb::test_single_with_extension PASSED [ 56%]
+    src/importnb/tests/test_importnb.ipynb::test_package PASSED              [ 60%]
+    src/importnb/tests/test_importnb.ipynb::test_package_failure xfail       [ 64%]
+    src/importnb/tests/test_importnb.ipynb::test_package_failure_partial PASSED [ 68%]
+    src/importnb/tests/test_importnb.ipynb::test_tmp_dir PASSED              [ 72%]
+    src/importnb/tests/test_unittests.ipynb::TestExtension::test_failure xfail [ 76%]
+    src/importnb/tests/test_unittests.ipynb::TestExtension::test_import PASSED [ 80%]
+    src/importnb/tests/test_unittests.ipynb::TestContext::test_import PASSED [ 84%]
+    src/importnb/tests/test_unittests.ipynb::TestContext::test_reload_with_context PASSED [ 88%]
+    src/importnb/tests/test_unittests.ipynb::TestPartial::test_exception PASSED [ 92%]
+    src/importnb/tests/test_unittests.ipynb::TestPartial::test_traceback PASSED [ 96%]
+    src/importnb/tests/test_unittests.ipynb::TestRemote::test_imports SKIPPED [100%]
+    
+    ========== 20 passed, 1 skipped, 3 xfailed, 1 xpassed in 3.82 seconds ==========
+    
+
+
 
 ```python
     if __name__ == '__main__':
@@ -244,3 +278,7 @@ To package notebooks add `recursive-include package_name *.ipynb`
             display(Image(url='docs/classes_importnb.png', ))
         except: ...
 ```
+
+
+<img src="docs/classes_importnb.png"/>
+
