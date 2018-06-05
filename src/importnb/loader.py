@@ -99,7 +99,7 @@ class ImportNbException(BaseException):
 
 """## Converting cells to code
 
-These functions are attached to the loaders.s
+These functions are attached to the loaders.
 """
 
 """## Loading from resources
@@ -112,6 +112,9 @@ def from_resource(loader, file=None, resource=None, exec=True, **globals):
     from_filename is not reloadable because it is not in the sys.modules.
 
     This still needs some work for packages.
+    
+    file: A file name to a notebook 
+    resource: A dotted path to a module containing the notebook file.
     
     >> assert from_resource(Notebook(), 'loader.ipynb', 'importnb.notebooks')
     """
