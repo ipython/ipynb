@@ -1,5 +1,5 @@
 
-__importnb__ imports notebooks as modules & packages.  Use notebooks as source code, importable modules, and command line utilities.
+__importnb__ imports notebooks as modules & packages.  Use notebooks as tests, source code, importable modules, and command line utilities.
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/deathbeds/importnb/master?urlpath=lab/tree/readme.ipynb)[![Build Status](https://travis-ci.org/deathbeds/importnb.svg?branch=master)](https://travis-ci.org/deathbeds/importnb)[![PyPI version](https://badge.fury.io/py/importnb.svg)](https://badge.fury.io/py/importnb)![PyPI - Python Version](https://img.shields.io/pypi/pyversions/importnb.svg)![PyPI - Format](https://img.shields.io/pypi/format/importnb.svg)![PyPI - Format](https://img.shields.io/pypi/l/importnb.svg)[
 ![Conda](https://img.shields.io/conda/pn/conda-forge/importnb.svg)](https://anaconda.org/conda-forge/importnb)[
@@ -16,6 +16,8 @@ __importnb__ imports notebooks as modules & packages.  Use notebooks as source c
 Use the `Notebook` context manager.
 
     >>> from importnb import Notebook
+    
+> After installation, [pytest](http://doc.pytest.org/en/latest/customize.html) will recognize notebooks as test files.
 
 ### For brevity
 
@@ -96,7 +98,7 @@ The first markdown cell will become the module docstring.
         print(readme.__doc__.splitlines()[0])
 ```
 
-    __importnb__ imports notebooks as modules & packages.  Use notebooks as source code, importable modules, and command line utilities.
+    __importnb__ imports notebooks as modules & packages.  Use notebooks as tests, source code, importable modules, and command line utilities.
 
 
 Meaning non-code blocks can be executeb by [doctest]().
@@ -233,40 +235,6 @@ To package notebooks add `recursive-include package_name *.ipynb`
             
 ```
 
-    plugins: cov-2.5.1, benchmark-3.1.1, hypothesis-3.56.5, importnb-0.3.0
-    collecting ... collected 25 items
-    
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_context PASSED [  4%]
-    src/importnb/tests/test_importnb.ipynb::test_from_filename PASSED        [  8%]
-    src/importnb/tests/test_importnb.ipynb::test_from_execute PASSED         [ 12%]
-    src/importnb/tests/test_importnb.ipynb::test_with_doctest PASSED         [ 16%]
-    src/importnb/tests/test_importnb.ipynb::test_from_filename_main PASSED   [ 20%]
-    src/importnb/tests/test_importnb.ipynb::test_parameterize PASSED         [ 24%]
-    src/importnb/tests/test_importnb.ipynb::test_commandline PASSED          [ 28%]
-    src/importnb/tests/test_importnb.ipynb::test_python_file PASSED          [ 32%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_capture PASSED [ 36%]
-    src/importnb/tests/test_importnb.ipynb::test_capturer PASSED             [ 40%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_lazy PASSED [ 44%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_without_context XPASS [ 48%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_relative 42
-    xfail  [ 52%]
-    src/importnb/tests/test_importnb.ipynb::test_single_with_extension PASSED [ 56%]
-    src/importnb/tests/test_importnb.ipynb::test_package PASSED              [ 60%]
-    src/importnb/tests/test_importnb.ipynb::test_package_failure xfail       [ 64%]
-    src/importnb/tests/test_importnb.ipynb::test_package_failure_partial PASSED [ 68%]
-    src/importnb/tests/test_importnb.ipynb::test_tmp_dir PASSED              [ 72%]
-    src/importnb/tests/test_unittests.ipynb::TestExtension::test_failure xfail [ 76%]
-    src/importnb/tests/test_unittests.ipynb::TestExtension::test_import PASSED [ 80%]
-    src/importnb/tests/test_unittests.ipynb::TestContext::test_import PASSED [ 84%]
-    src/importnb/tests/test_unittests.ipynb::TestContext::test_reload_with_context PASSED [ 88%]
-    src/importnb/tests/test_unittests.ipynb::TestPartial::test_exception PASSED [ 92%]
-    src/importnb/tests/test_unittests.ipynb::TestPartial::test_traceback PASSED [ 96%]
-    src/importnb/tests/test_unittests.ipynb::TestRemote::test_imports SKIPPED [100%]
-    
-    ========== 20 passed, 1 skipped, 3 xfailed, 1 xpassed in 3.82 seconds ==========
-    
-
-
 
 ```python
     if __name__ == '__main__':
@@ -278,7 +246,3 @@ To package notebooks add `recursive-include package_name *.ipynb`
             display(Image(url='docs/classes_importnb.png', ))
         except: ...
 ```
-
-
-<img src="docs/classes_importnb.png"/>
-
