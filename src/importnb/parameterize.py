@@ -147,7 +147,12 @@ def module_to_argparse(object):
     parser = argparse.ArgumentParser(prog=object.__file__, description=inspect.getdoc(object))
     for key, parameter in vars(object).items():
         if key[0] != "_":
-            parser.add_argument("--%s" % key, type=literal_eval_or_string, default=parameter)
+            parser.add_argument(
+                "--%s" % key,
+                type=literal_eval_or_string,
+                default=parameter,
+                help="{} {}".format(type(parameter), parameter),
+            )
     return parser
 
 
