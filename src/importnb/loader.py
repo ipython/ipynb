@@ -337,13 +337,6 @@ def unload_ipython_extension(ip=None):
     remove_one_path_hook(Notebook)
 
 
-def main(*files):
-    loader = Notebook("__main__")
-    if not files:
-        files = sys.argv[1:]
-    return {file: loader.from_filename(file) for file in files}
-
-
 """# Developer
 """
 
