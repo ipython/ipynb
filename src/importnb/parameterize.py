@@ -14,9 +14,9 @@ The execute importer maintains an attribute that includes the notebooks inputs a
 """
 
 try:
-    from .execute import Execute, loader_include_notebook
+    from .execute import Execute
 except:
-    from importnb.execute import Execute, loader_include_notebook
+    from importnb.execute import Execute
 
 import ast, sys, inspect
 
@@ -91,7 +91,7 @@ class Parameterize(Execute):
         _init_module_attrs(spec, module)
 
         # Import the notebook when parameterize is imported
-        loader_include_notebook(self, module)
+        self.set_notebook(module)
 
         node = self.nb_to_ast(module._notebook)
 
@@ -133,6 +133,10 @@ class Parameterize(Execute):
         node = AssignmentIgnore().visit(node)
         super()._exec_cell(cell, node, module, prev=prev)
 
+    def set_notebook(self, module):
+        if not hasattr(module, "_notebook"):
+            super().set_notebook(module)
+
 
 def literal_eval_or_string(object):
     try:
@@ -144,7 +148,9 @@ def literal_eval_or_string(object):
 def module_to_argparse(object):
     import argparse
 
-    parser = argparse.ArgumentParser(prog=object.__file__, description=inspect.getdoc(object))
+    parser = argparse.ArgumentParser(
+        prog=object.__loader__.path, description=inspect.getdoc(object)
+    )
     for key, parameter in vars(object).items():
         if key[0] != "_":
             parser.add_argument(
