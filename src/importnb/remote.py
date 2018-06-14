@@ -1,20 +1,20 @@
 # coding: utf-8
-"""# A reloadable notebook importer
+"""# A reloadable remote notebook importer
 """
 
 """    >>> with remote("https://gist.githubusercontent.com/tonyfast/e7fb55934168744926961f02f6171c6a/raw/*.ipynb"):
     ...     import black_formatter  #doctest: +ELLIPSIS
 
     >>> with black_formatter.__loader__:
-    ...     importnb.reload(black_formatter) #doctest: +ELLIPSIS
+    ...     importlib.reload(black_formatter) #doctest: +ELLIPSIS
 
     >>> black_formatter2 = Remote().from_filename(black_formatter.__file__)
 
     >>> with black_formatter.__loader__:
-    ...    importnb.reload(black_formatter2) #doctest: +ELLIPSIS
+    ...    importlib.reload(black_formatter2) #doctest: +ELLIPSIS
 """
 
-'''    >>>  Remote(exceptions=BaseException).from_filename(
+"""    >>>  Remote(exceptions=BaseException).from_filename(
     "https://raw.githubusercontent.com/jakevdp/PythonDataScienceHandbook/master/notebooks/06.00-Figure-Code.ipynb")
 
     >>> with Remote(path="https://raw.githubusercontent.com/bloomberg/bqplot/master/examples/Marks/Object%20Model/{}.ipynb"):
@@ -22,10 +22,16 @@
 
     >>> Hist.Figure(marks=[Hist.hist], axes=[Hist.ax_x, Hist.ax_y], padding_y=0)
     
-    >>> with remote("""https://raw.githubusercontent.com/deathbeds/importnb/master/src/importnb/tests/*.ipynb"""):
+"""
+
+'''    >>> with remote("""https://raw.githubusercontent.com/deathbeds/importnb/master/src/importnb/tests/*.ipynb"""):
     ...     import test_importnb
 '''
 
+try:
+    from .loader import Notebook
+except:
+    from loader import Notebook
 try:
     from importlib._bootstrap import _init_module_attrs
 except:
@@ -36,16 +42,23 @@ except:
         return _SpecMethods(spec).init_module_attrs(module)
 
 
-import importlib.util, importlib.machinery, inspect, sys, requests, importnb, types
+import importlib.util, importlib.machinery, inspect, sys, types, urllib.error, urllib.request
 
 _REMOTE_IMPORT_CACHE = {}
+
+
+def urlopen(path):
+    try:
+        return urllib.request.urlopen(path)
+    except urllib.error.HTTPError as Exception:
+        ...
 
 
 class RemoteMixin:
 
     def get_data(self, path):
         global _REMOTE_IMPORT_CACHE
-        return _REMOTE_IMPORT_CACHE.pop(path, requests.get(path)).content
+        return _REMOTE_IMPORT_CACHE.pop(path, urlopen(path)).read()
 
     def __enter__(self):
         super().__enter__()
@@ -63,8 +76,8 @@ class RemoteMixin:
 
         url = self.path.replace("*", fullname)
         if url not in _REMOTE_IMPORT_CACHE or fullname in sys.modules:
-            _REMOTE_IMPORT_CACHE[url] = requests.get(url)
-            if _REMOTE_IMPORT_CACHE[url].status_code == 200:
+            _REMOTE_IMPORT_CACHE[url] = urlopen(url)
+            if _REMOTE_IMPORT_CACHE[url]:
                 spec = importlib.machinery.ModuleSpec(
                     fullname, type(self)(fullname, url), origin=url
                 )
@@ -72,11 +85,11 @@ class RemoteMixin:
                 return spec
 
 
-class Remote(RemoteMixin, importnb.Notebook):
+class Remote(RemoteMixin, Notebook):
     ...
 
 
-def remote(path, loader=importnb.Notebook):
+def remote(path, loader=Notebook):
     """A remote notebook finder.  Place a `*` into a url
     to generalize the finder.  It returns a context manager
     """
