@@ -2,6 +2,10 @@
 """# A reloadable remote notebook importer
 """
 
+"""        # Run this cell to use on binder then re run the notebook
+        !importnb-install
+"""
+
 """    >>> with remote("https://gist.githubusercontent.com/tonyfast/e7fb55934168744926961f02f6171c6a/raw/*.ipynb"):
     ...     import black_formatter  #doctest: +ELLIPSIS
 
