@@ -14,14 +14,17 @@
     ...    importnb.reload(black_formatter2) #doctest: +ELLIPSIS
 """
 
-"""    >>>  Remote(exceptions=BaseException).from_filename(
+'''    >>>  Remote(exceptions=BaseException).from_filename(
     "https://raw.githubusercontent.com/jakevdp/PythonDataScienceHandbook/master/notebooks/06.00-Figure-Code.ipynb")
 
     >>> with Remote(path="https://raw.githubusercontent.com/bloomberg/bqplot/master/examples/Marks/Object%20Model/{}.ipynb"):
     ...     import Hist
 
     >>> Hist.Figure(marks=[Hist.hist], axes=[Hist.ax_x, Hist.ax_y], padding_y=0)
-"""
+    
+    >>> with remote("""https://raw.githubusercontent.com/deathbeds/importnb/master/src/importnb/tests/*.ipynb"""):
+    ...     import test_importnb
+'''
 
 try:
     from importlib._bootstrap import _init_module_attrs
