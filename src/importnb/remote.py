@@ -74,6 +74,9 @@ class Remote(RemoteMixin, importnb.Notebook):
 
 
 def remote(path, loader=importnb.Notebook):
+    """A remote notebook finder.  Place a `*` into a url
+    to generalize the finder.  It returns a context manager
+    """
 
     class Remote(RemoteMixin, loader):
         ...

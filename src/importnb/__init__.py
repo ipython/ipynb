@@ -12,6 +12,7 @@ try:
     )
     from .execute import Execute, Interactive
     from .parameterize import Parameterize
+    from .remote import remote
     from . import test
 except:
     from loader import (
@@ -22,4 +23,5 @@ except:
     )
     from execute import Execute, Interactive
     from parameterize import Parameterize
+    from remote import remote
     import test
