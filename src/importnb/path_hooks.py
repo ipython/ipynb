@@ -13,12 +13,49 @@ import inspect, sys, ast, os
 from pathlib import Path
 
 try:
-    from importlib._bootstrap_external import FileFinder
+    from importlib._bootstrap_external import FileFinder as _FileFinder
 except:
     # python 3.4
-    from importlib.machinery import FileFinder
+    from importlib.machinery import FileFinder as _FileFinder
 
 from contextlib import contextmanager, ExitStack
+
+from itertools import chain
+
+
+class FileFinder(_FileFinder):
+    """Adds the ability to open file names with special characters using underscores."""
+
+    def find_spec(self, fullname, target=None):
+        """Try to finder the spec and if it cannot be found, use the underscore starring syntax
+        to identify potential matches.
+        """
+        spec = super().find_spec(fullname, target=target)
+
+        if spec is None:
+            original = fullname
+
+            if "." in fullname:
+                original, fullname = fullname.rsplit(".", 1)
+            else:
+                original, fullname = "", original
+
+            if "_" in fullname:
+                files = chain(
+                    Path(self.path).glob(fullname + ".*"),
+                    Path(self.path).glob(
+                        fullname.replace("__", "*").replace("_", "?").__add__(".*")
+                    ),
+                )
+
+                try:
+                    spec = super().find_spec(
+                        (original + "." + next(files).stem).lstrip("."), target=target
+                    )
+                except StopIteration:
+                    ...
+
+        return spec
 
 
 @contextmanager
@@ -33,7 +70,7 @@ def modify_file_finder_details():
             closure = inspect.getclosurevars(hook).nonlocals
         except TypeError:
             continue
-        if issubclass(closure["cls"], FileFinder):
+        if issubclass(closure["cls"], _FileFinder):
             sys.path_hooks.pop(id)
             details = list(closure["loader_details"])
             yield details
