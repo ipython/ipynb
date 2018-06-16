@@ -106,6 +106,25 @@ The `lazy` option will delay the evaluation of a module until one of its attribu
         import readme
 ```
 
+### Fuzzy File Names
+
+
+```python
+    if __name__ == '__main__':
+        with Notebook():
+            import __a_me
+            
+        assert __a_me.__file__ == readme.__file__
+```
+
+Python does not provide a way to import file names starting with numbers of contains special characters.  `importnb` installs a fuzzy import logic to import files containing these edge cases.
+
+    import __2018__6_01_A_Blog_Post
+    
+will find the first file matching `*2018*6?01?A?Blog?Post`.  Importing `Untitled314519.ipynb` import as
+
+    import __314519
+
 ## Capture Outputs
 
 `importnb` can capture the `stdout`, `stderr`, and `display` in the context manager.  The arguments are similar to `IPython.util.capture.capture_output`.
@@ -263,37 +282,37 @@ To package notebooks add `recursive-include package_name *.ipynb`
             
 ```
 
-    plugins: cov-2.5.1, benchmark-3.1.1, hypothesis-3.56.5, importnb-0.3.0
-    collecting ... collected 25 items
+    plugins: cov-2.5.1, benchmark-3.1.1, hypothesis-3.56.5, importnb-0.3.1
+    collecting ... collected 26 items
     
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_context PASSED [  4%]
-    src/importnb/tests/test_importnb.ipynb::test_from_filename PASSED        [  8%]
-    src/importnb/tests/test_importnb.ipynb::test_from_execute PASSED         [ 12%]
-    src/importnb/tests/test_importnb.ipynb::test_with_doctest PASSED         [ 16%]
-    src/importnb/tests/test_importnb.ipynb::test_from_filename_main PASSED   [ 20%]
-    src/importnb/tests/test_importnb.ipynb::test_parameterize PASSED         [ 24%]
-    src/importnb/tests/test_importnb.ipynb::test_commandline PASSED          [ 28%]
-    src/importnb/tests/test_importnb.ipynb::test_python_file PASSED          [ 32%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_capture PASSED [ 36%]
-    src/importnb/tests/test_importnb.ipynb::test_capturer PASSED             [ 40%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_with_lazy PASSED [ 44%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_without_context XPASS [ 48%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_relative 42
-    xfail  [ 52%]
-    src/importnb/tests/test_importnb.ipynb::test_single_with_extension PASSED [ 56%]
-    src/importnb/tests/test_importnb.ipynb::test_package PASSED              [ 60%]
-    src/importnb/tests/test_importnb.ipynb::test_package_failure xfail       [ 64%]
-    src/importnb/tests/test_importnb.ipynb::test_package_failure_partial PASSED [ 68%]
-    src/importnb/tests/test_importnb.ipynb::test_tmp_dir PASSED              [ 72%]
+    src/importnb/tests/test_importnb.ipynb::test_single_file_with_context PASSED [  3%]
+    src/importnb/tests/test_importnb.ipynb::test_from_filename PASSED         [  7%]
+    src/importnb/tests/test_importnb.ipynb::test_from_execute PASSED          [ 11%]
+    src/importnb/tests/test_importnb.ipynb::test_with_doctest PASSED          [ 15%]
+    src/importnb/tests/test_importnb.ipynb::test_from_filename_main PASSED    [ 19%]
+    src/importnb/tests/test_importnb.ipynb::test_parameterize PASSED          [ 23%]
+    src/importnb/tests/test_importnb.ipynb::test_commandline PASSED           [ 26%]
+    src/importnb/tests/test_importnb.ipynb::test_python_file PASSED           [ 30%]
+    src/importnb/tests/test_importnb.ipynb::test_single_file_with_capture PASSED [ 34%]
+    src/importnb/tests/test_importnb.ipynb::test_capturer PASSED              [ 38%]
+    src/importnb/tests/test_importnb.ipynb::test_single_file_with_lazy PASSED [ 42%]
+    src/importnb/tests/test_importnb.ipynb::test_single_file_without_context XPASS [ 46%]
+    src/importnb/tests/test_importnb.ipynb::test_single_file_relative XPASS   [ 50%]
+    src/importnb/tests/test_importnb.ipynb::test_single_with_extension PASSED [ 53%]
+    src/importnb/tests/test_importnb.ipynb::test_package PASSED               [ 57%]
+    src/importnb/tests/test_importnb.ipynb::test_package_failure xfail        [ 61%]
+    src/importnb/tests/test_importnb.ipynb::test_package_failure_partial PASSED [ 65%]
+    src/importnb/tests/test_importnb.ipynb::test_tmp_dir PASSED               [ 69%]
+    src/importnb/tests/test_importnb.ipynb::test_query_numeric_files PASSED   [ 73%]
     src/importnb/tests/test_unittests.ipynb::TestExtension::test_failure xfail [ 76%]
     src/importnb/tests/test_unittests.ipynb::TestExtension::test_import PASSED [ 80%]
-    src/importnb/tests/test_unittests.ipynb::TestContext::test_import PASSED [ 84%]
+    src/importnb/tests/test_unittests.ipynb::TestContext::test_import PASSED  [ 84%]
     src/importnb/tests/test_unittests.ipynb::TestContext::test_reload_with_context PASSED [ 88%]
     src/importnb/tests/test_unittests.ipynb::TestPartial::test_exception PASSED [ 92%]
     src/importnb/tests/test_unittests.ipynb::TestPartial::test_traceback PASSED [ 96%]
     src/importnb/tests/test_unittests.ipynb::TestRemote::test_imports SKIPPED [100%]
     
-    ========== 20 passed, 1 skipped, 3 xfailed, 1 xpassed in 3.84 seconds ==========
+    ========== 21 passed, 1 skipped, 2 xfailed, 2 xpassed in 3.79 seconds ===========
     
 
 
