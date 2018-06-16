@@ -121,7 +121,7 @@ Python does not provide a way to import file names starting with numbers of cont
 
     import __2018__6_01_A_Blog_Post
     
-will find the first file matching `*2018*6?01?A?Blog?Post`.  Importing `Untitled314519.ipynb` import as
+will find the first file matching `*2018*6?01?A?Blog?Post`.  Importing `Untitled314519.ipynb` could be supported with the query below.
 
     import __314519
 
@@ -312,7 +312,7 @@ To package notebooks add `recursive-include package_name *.ipynb`
     src/importnb/tests/test_unittests.ipynb::TestPartial::test_traceback PASSED [ 96%]
     src/importnb/tests/test_unittests.ipynb::TestRemote::test_imports SKIPPED [100%]
     
-    ========== 21 passed, 1 skipped, 2 xfailed, 2 xpassed in 3.79 seconds ===========
+    ========== 21 passed, 1 skipped, 2 xfailed, 2 xpassed in 3.82 seconds ===========
     
 
 

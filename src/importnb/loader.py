@@ -47,6 +47,8 @@ if globals().get("show", None):
 
 from .capture import capture_output
 from .path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
+from .shell import ShellMixin
+from .decoder import loads
 
 import ast, sys
 from copy import copy
@@ -76,8 +78,6 @@ except:
     from importlib_resources import path
 
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
-from json import load as _load, loads as _loads
-from functools import partial
 
 try:
     from IPython.core.inputsplitter import IPythonInputSplitter
@@ -158,61 +158,6 @@ def from_resource(loader, file=None, resource=None, exec=True, **globals):
 
 def assign_line_numbers(cell, node):
     return ast.fix_missing_locations(ast.increment_lineno(node, cell["metadata"].get("lineno", 1)))
-
-
-class LineNumberDecoder(JSONDecoder):
-    """A JSON Decoder to return a NotebookNode with lines numbers in the metadata."""
-
-    def __init__(
-        self,
-        *,
-        object_hook=None,
-        parse_float=None,
-        parse_int=None,
-        parse_constant=None,
-        strict=True,
-        object_pairs_hook=None
-    ):
-        from json.scanner import py_make_scanner
-
-        super().__init__(
-            object_hook=object_hook,
-            parse_float=parse_float,
-            parse_int=parse_int,
-            parse_constant=parse_constant,
-            strict=strict,
-            object_pairs_hook=object_pairs_hook,
-        )
-        self.parse_object = self._parse_object
-        self.scan_once = py_make_scanner(self)
-
-    def _parse_object(
-        self,
-        s_and_end,
-        strict,
-        scan_once,
-        object_hook,
-        object_pairs_hook,
-        memo=None,
-        _w=WHITESPACE.match,
-        _ws=WHITESPACE_STR,
-    ) -> (dict, int):
-        object, next = JSONObject(
-            s_and_end, strict, scan_once, object_hook, object_pairs_hook, memo=memo, _w=_w, _ws=_ws
-        )
-        if "cell_type" in object:
-            object["metadata"].update(
-                {"lineno": len(s_and_end[0][:next].rsplit('"source":', 1)[0].splitlines())}
-            )
-
-        for key in ("source", "text"):
-            if key in object:
-                object[key] = "".join(object[key])
-
-        return object, next
-
-
-loads = partial(_loads, cls=LineNumberDecoder)
 
 
 def markdown_string_expression(cell):
@@ -298,35 +243,6 @@ def advanced_exec_module(exec_module):
                 module._exception = Exception
 
     return _exec_module
-
-
-"""# The Shell Mixin
-
-Allows the current ipython configuration to effect the code and ast tranformers.
-"""
-
-
-class ShellMixin:
-
-    @property
-    def _shell(self):
-        try:
-            return __import__("IPython").get_ipython()
-        except:
-            return
-
-    def format(self, str):
-        return (
-            self._shell and self._shell.input_transformer_manager.transform_cell or super().dedent
-        )(
-            str
-        )
-
-    def visit(self, node):
-        if self._shell:
-            for visitor in self._shell.ast_transformers:
-                node = visitor.visit(node)
-        return node
 
 
 """# The Advanced Notebook loader
