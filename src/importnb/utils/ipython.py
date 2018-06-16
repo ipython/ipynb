@@ -2,7 +2,7 @@
 from IPython import paths, get_ipython
 
 from pathlib import Path
-import json
+import json, ast
 
 
 def get_config():
@@ -57,8 +57,10 @@ def uninstall(ip=None):
 
 def load_ipython_extension(ip):
     from ..loader import Notebook
+    from .relative import load_ipython_extension
 
-    Notebook().__enter__(position=-1)
+    Notebook(shell=ip).__enter__(position=-1)
+    load_ipython_extension(ip)
 
 
 if __name__ == "__main__":

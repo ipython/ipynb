@@ -35,10 +35,8 @@
     
 """
 
-try:
-    from .loader import Notebook
-except:
-    from loader import Notebook
+from .loader import Notebook
+
 try:
     from importlib._bootstrap import _init_module_attrs
 except:

@@ -4,10 +4,7 @@
 Many suggestions for importing notebooks use `sys.meta_paths`, but `importnb` relies on the `sys.path_hooks` to load any notebook in the path. `PathHooksContext` is a base class for the `importnb.Notebook` `SourceFileLoader`.
 """
 
-try:
-    from .capture import capture_output, CapturedIO
-except:
-    from capture import capture_output, CapturedIO
+from .capture import capture_output, CapturedIO
 
 import inspect, sys, ast, os
 from pathlib import Path

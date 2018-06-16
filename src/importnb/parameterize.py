@@ -3,7 +3,7 @@
 
 The execute importer maintains an attribute that includes the notebooks inputs and outputs.
 
-    >>> f = Parameterize().from_filename('parameterize.ipynb', 'importnb.notebooks')
+    >>> f = Parameterize(shell=True).from_filename('parameterize.ipynb', 'importnb.notebooks')
     >>> assert 'a_variable_to_parameterize' in f.__signature__.parameters
     >>> assert f(a_variable_to_parameterize=100)
     
@@ -13,10 +13,7 @@ The execute importer maintains an attribute that includes the notebooks inputs a
     !ipython -m importnb.parameterize a_variable_to_parameterize.ipynb -- --a_variable_to_parameterize 100
 """
 
-try:
-    from .execute import Execute
-except:
-    from importnb.execute import Execute
+from .execute import Execute
 
 import ast, sys, inspect
 
@@ -198,5 +195,5 @@ if __name__ == "__main__":
         from importnb.utils.export import export
 
         export("parameterize.ipynb", "../parameterize.py")
-        module = Execute().from_filename("parameterize.ipynb")
+        module = Execute(shell=True).from_filename("parameterize.ipynb")
         __import__("doctest").testmod(module, verbose=2)

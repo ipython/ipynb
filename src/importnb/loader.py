@@ -45,12 +45,8 @@ Not all notebooks may be loaded as modules throught the standard python import f
 if globals().get("show", None):
     print("Catch me if you can")
 
-try:
-    from .capture import capture_output
-    from .path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
-except:
-    from capture import capture_output
-    from path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
+from .capture import capture_output
+from .path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
 
 import ast, sys
 from copy import copy
@@ -236,9 +232,11 @@ class NotebookLoader(SourceFileLoader, PathHooksContext):
         super().__init__(fullname, path)
         PathHooksContext.__init__(self)
 
-    @property
-    def format(self):
-        return dedent
+    def format(self, str):
+        return dedent(str)
+
+    def visit(self, node):
+        return node
 
     from_filename = from_resource
 
@@ -256,7 +254,7 @@ class NotebookLoader(SourceFileLoader, PathHooksContext):
             if cell["cell_type"] == "code":
                 node = ast.parse(self.format("".join(cell["source"])))
             if node is not None:
-                yield cell, assign_line_numbers(cell, node)
+                yield cell, assign_line_numbers(cell, self.visit(node))
 
     def nb_to_ast(self, nb):
         module = ast.Module(body=[])
@@ -302,11 +300,40 @@ def advanced_exec_module(exec_module):
     return _exec_module
 
 
+"""# The Shell Mixin
+
+Allows the current ipython configuration to effect the code and ast tranformers.
+"""
+
+
+class ShellMixin:
+
+    @property
+    def _shell(self):
+        try:
+            return __import__("IPython").get_ipython()
+        except:
+            return
+
+    def format(self, str):
+        return (
+            self._shell and self._shell.input_transformer_manager.transform_cell or super().dedent
+        )(
+            str
+        )
+
+    def visit(self, node):
+        if self._shell:
+            for visitor in self._shell.ast_transformers:
+                node = visitor.visit(node)
+        return node
+
+
 """# The Advanced Notebook loader
 """
 
 
-class Notebook(NotebookLoader):
+class Notebook(ShellMixin, NotebookLoader):
     """The Notebook loader is an advanced loader for IPython notebooks:
     
     * Capture stdout, stderr, and display objects.
@@ -319,7 +346,7 @@ class Notebook(NotebookLoader):
 
     format = staticmethod(dedent)
 
-    __slots__ = "stdout", "stderr", "display", "lazy", "exceptions", "globals", "dir"
+    __slots__ = "stdout", "stderr", "display", "lazy", "exceptions", "globals", "dir", "shell"
 
     def __init__(
         self,
@@ -332,7 +359,8 @@ class Notebook(NotebookLoader):
         lazy=False,
         globals=None,
         exceptions=ImportNbException,
-        dir=None
+        dir=None,
+        shell=True
     ):
         super().__init__(fullname, path)
         self.stdout = stdout
@@ -342,12 +370,13 @@ class Notebook(NotebookLoader):
         self.globals = {} if globals is None else globals
         self.exceptions = exceptions
         self.dir = dir
+        self.shell = shell
 
     exec_module = advanced_exec_module(NotebookLoader.exec_module)
 
 
 def load_ipython_extension(ip=None):
-    add_path_hooks(Notebook, Notebook.EXTENSION_SUFFIXES)
+    add_path_hooks(Notebook(shell=True), Notebook.EXTENSION_SUFFIXES)
 
 
 def unload_ipython_extension(ip=None):
@@ -363,7 +392,7 @@ if __name__ == "__main__":
     except:
         from .utils.export import export
     export("loader.ipynb", "../loader.py")
-    m = Notebook().from_filename("loader.ipynb")
+    m = Notebook(shell=True).from_filename("loader.ipynb")
     print(__import__("doctest").testmod(m, verbose=2))
 
 """# More Information

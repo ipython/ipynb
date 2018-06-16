@@ -4,8 +4,8 @@
 `Interactive` and `Execute` contain the notebook as an object.  The execute importer maintains an attribute that includes the notebooks inputs and outputs.
 
     >>> import importnb    
-    >>> from importnb import notebooks
-    >>> nb = Execute(stdout=True).from_filename('execute.ipynb', 'importnb.notebooks')
+    >>> with Execute(stdout=True):
+    ...     from importnb.notebooks import execute as nb
     
 An executed notebook contains a `__notebook__` attributes that is populated with cell outputs.
 
@@ -21,12 +21,8 @@ The `__notebook__` attribute complies with `nbformat`
 if globals().get("show", None):
     print("I am tested.")
 
-try:
-    from .capture import capture_output
-    from .loader import Notebook, advanced_exec_module, reload, loads
-except:
-    from capture import capture_output
-    from loader import Notebook, advanced_exec_module, reload, loads
+from .capture import capture_output
+from .loader import Notebook, advanced_exec_module, reload, loads
 
 import ast
 from importlib._bootstrap import _call_with_frames_removed
@@ -86,8 +82,8 @@ def exec_modes(node):
 class Interactive(Notebook):
     """The Execute loader reproduces outputs in the module._notebook attribute.
 
-        >>> nb_raw = Notebook(display=True, stdout=True).from_filename('execute.ipynb', 'importnb.notebooks')
-        >>> with Execute(display=True, stdout=True) as loader:
+        >>> nb_raw = Notebook(display=True, stdout=True, shell=True).from_filename('execute.ipynb', 'importnb.notebooks')
+        >>> with Execute(display=True, stdout=True, shell=True) as loader:
         ...    nb = loader.from_filename('execute.ipynb', 'importnb.notebooks', show=True)
 
         The loader includes the first markdown cell or leading block string as the docstring.
@@ -166,14 +162,14 @@ class Interactive(Notebook):
 
 
 if __name__ == "__main__":
-    nb = Interactive().from_filename("execute.ipynb", "importnb.notebooks")
+    nb = Interactive(shell=True).from_filename("execute.ipynb", "importnb.notebooks")
 
 
 class Execute(Interactive):
     """The Execute loader reproduces outputs in the module._notebook attribute.
 
-    >>> nb_raw = Notebook(display=True, stdout=True).from_filename('execute.ipynb', 'importnb.notebooks')
-    >>> with Execute(display=True, stdout=True) as loader:
+    >>> nb_raw = Notebook(display=True, stdout=True, shell=True).from_filename('execute.ipynb', 'importnb.notebooks')
+    >>> with Execute(display=True, stdout=True, shell=True) as loader:
     ...    nb = loader.from_filename('execute.ipynb', 'importnb.notebooks', show=True)
     
     The loader includes the first markdown cell or leading block string as the docstring.
@@ -208,7 +204,7 @@ class Execute(Interactive):
 
 
 if __name__ == "__main__":
-    nb = Execute(display=True).from_filename("execute.ipynb", "importnb.notebooks")
+    nb = Execute(display=True, shell=True).from_filename("execute.ipynb", "importnb.notebooks")
 
 
 class f:
@@ -224,5 +220,5 @@ if __name__ == "__main__":
     except:
         from .utils.export import export
     export("execute.ipynb", "../execute.py")
-    module = Execute().from_filename("execute.ipynb")
+    module = Execute(shell=True).from_filename("execute.ipynb")
     __import__("doctest").testmod(module, verbose=2)
