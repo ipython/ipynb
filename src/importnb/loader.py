@@ -260,8 +260,6 @@ class Notebook(ShellMixin, NotebookLoader):
     """
     EXTENSION_SUFFIXES = ".ipynb",
 
-    format = staticmethod(dedent)
-
     __slots__ = "stdout", "stderr", "display", "lazy", "exceptions", "globals", "dir", "shell"
 
     def __init__(
