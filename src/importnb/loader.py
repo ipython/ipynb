@@ -47,7 +47,7 @@ if globals().get("show", None):
 
 from .capture import capture_output
 from .path_hooks import PathHooksContext, modify_sys_path, add_path_hooks, remove_one_path_hook
-from .shell import ShellMixin
+from .shell import ShellMixin, dedent
 from .decoder import loads
 
 import ast, sys
@@ -78,13 +78,6 @@ except:
     from importlib_resources import path
 
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
-
-try:
-    from IPython.core.inputsplitter import IPythonInputSplitter
-
-    dedent = IPythonInputSplitter().transform_cell
-except:
-    from textwrap import dedent
 
 __all__ = "Notebook", "reload",
 

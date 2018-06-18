@@ -4,6 +4,13 @@
 Allows the current ipython configuration to effect the code and ast tranformers.
 """
 
+try:
+    from IPython.core.inputsplitter import IPythonInputSplitter
+
+    dedent = IPythonInputSplitter().transform_cell
+except:
+    from textwrap import dedent
+
 
 class ShellMixin:
 
@@ -15,11 +22,7 @@ class ShellMixin:
             return
 
     def format(self, str):
-        return (
-            self._shell and self._shell.input_transformer_manager.transform_cell or super().dedent
-        )(
-            str
-        )
+        return (self._shell and self._shell.input_transformer_manager.transform_cell or dedent)(str)
 
     def visit(self, node):
         if self._shell:
