@@ -286,33 +286,33 @@ To package notebooks add `recursive-include package_name *.ipynb`
     collecting ... collected 26 items
     
     src/importnb/tests/test_importnb.ipynb::test_single_file_with_context PASSED [  3%]
-    src/importnb/tests/test_importnb.ipynb::test_from_filename PASSED         [  7%]
-    src/importnb/tests/test_importnb.ipynb::test_from_execute PASSED          [ 11%]
-    src/importnb/tests/test_importnb.ipynb::test_with_doctest PASSED          [ 15%]
-    src/importnb/tests/test_importnb.ipynb::test_from_filename_main PASSED    [ 19%]
-    src/importnb/tests/test_importnb.ipynb::test_parameterize PASSED          [ 23%]
-    src/importnb/tests/test_importnb.ipynb::test_commandline PASSED           [ 26%]
-    src/importnb/tests/test_importnb.ipynb::test_python_file PASSED           [ 30%]
+    src/importnb/tests/test_importnb.ipynb::test_from_filename PASSED       [  7%]
+    src/importnb/tests/test_importnb.ipynb::test_from_execute PASSED        [ 11%]
+    src/importnb/tests/test_importnb.ipynb::test_with_doctest PASSED        [ 15%]
+    src/importnb/tests/test_importnb.ipynb::test_from_filename_main PASSED  [ 19%]
+    src/importnb/tests/test_importnb.ipynb::test_parameterize PASSED        [ 23%]
+    src/importnb/tests/test_importnb.ipynb::test_commandline PASSED         [ 26%]
+    src/importnb/tests/test_importnb.ipynb::test_python_file PASSED         [ 30%]
     src/importnb/tests/test_importnb.ipynb::test_single_file_with_capture PASSED [ 34%]
-    src/importnb/tests/test_importnb.ipynb::test_capturer PASSED              [ 38%]
+    src/importnb/tests/test_importnb.ipynb::test_capturer PASSED            [ 38%]
     src/importnb/tests/test_importnb.ipynb::test_single_file_with_lazy PASSED [ 42%]
     src/importnb/tests/test_importnb.ipynb::test_single_file_without_context XPASS [ 46%]
-    src/importnb/tests/test_importnb.ipynb::test_single_file_relative XPASS   [ 50%]
+    src/importnb/tests/test_importnb.ipynb::test_single_file_relative XPASS [ 50%]
     src/importnb/tests/test_importnb.ipynb::test_single_with_extension PASSED [ 53%]
-    src/importnb/tests/test_importnb.ipynb::test_package PASSED               [ 57%]
-    src/importnb/tests/test_importnb.ipynb::test_package_failure xfail        [ 61%]
+    src/importnb/tests/test_importnb.ipynb::test_package PASSED             [ 57%]
+    src/importnb/tests/test_importnb.ipynb::test_package_failure xfail      [ 61%]
     src/importnb/tests/test_importnb.ipynb::test_package_failure_partial PASSED [ 65%]
-    src/importnb/tests/test_importnb.ipynb::test_tmp_dir PASSED               [ 69%]
-    src/importnb/tests/test_importnb.ipynb::test_query_numeric_files PASSED   [ 73%]
+    src/importnb/tests/test_importnb.ipynb::test_tmp_dir PASSED             [ 69%]
+    src/importnb/tests/test_importnb.ipynb::test_query_numeric_files PASSED [ 73%]
     src/importnb/tests/test_unittests.ipynb::TestExtension::test_failure xfail [ 76%]
     src/importnb/tests/test_unittests.ipynb::TestExtension::test_import PASSED [ 80%]
-    src/importnb/tests/test_unittests.ipynb::TestContext::test_import PASSED  [ 84%]
+    src/importnb/tests/test_unittests.ipynb::TestContext::test_import PASSED [ 84%]
     src/importnb/tests/test_unittests.ipynb::TestContext::test_reload_with_context PASSED [ 88%]
     src/importnb/tests/test_unittests.ipynb::TestPartial::test_exception PASSED [ 92%]
     src/importnb/tests/test_unittests.ipynb::TestPartial::test_traceback PASSED [ 96%]
     src/importnb/tests/test_unittests.ipynb::TestRemote::test_imports SKIPPED [100%]
     
-    ========== 21 passed, 1 skipped, 2 xfailed, 2 xpassed in 3.82 seconds ===========
+    ========= 21 passed, 1 skipped, 2 xfailed, 2 xpassed in 3.86 seconds ==========
     
 
 
