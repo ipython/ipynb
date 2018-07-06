@@ -14,7 +14,7 @@ from .remote import remote
 from . import test
 
 def load_ipython_extension(ip):
-    from .loader import load_ipython_extension
+    from .extensions import load_ipython_extension
     load_ipython_extension(ip)
     from .utils.relative import load_ipython_extension
     load_ipython_extension(ip)
