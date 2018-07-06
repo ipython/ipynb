@@ -21,14 +21,12 @@ from importlib.machinery import SourceFileLoader, ModuleSpec
 
 
 class FileModuleSpec(ModuleSpec):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._set_fileattr = True
 
 
 class FuzzySpec(FileModuleSpec):
-
     def __init__(
         self, name, loader, *, alias=None, origin=None, loader_state=None, is_package=None
     ):
@@ -62,10 +60,11 @@ class FuzzyFinder(FileFinder):
                         fullname.replace("__", "*").replace("_", "?").__add__(".*")
                     ),
                 )
+                files = sorted(map(str, files), key=len)
+                if files:
 
-                try:
                     spec = super().find_spec(
-                        (original + "." + next(files).stem).lstrip("."), target=target
+                        (original + "." + Path(files[0]).stem).lstrip("."), target=target
                     )
                     fullname = (original + "." + fullname).lstrip(".")
                     if fullname != spec.name:
@@ -77,8 +76,6 @@ class FuzzyFinder(FileFinder):
                             alias=fullname,
                             is_package=bool(spec.submodule_search_locations),
                         )
-                except StopIteration:
-                    ...
         return spec
 
 
