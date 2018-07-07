@@ -54,17 +54,22 @@ class FuzzyFinder(FileFinder):
                 original, fullname = "", original
 
             if "_" in fullname:
-                files = chain(
-                    Path(self.path).glob(fullname + ".*"),
-                    Path(self.path).glob(
-                        fullname.replace("__", "*").replace("_", "?").__add__(".*")
-                    ),
+                files = list(
+                    map(
+                        str,
+                        chain(
+                            Path(self.path).glob(fullname + ".*"),
+                            Path(self.path).glob(
+                                fullname.replace("__", "*").replace("_", "?").__add__(".*")
+                            ),
+                        ),
+                    )
                 )
-                files = sorted(map(str, files), key=len)
+                files = sorted(files)
                 if files:
-
                     spec = super().find_spec(
-                        (original + "." + Path(files[0]).stem).lstrip("."), target=target
+                        (original + "." + Path(files[-1]).stem.split(".", 1)[0]).lstrip("."),
+                        target=target,
                     )
                     fullname = (original + "." + fullname).lstrip(".")
                     if fullname != spec.name:
