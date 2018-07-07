@@ -159,6 +159,17 @@ def markdown_string_expression(cell):
 
 import json
 
+from importlib._bootstrap import _new_module
+
+try:
+    from importlib._bootstrap import _init_module_attrs
+except:
+    # python 3.4
+    from importlib._bootstrap import _SpecMethods
+
+    def _init_module_attrs(spec, module):
+        return _SpecMethods(spec).init_module_attrs(module)
+
 
 class NotebookLoader(SourceFileLoader, BaseFinder):
     """The simplest implementation of a Notebook Source File Loader.
@@ -179,6 +190,14 @@ class NotebookLoader(SourceFileLoader, BaseFinder):
         valid Python.
         """
         return dedent(str)
+
+    def create_module(self, spec):
+        module = _new_module(spec.name)
+        _init_module_attrs(spec, module)
+        if isinstance(spec, FuzzySpec):
+            sys.modules[spec.alias] = module
+
+        return module
 
     def visit(self, node):
         """A method that allows a NodeTransformer to modify code."""
@@ -246,9 +265,6 @@ def advanced_exec_module(exec_module):
                 exec_module(loader, module)
             except loader.exceptions as Exception:
                 module._exception = Exception
-
-        if isinstance(module.__spec__, FuzzySpec):
-            sys.modules[module.__spec__.alias] = sys.modules[module.__name__]
 
     return _exec_module
 
