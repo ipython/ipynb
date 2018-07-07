@@ -7,22 +7,21 @@ Allows the current ipython configuration to effect the code and ast tranformers.
 try:
     from IPython.core.inputsplitter import IPythonInputSplitter
 
-    dedent = IPythonInputSplitter().transform_cell
+    dedent = IPythonInputSplitter(line_input_checker=False).transform_cell
 except:
     from textwrap import dedent
 
 
 class ShellMixin:
-
     @property
     def _shell(self):
         try:
             return __import__("IPython").get_ipython()
         except:
-            return
+            ...
 
     def format(self, str):
-        return (self._shell and self._shell.input_transformer_manager.transform_cell or dedent)(str)
+        return (self.shell and self._shell.input_transformer_manager.transform_cell or dedent)(str)
 
     def visit(self, node):
         if self._shell:
