@@ -157,8 +157,6 @@ def markdown_string_expression(cell):
     return ast.Module(body=[ast.Expr(ast.Str(s="".join(cell["source"])))])
 
 
-import json
-
 from importlib._bootstrap import _new_module
 
 try:
@@ -309,7 +307,7 @@ class Notebook(ShellMixin, NotebookLoader):
         globals=None,
         exceptions=ImportNbException,
         dir=None,
-        shell=True,
+        shell=False,
         fuzzy=True,
         extensions=None
     ):

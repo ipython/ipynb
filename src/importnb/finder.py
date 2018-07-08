@@ -54,17 +54,19 @@ class FuzzyFinder(FileFinder):
                 original, fullname = "", original
 
             if "_" in fullname:
-                files = chain(
-                    Path(self.path).glob(fullname + ".*"),
-                    Path(self.path).glob(
-                        fullname.replace("__", "*").replace("_", "?").__add__(".*")
-                    ),
+                files = list(
+                    chain(
+                        Path(self.path).glob(fullname + ".*"),
+                        Path(self.path).glob(
+                            fullname.replace("__", "*").replace("_", "?").__add__(".*")
+                        ),
+                    )
                 )
-                files = sorted(map(str, files), key=len)
                 if files:
-
+                    files = sorted(files)
                     spec = super().find_spec(
-                        (original + "." + Path(files[0]).stem).lstrip("."), target=target
+                        (original + "." + Path(files[0]).stem.split(".", 1)[0]).lstrip("."),
+                        target=target,
                     )
                     fullname = (original + "." + fullname).lstrip(".")
                     if fullname != spec.name:
@@ -77,6 +79,15 @@ class FuzzyFinder(FileFinder):
                             is_package=bool(spec.submodule_search_locations),
                         )
         return spec
+
+
+"""f = FuzzyFinder(
+    'C:/Users/deathbeds/deathbeds.github.io/deathbeds/',
+    (SourceFileLoader, ('*.ipynb',))
+)
+
+f.find_spec('__String__')
+"""
 
 
 @contextmanager

@@ -56,7 +56,7 @@ def uninstall(ip=None):
 
 
 def load_ipython_extension(ip):
-    from ..loader import Interactive, reload
+    from .. import Interactive, reload
     from .relative import load_ipython_extension
 
     Interactive().__enter__(position=-1)
