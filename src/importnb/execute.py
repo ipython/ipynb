@@ -153,7 +153,7 @@ class Interactive(Notebook):
     def exec_module(self, module, **globals):
         self.set_notebook(module)
         prev = None
-        for cell, node in self._iter_cells(module._notebook):
+        for cell, node in self.parse_cells(module._notebook, module=module):
             if module._exception:
                 break
 

@@ -51,7 +51,7 @@ from .extensions import load_ipython_extension, unload_ipython_extension
 from .shell import ShellMixin, dedent
 from .decoder import loads
 
-import ast, sys
+import ast, sys, json
 from copy import copy
 from importlib.machinery import SourceFileLoader, ModuleSpec
 from importlib.util import spec_from_loader
@@ -153,10 +153,6 @@ def assign_line_numbers(cell, node):
     return ast.fix_missing_locations(ast.increment_lineno(node, cell["metadata"].get("lineno", 1)))
 
 
-def markdown_string_expression(cell):
-    return ast.Module(body=[ast.Expr(ast.Str(s="".join(cell["source"])))])
-
-
 from importlib._bootstrap import _new_module
 
 try:
@@ -209,19 +205,25 @@ class NotebookLoader(SourceFileLoader, BaseFinder):
         self = copy(self)
         return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
 
-    def _iter_cells(self, nb):
+    def parse_cells(self, nb, **kwargs):
         for i, cell in enumerate(nb["cells"]):
             node = None
             if cell["cell_type"] == "markdown":
-                node = markdown_string_expression(cell)
+                node = self.parse_markdown_cell(cell, **kwargs)
             if cell["cell_type"] == "code":
-                node = ast.parse(self.format("".join(cell["source"])))
+                node = self.parse_code_cell(cell, **kwargs)
             if node is not None:
                 yield cell, assign_line_numbers(cell, self.visit(node))
 
+    def parse_markdown_cell(self, cell, **kwargs):
+        return ast.Module(body=[ast.Expr(ast.Str(s="".join(cell["source"])))])
+
+    def parse_code_cell(self, cell, **kwargs):
+        return ast.parse(self.format("".join(cell["source"])))
+
     def nb_to_ast(self, nb):
         module = ast.Module(body=[])
-        for i, (cell, node) in enumerate(self._iter_cells(nb)):
+        for i, (cell, node) in enumerate(self.parse_cells(nb)):
             module.body.extend(node.body)
         return module
 
@@ -333,8 +335,8 @@ if __name__ == "__main__":
     except:
         from .utils.export import export
     export("loader.ipynb", "../loader.py")
-    m = Notebook(shell=True).from_filename("loader.ipynb")
-    print(__import__("doctest").testmod(m, verbose=2))
+    m = Notebook().from_filename("loader.ipynb")
+    print(__import__("doctest").testmod(__import__(__name__), verbose=2))
 
 """# More Information
 

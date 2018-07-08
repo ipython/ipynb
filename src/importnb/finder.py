@@ -81,15 +81,6 @@ class FuzzyFinder(FileFinder):
         return spec
 
 
-"""f = FuzzyFinder(
-    'C:/Users/deathbeds/deathbeds.github.io/deathbeds/',
-    (SourceFileLoader, ('*.ipynb',))
-)
-
-f.find_spec('__String__')
-"""
-
-
 @contextmanager
 def modify_file_finder_details(finder=FileFinder):
     """yield the FileFinder in the sys.path_hooks that loads Python files and assure

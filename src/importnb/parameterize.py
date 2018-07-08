@@ -20,19 +20,7 @@ import ast, sys, inspect
 from collections import ChainMap
 from functools import partialmethod
 
-from importlib._bootstrap import _new_module
-
-try:
-    from importlib._bootstrap import _init_module_attrs
-except:
-    # python 3.4
-    from importlib._bootstrap import _SpecMethods
-
-    def _init_module_attrs(spec, module):
-        return _SpecMethods(spec).init_module_attrs(module)
-
-
-__all__ = "Parameterize",
+__all__ = ("Parameterize",)
 
 a_variable_to_parameterize = 42
 
@@ -45,6 +33,7 @@ class AssignmentFinder(ast.NodeTransformer):
     
     >>> assert len(AssignmentFinder().visit(ast.parse("a = 10; print(a);")).body) == 1
     """
+
     visit_Module = ast.NodeTransformer.generic_visit
 
     def visit_Assign(self, node):
@@ -61,7 +50,6 @@ class AssignmentFinder(ast.NodeTransformer):
 
 
 class AssignmentIgnore(AssignmentFinder):
-
     def visit_Assign(self, node):
         if isinstance(super().visit_Assign(node), ast.Assign):
             return
@@ -84,8 +72,7 @@ class Parameterize(Execute):
     """
 
     def create_module(self, spec):
-        module = _new_module(spec.name)
-        _init_module_attrs(spec, module)
+        module = super().create_module(spec)
 
         # Import the notebook when parameterize is imported
         self.set_notebook(module)

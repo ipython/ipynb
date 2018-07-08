@@ -36,7 +36,6 @@ if __IPYTHON__:
 
     @magics_class
     class ImportNbExtension(Magics):
-
         def __init__(self, shell):
             super().__init__(shell)
 
