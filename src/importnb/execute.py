@@ -70,15 +70,6 @@ def new_display(object, metadata=None):
 """
 
 
-def exec_modes(node):
-    if isinstance(node, ast.Module):
-        return "exec"
-    if isinstance(node, ast.Expression):
-        return "eval"
-    if isinstance(node, ast.Interactive):
-        return "single"
-
-
 class Interactive(Notebook):
     """The Execute loader reproduces outputs in the module._notebook attribute.
 
@@ -105,11 +96,6 @@ class Interactive(Notebook):
 
         _cell, _node = prev or ({}, ast.Module())
 
-        if cell["cell_type"] == "markdown":
-            """Leading markdown class/function cells become the docstring"""
-            if getattr(_node, "body", False) and _cell.get("cell_type", None) == "markdown":
-                self._call_exec(ast.Expression(_node.body[0].value), module)
-
         if cell["cell_type"] == "code":
             if _cell.get("cell_type", None) == "markdown":
                 if (
@@ -118,32 +104,15 @@ class Interactive(Notebook):
                     and ast.get_docstring(node.body[0]) is None
                 ):
                     """Make a leading markdown cell the docstring"""
-                    node.body[0].body.insert(0, _node.body[0])
+                    if _node.body and not isinstance(node.body[0], ast.Str):
+                        node.body[0].body.insert(0, _node.body[0])
             # This is where we could assign function and class docstrings
-            for expression in node.body:
-                """Evaluate one node at a time."""
-                if expression == node.body[-1]:
-                    """The last node is interactive."""
-                    if hasattr(expression, "body"):
-                        expression = ast.Module([expression])
-                    else:
-                        expression = ast.Interactive(body=[expression])
-                else:
-                    """Execute Expr as Expressions so the docstring doesn't change."""
-                    if isinstance(expression, ast.Expr):
-                        expression = ast.Expression(expression.value)
-                    else:
-                        """Everything else must a module."""
-                        expression = ast.Module([expression])
-                self._call_exec(expression, module)
+            self._call_exec(node, module)
         return cell, node
 
     def _call_exec(self, expression, module):
         _call_with_frames_removed(
-            exec,
-            compile(expression, module.__name__, exec_modes(expression)),
-            module.__dict__,
-            module.__dict__,
+            exec, compile(expression, module.__name__, "exec"), module.__dict__, module.__dict__
         )
 
     def set_notebook(self, module):
