@@ -36,6 +36,17 @@ class FuzzySpec(FileModuleSpec):
         self.alias = alias
 
 
+def fuzzy_file_search(path, fullname):
+    results = []
+    with modify_file_finder_details(None) as details:
+        for ext in sum((list(object[1]) for object in details), []):
+            results.extend(Path(path).glob(fullname + ext))
+            "_" in fullname and results.extend(
+                Path(path).glob(fullname.replace("__", "*").replace("_", "?") + ext)
+            )
+    return results
+
+
 class FuzzyFinder(FileFinder):
     """Adds the ability to open file names with special characters using underscores."""
 
@@ -54,14 +65,7 @@ class FuzzyFinder(FileFinder):
                 original, fullname = "", original
 
             if "_" in fullname:
-                files = list(
-                    chain(
-                        Path(self.path).glob(fullname + ".*"),
-                        Path(self.path).glob(
-                            fullname.replace("__", "*").replace("_", "?").__add__(".*")
-                        ),
-                    )
-                )
+                files = fuzzy_file_search(self.path, fullname)
                 if files:
                     files = sorted(files)
                     spec = super().find_spec(
@@ -69,7 +73,7 @@ class FuzzyFinder(FileFinder):
                         target=target,
                     )
                     fullname = (original + "." + fullname).lstrip(".")
-                    if fullname != spec.name:
+                    if spec and fullname != spec.name:
                         spec = FuzzySpec(
                             spec.name,
                             spec.loader,
@@ -89,6 +93,8 @@ def modify_file_finder_details(finder=FileFinder):
     * Everything goes to shit if the import cache is not cleared.
     * This function is independent
     
+    When finder is None we just recieve the details
+    
     """
 
     for id, hook in enumerate(sys.path_hooks):
@@ -97,12 +103,15 @@ def modify_file_finder_details(finder=FileFinder):
         except TypeError:
             continue
         if issubclass(closure["cls"], FileFinder):
-            sys.path_hooks.pop(id)
+            finder and sys.path_hooks.pop(id)
             details = list(closure["loader_details"])
             yield details
             break
-    sys.path_hooks.insert(id, finder.path_hook(*details))
-    sys.path_importer_cache.clear()
+
+    if finder:
+        # This repetition may eventually become a problem
+        sys.path_hooks.insert(id, finder.path_hook(*details))
+        sys.path_importer_cache.clear()
 
 
 """Update the file_finder details with functions to append and remove the [loader details](https://docs.python.org/3.7/library/importlib.html#importlib.machinery.FileFinder).
