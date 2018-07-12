@@ -23,4 +23,4 @@ deploy:
     tags: true
     distributions: sdist bdist_wheel
     repo: deathbeds/importnb
-    on: '3.6'
+    python: '3.6'
