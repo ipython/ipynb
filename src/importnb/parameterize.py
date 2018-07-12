@@ -20,7 +20,7 @@ import ast, sys, inspect
 from collections import ChainMap
 from functools import partialmethod
 
-__all__ = ("Parameterize",)
+__all__ = "Parameterize",
 
 a_variable_to_parameterize = 42
 
@@ -33,7 +33,6 @@ class AssignmentFinder(ast.NodeTransformer):
     
     >>> assert len(AssignmentFinder().visit(ast.parse("a = 10; print(a);")).body) == 1
     """
-
     visit_Module = ast.NodeTransformer.generic_visit
 
     def visit_Assign(self, node):
@@ -50,6 +49,7 @@ class AssignmentFinder(ast.NodeTransformer):
 
 
 class AssignmentIgnore(AssignmentFinder):
+
     def visit_Assign(self, node):
         if isinstance(super().visit_Assign(node), ast.Assign):
             return

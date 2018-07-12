@@ -69,7 +69,9 @@ def predict_fuzzy(fullname):
     return set(
         (package and package + "." or "") + align_match(fuzzify_string(spec), fullname)
         for spec in specs
-    ).union(set(extras))
+    ).union(
+        set(extras)
+    )
 
 
 def fuzzy_complete_event(self, event):

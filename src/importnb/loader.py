@@ -80,7 +80,7 @@ except:
 
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
 
-__all__ = "Notebook", "reload"
+__all__ = "Notebook", "reload",
 
 
 class ImportNbException(BaseException):
@@ -171,8 +171,7 @@ class NotebookLoader(SourceFileLoader, BaseFinder):
     ...    from importnb.notebooks import loader
     >>> assert loader.__file__.endswith('.ipynb')
     """
-
-    extensions = (".ipynb",)
+    extensions = ".ipynb",
     __slots__ = "name", "path", "finder", "lazy"
 
     def __init__(self, fullname=None, path=None, *, fuzzy=True, lazy=False, extensions=None):
@@ -282,20 +281,9 @@ class Notebook(ShellMixin, NotebookLoader):
     
     >>> assert Notebook().from_filename('loader.ipynb', 'importnb.notebooks')
     """
+    EXTENSION_SUFFIXES = ".ipynb",
 
-    EXTENSION_SUFFIXES = (".ipynb",)
-
-    __slots__ = (
-        "stdout",
-        "stderr",
-        "display",
-        "lazy",
-        "exceptions",
-        "globals",
-        "dir",
-        "shell",
-        "finder",
-    )
+    __slots__ = "stdout", "stderr", "display", "lazy", "exceptions", "globals", "dir", "shell", "finder"
 
     def __init__(
         self,
