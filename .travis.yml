@@ -11,18 +11,16 @@ install:
 - python setup.py bdist_wheel
 - pip install -r requirements.txt
 - python -m pip install dist/importnb-*.tar.gz --ignore-installed --no-deps
-
 script:
 - tox
-
 deploy:
-- provider: pypi
+  provider: pypi
   user: docfast
-  password:
-    secure: ry7gJ1HGGEXEzIPAMtWKt1XnoAZ5C642J7/TVFaqEVFT1zukF3wmGL1rqI4h4taq/QhPKznx2NBueySJZZN3vK1wJnfM3pEjroOMQAtrU+W9Y2EKXR4uNFxWSUtqBiuFWkq6IGMC12rPgAjv4U2cDU/HTrezSYKcl5PGZax36wikG7rmEw+UAyPtggWOt4Gcg7vWv6YKzDFW1JIC5qEBEbSxVssmT1uuEKhFSsvl50jmdNukkT+jbFkhjQ0f2cpFwM+Tt+w+eGHAFUxsUQRASwOUDMZK0l43M7eFqqmHZa0XcPQMSrT2lnRcp7yLa9m0WTDHbTnJIEGdw0hBlXXO8GQYcM46cTICFspbtlFFxCnW6+f9mI+y+ONAP/2Gd7/7W1WzfxypcdlnR6XqDgjdd9DzDM+wuTp9IDuSrc6CNGcChs9at0yl83UNZ7t6ikqnw3jc0fKSf7wXP3sHNfDCpCIiEQCgphrOkHa5rHRX+ic9XhzHEoMpTwR71yJHzoFrB6RJZo/8aqifbdqw/VWGt5ESNs6oYUeRjf7oYDPWR86kzY8XlwV5jrr0qZF6eBGe/Bm/pJF3AnHrZkTJVAv84V985g+Mh9XroGksNYG2vKOkGFmCxeqQaZWUHnAYIFtRPamkW7nk+2LUk2hDAGoe5N77BpBVCqUrFR+i+dHbUyM=
   skip_cleanup: true
+  password:
+    secure: s9hSRaBCXVpCm2W0moHHAJrzceFWnbIZoZ2j8BhqwbwTicxqIvi8pN7XQWokZt5ymLUDn6OfZ7yap81LXN8XcRWPFTVGJXOuzCrJJuvn06kWx3/x7FZ+hNKCVrsL3wyXXwKTcj8gMUahArYFuseReoAKhcbyH2/yL4n6HXkgcXGWrFXcISVnbR5D+WOlTt3WzEOlh55BoMLUcmAbN8Wa32z8cSQyFcW6kz9DqwcpRy//vCYh4SC/GJZZc5bXX6ByqloxyHmb7MlONCoDEfm7O9fHho8cv9IEZXiZmgy+f0l/ugmGKFBIEp6hhxThD8opw3zQBwl1FHVMJcwqLi+ODmY6lB9xYgtO652wxNZuCkKCArUL/LqBspRTBruex/K2/XjLusln8lrDSExsDvFKWksRrMODW1YccUQK9nhMBrFH18kveIbwr5E41ZfbrWD8I8wn0jHnwiJ/zaYbtPpm0egiY0YfGTVAEQoWN5iV5u5zoDWZA8LiFwTYnywLogGhVbUPX+CkjC7dBm7hWUrkihS99F6nPaP+B4E5HWubp64qsJSko8V+cufrnsqGomG/StozKJhw4+5Zhb9xuWNk0nqhq3Jdi/m0BAsgPLjIriovCcuTqpYC0ojCtpjO+7qExk91N55vGKUIeUkkQAu8gAhQ29jXwxa1HEqy8YO+WUI=
   on:
     tags: true
     distributions: sdist bdist_wheel
     repo: deathbeds/importnb
-    python: '3.6'
+    on: '3.6'
