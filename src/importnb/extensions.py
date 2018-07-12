@@ -92,6 +92,11 @@ def load_ipython_extension(ip=None):
         from .utils.relative import load_ipython_extension
 
         load_ipython_extension(ip)
+        from .completer import load_ipython_extension
+
+        load_ipython_extension(ip)
+
+        ip.user_ns["reload"] = __import__("importlib").reload
 
 
 def unload_ipython_extension(ip=None):
@@ -103,10 +108,8 @@ def unload_ipython_extension(ip=None):
 """
 
 if __name__ == "__main__":
-    try:
-        from utils.export import export
-    except:
-        from .utils.export import export
+    from importnb.utils.export import export
+
     export("extensions.ipynb", "../extensions.py")
     # m = Notebook(shell=True).from_filename('extensions.ipynb')
     # print(__import__('doctest').testmod(m, verbose=2))

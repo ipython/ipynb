@@ -12,9 +12,5 @@ from .execute import Execute, Interactive
 from .parameterize import Parameterize
 from .remote import remote
 from . import test
-
-def load_ipython_extension(ip):
-    from .extensions import load_ipython_extension
-    load_ipython_extension(ip)
-    from .utils.relative import load_ipython_extension
-    load_ipython_extension(ip)
+from .extensions import load_ipython_extension
+from ._version import *
