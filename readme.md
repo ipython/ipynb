@@ -41,6 +41,9 @@ After `importnb` is install, [pytest](https://pytest.readthedocs.io/) will disco
 
 # `importnb` for Python and IPython
 
+
+It is suggested to execute `importnb-install` to make sure that notebooks for each IPython session.
+
 > Restart and run all or it didn't happen.
 
 `importnb` excels in an interactive environment and if a notebook will __Restart and Run All__ then it may reused as python code. The `Notebook` context manager will allow notebooks _with valid names_ to import with Python.
