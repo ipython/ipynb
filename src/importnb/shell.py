@@ -13,7 +13,6 @@ except:
 
 
 class ShellMixin:
-
     @property
     def _shell(self):
         try:
@@ -23,7 +22,7 @@ class ShellMixin:
 
     def format(self, str):
         shell = self._shell
-        return (self.shell and shell and shell.input_transformer_manager.transform_cell or dedent)(
+        return (shell.input_transformer_manager.transform_cell if self.shell and shell else dedent)(
             str
         )
 

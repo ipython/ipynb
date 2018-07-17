@@ -27,34 +27,33 @@ def load_config():
     return config, location
 
 
-def install(ip=None):
+def install(project="importnb"):
     config, location = load_config()
 
-    if "importnb" not in config["InteractiveShellApp"]["extensions"]:
-        config["InteractiveShellApp"]["extensions"].append("importnb")
+    if not installed(project):
+        config["InteractiveShellApp"]["extensions"].append(project)
 
     with location.open("w") as file:
         json.dump(config, file)
 
-    print("""🤘 Rock on!  You can import notebooks in your notebooks.""")
+    print("""<3 {}""".format(project))
 
 
-def installed():
-    config = load_config()
-    return "importnb" in config.get("InteractiveShellApp", {}).get("extensions", [])
+def installed(project):
+    config, location = load_config()
+    return project in config.get("InteractiveShellApp", {}).get("extensions", [])
 
 
-def uninstall(ip=None):
+def uninstall(project="importnb"):
     config, location = load_config()
 
     config["InteractiveShellApp"]["extensions"] = [
-        ext
-        for ext in config["InteractiveShellApp"]["extensions"]
-        if ext != "importnb.utils.ipython"
+        ext for ext in config["InteractiveShellApp"]["extensions"] if ext != project
     ]
 
     with location.open("w") as file:
         json.dump(config, file)
+    print("""</3 {}.""".format(project))
 
 
 if __name__ == "__main__":

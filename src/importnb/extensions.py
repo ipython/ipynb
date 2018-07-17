@@ -37,7 +37,7 @@ class ImportNbExtensionBase:
         self.loaders = []
         # A default loader to install
         if loader:
-            self.loaders.append(loader(shell=True).__enter__(-1))
+            self.loaders.append(loader().__enter__(-1))
 
 
 if __IPYTHON__:

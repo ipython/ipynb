@@ -80,7 +80,7 @@ except:
 
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
 
-__all__ = "Notebook", "reload",
+__all__ = "Notebook", "reload"
 
 
 class ImportNbException(BaseException):
@@ -171,7 +171,8 @@ class NotebookLoader(SourceFileLoader, BaseFinder):
     ...    from importnb.notebooks import loader
     >>> assert loader.__file__.endswith('.ipynb')
     """
-    extensions = ".ipynb",
+
+    extensions = (".ipynb",)
     __slots__ = "name", "path", "finder", "lazy"
 
     def __init__(self, fullname=None, path=None, *, fuzzy=True, lazy=False, extensions=None):
@@ -189,7 +190,8 @@ class NotebookLoader(SourceFileLoader, BaseFinder):
         _init_module_attrs(spec, module)
         if isinstance(spec, FuzzySpec):
             sys.modules[spec.alias] = module
-
+        if self.name:
+            module.__name__ = self.name
         return module
 
     def visit(self, node):
@@ -202,7 +204,7 @@ class NotebookLoader(SourceFileLoader, BaseFinder):
         """The PathFinder calls this when looking for objects 
         on the path."""
         self = copy(self)
-        return SourceFileLoader.__init__(self, str(fullname), str(path)) or self
+        return SourceFileLoader.__init__(self, str(self.name or fullname), str(path)) or self
 
     def parse_cells(self, nb, **kwargs):
         for i, cell in enumerate(nb["cells"]):
@@ -281,9 +283,20 @@ class Notebook(ShellMixin, NotebookLoader):
     
     >>> assert Notebook().from_filename('loader.ipynb', 'importnb.notebooks')
     """
-    EXTENSION_SUFFIXES = ".ipynb",
 
-    __slots__ = "stdout", "stderr", "display", "lazy", "exceptions", "globals", "dir", "shell", "finder"
+    EXTENSION_SUFFIXES = (".ipynb",)
+
+    __slots__ = (
+        "stdout",
+        "stderr",
+        "display",
+        "lazy",
+        "exceptions",
+        "globals",
+        "dir",
+        "shell",
+        "finder",
+    )
 
     def __init__(
         self,
