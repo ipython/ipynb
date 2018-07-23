@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-__all__ = "Notebook", "reload", "Parameterize", "Execute", "Interactive"
+__all__ = "Notebook", "reload", "Parameterize", "Execute", "Interactive", "MAIN", "CLI", "INTERACTIVE", "IMPORTED"
 
 from .loader import (
     Notebook,
@@ -14,3 +14,4 @@ from .remote import remote
 from . import test
 from .extensions import load_ipython_extension
 from ._version import *
+from .helpers import MAIN, CLI, INTERACTIVE, IMPORTED
