@@ -1,62 +1,99 @@
 # coding: utf-8
+"""# Decode `nbformat` with line numbers
+
+`importnb` decodes notebooks with the `nbformat` in valid source code.
+
+We consider three kinds of cells.
+"""
+
 from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
 from json import load as _load, loads as _loads
 from functools import partial
+from json.scanner import py_make_scanner
+from json.decoder import JSONDecoder, WHITESPACE, WHITESPACE_STR, JSONObject, py_scanstring
+import linecache, textwrap
+
+"""Output the strings slice that the source came from.
+"""
 
 
-class LineNumberDecoder(JSONDecoder):
-    """A JSON Decoder to return a NotebookNode with lines numbers in the metadata."""
+def scanstring(s, end, strict=True, **kwargs):
+    s, id = py_scanstring(s, end, strict, **kwargs)
+    return (slice(end, id), s), id
 
+
+def quote(object, *, quotes="'''"):
+    if quotes in object:
+        quotes = '"""'
+    return quotes + object + "\n" + quotes
+
+
+def object_pairs_hook(object) -> (slice, str):
+    object = dict(object)
+    if "cells" in object:
+        return object["cells"]
+
+    if "cell_type" in object:
+        _, object["cell_type"] = object["cell_type"]
+
+    for key in ["text", "source"]:
+        if key in object:
+            if object[key]:
+                return (
+                    slice(object[key][0][0].start, object[key][-1][0].stop),
+                    object,
+                    "".join(_[1] for _ in object[key]),
+                )
+    return slice(None), None, None
+
+
+class LineCacheNotebookDecoder(JSONDecoder):
     def __init__(
         self,
-        *,
-        object_hook=None,
-        parse_float=None,
-        parse_int=None,
-        parse_constant=None,
-        strict=True,
-        object_pairs_hook=None
+        markdown=quote,
+        code=textwrap.dedent,
+        raw=partial(textwrap.indent, prefix="# "),
+        **kwargs
     ):
-        from json.scanner import py_make_scanner
+        super().__init__(**kwargs)
 
-        super().__init__(
-            object_hook=object_hook,
-            parse_float=parse_float,
-            parse_int=parse_int,
-            parse_constant=parse_constant,
-            strict=strict,
-            object_pairs_hook=object_pairs_hook,
-        )
-        self.parse_object = self._parse_object
+        for key in ("markdown", "code", "raw"):
+            setattr(self, "transform_" + key, locals().get(key))
+
+        self.parse_string = scanstring
+        self.object_pairs_hook = object_pairs_hook
         self.scan_once = py_make_scanner(self)
 
-    def _parse_object(
-        self,
-        s_and_end,
-        strict,
-        scan_once,
-        object_hook,
-        object_pairs_hook,
-        memo=None,
-        _w=WHITESPACE.match,
-        _ws=WHITESPACE_STR,
-    ) -> (dict, int):
-        object, next = JSONObject(
-            s_and_end, strict, scan_once, object_hook, object_pairs_hook, memo=memo, _w=_w, _ws=_ws
-        )
-        if "cell_type" in object:
-            object["metadata"].update(
-                {"lineno": len(s_and_end[0][:next].rsplit('"source":', 1)[0].splitlines())}
+    def decode(self, object, filename):
+        lines = []
+
+        linecache.updatecache(filename)
+        if filename in linecache.cache:
+            linecache.cache[filename] = (
+                linecache.cache[filename][0],
+                linecache.cache[filename][1],
+                lines,
+                filename,
             )
+        last, new, old = slice(0, 0), 0, 0
+        for current, cell, source in super().decode(object):
+            if cell:
+                lines += ["\n"] * (
+                    object[last.stop : current.start].splitlines().__len__() - 1 + (old - new)
+                )
 
-        for key in ("source", "text"):
-            if key in object:
-                object[key] = "".join(object[key])
+                source = getattr(self, "transform_" + cell["cell_type"])(source)
 
-        return object, next
+                lines += list(map("{}\n".format, source.splitlines()))
+                new, old = map(len, map(str.splitlines, (source, object[current])))
+                if not lines[-1]:
+                    lines.pop()
+                last = current
+
+        return "".join(lines)
 
 
-loads = partial(_loads, cls=LineNumberDecoder)
+decoder = LineCacheNotebookDecoder()
 
 if __name__ == "__main__":
     try:
@@ -64,8 +101,3 @@ if __name__ == "__main__":
     except:
         from .utils.export import export
     export("decoder.ipynb", "../decoder.py")
-
-"""# More Information
-
-The `importnb.loader` module recreates basic Python importing abilities.  Have a look at [`execute.ipynb`](execute.ipynb) for more advanced usages.
-"""

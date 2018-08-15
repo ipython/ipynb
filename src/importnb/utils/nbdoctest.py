@@ -1,5 +1,4 @@
 # coding: utf-8
-from IPython import get_ipython
 from doctest import OPTIONFLAGS_BY_NAME, testfile, testmod, FAIL_FAST
 import os, argparse
 
@@ -56,9 +55,7 @@ def _test():
             # It is a module -- insert its dir into sys.path and try to
             # import it. If it is part of a package, that possibly
             # won't work because of package imports.
-            failures, _ = testmod(
-                Notebook.from_filename(filename), verbose=verbose, optionflags=options
-            )
+            failures, _ = testmod(Notebook.load(filename), verbose=verbose, optionflags=options)
         else:
             failures, _ = testfile(
                 filename, module_relative=False, verbose=verbose, optionflags=options
@@ -72,8 +69,6 @@ if __name__ == "__main__":
     _test()
 
 if __name__ == "__main__":
-    try:
-        from ..loader import export
-    except:
-        from importnb.loader import export
+    from .export import export
+
     export("nbdoctest.ipynb", "../../utils/nbdoctest.py")

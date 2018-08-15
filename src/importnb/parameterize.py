@@ -1,186 +1,155 @@
 # coding: utf-8
-"""# `Parameterize` notebooks.
+"""# Parameterize
 
-The execute importer maintains an attribute that includes the notebooks inputs and outputs.
-
-    >>> f = Parameterize(shell=True).from_filename('parameterize.ipynb', 'importnb.notebooks')
-    >>> assert 'a_variable_to_parameterize' in f.__signature__.parameters
-    >>> assert f(a_variable_to_parameterize=100)
-    
+The parameterize loader allows notebooks to be used as functions and command line tools.  A `Parameterize` loader will convert an literal ast assigments to keyword arguments for the module.
 """
 
-"""    !python -m importnb.parameterize parameterize.ipynb --a_variable_to_parameterize 100
-    !ipython -m importnb.parameterize a_variable_to_parameterize.ipynb -- --a_variable_to_parameterize 100
-"""
-
-from .execute import Execute
-
-import ast, sys, inspect
-
-from collections import ChainMap
+from .loader import Notebook, module_from_spec
+import argparse, ast, inspect
+from functools import partial
+from copy import deepcopy
+from inspect import Signature, Parameter
+from pathlib import Path
 from functools import partialmethod
-
-__all__ = "Parameterize",
-
-a_variable_to_parameterize = 42
-
-if globals().get("show", None):
-    print("I am tested.")
+from inspect import signature
+import sys
+from importlib.util import find_spec, spec_from_loader
+from importlib._bootstrap import _installed_safely
 
 
-class AssignmentFinder(ast.NodeTransformer):
-    """Find an ast assignments that ast.literal_eval
-    
-    >>> assert len(AssignmentFinder().visit(ast.parse("a = 10; print(a);")).body) == 1
-    """
-    visit_Module = ast.NodeTransformer.generic_visit
+class FindReplace(ast.NodeTransformer):
+    def __init__(self, globals, parser):
+        self.globals = globals
+        self.parser = parser
+        self.argv = sys.argv[1:]
+        self.parameters = []
 
     def visit_Assign(self, node):
-        if len(node.targets):
+        if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            target, parameter = node.targets[0].id, node.value
             try:
-                if not getattr(node.targets[0], "id", "_").startswith("_"):
-                    ast.literal_eval(node.value)
-                    return node
+                parameter = ast.literal_eval(parameter)
             except:
-                ...
+                return node
 
-    def generic_visit(self, node):
-        ...
+            if target[0].lower():
+                try:
+                    self.parser.add_argument(
+                        "--%s" % target,
+                        default=parameter,
+                        help="{} : {} = {}".format(target, type(parameter).__name__, parameter),
+                    )
+                except argparse.ArgumentError:
+                    ...
+                self.parameters.append(Parameter(target, Parameter.KEYWORD_ONLY, default=parameter))
+                if ("-h" not in self.argv) and ("--help" not in self.argv):
+                    ns, self.argv = self.parser.parse_known_args(self.argv)
+                    if target in self.globals:
+                        node = ast.Expr(ast.Str("Skipped"))
+                    elif getattr(ns, target) != parameter:
+                        node.value = ast.parse(str(getattr(ns, target))).body[0].value
+        return node
 
+    @property
+    def signature(self):
+        return Signature(self.parameters)
 
-class AssignmentIgnore(AssignmentFinder):
-
-    def visit_Assign(self, node):
-        if isinstance(super().visit_Assign(node), ast.Assign):
-            return
+    def visit_Module(self, node):
+        node.body = list(map(self.visit, node.body))
+        self.parser.description = ast.get_docstring(node)
+        self.parser.parse_known_args(self.argv)  # run in case there is a help arugment
         return node
 
     def generic_visit(self, node):
         return node
 
 
-def copy_module(module):
+def copy_(module):
     new = type(module)(module.__name__)
-    new.__dict__.update(module.__dict__)
-    return new
+    return new.__dict__.update(**vars(module)) or new
 
 
-class Parameterize(Execute):
-    """Discover any literal ast expression and create parameters from them. 
-            
-    Parametize is a NodeTransformer that import any nodes return by Parameterize Node.
-    """
+class Parameterize(Notebook):
+    __slots__ = Notebook.__slots__ + ("globals",)
 
-    def create_module(self, spec):
-        module = super().create_module(spec)
-
-        # Import the notebook when parameterize is imported
-        self.set_notebook(module)
-
-        node = self.nb_to_ast(module._notebook)
-
-        # Extra effort to supply a docstring
-        doc = None
-        if node.body:
-            _node = node.body[0]
-            if isinstance(_node, ast.Expr) and isinstance(_node.value, ast.Str):
-                doc = _node
-
-        # Discover the parameterizable nodes
-        params = AssignmentFinder().visit(node)
-
-        # Include the string in the compilation
-        doc and params.body.insert(0, doc)
-
-        # Supply the literal parameter values as module globals.
-        exec(compile(params, "<parameterize>", "exec"), module.__dict__, module.__dict__)
-
-        self.parser = getattr(self, "parser", module_to_argparse(module))
-
-        return module
-
-    def from_filename(self, filename, path=None, **globals):
-        module = super().from_filename(filename, path, exec=False)
-
-        def recall(**kwargs):
-            nonlocal module, globals
-            module.__loader__.exec_module(module, **ChainMap(kwargs, globals))
-            return copy_module(module)
-
-        recall.__signature__ = vars_to_sig(
-            **{k: v for k, v in module.__dict__.items() if not k.startswith("_")}
+    def __init__(
+        self,
+        fullname=None,
+        path=None,
+        *,
+        _lazy=False,
+        _shell=False,
+        _fuzzy=True,
+        _markdown_docstring=True,
+        _position=0,
+        globals=None,
+        **_globals
+    ):
+        super().__init__(
+            fullname, path, _lazy=_lazy, _fuzzy=_fuzzy, _shell=_shell, _position=_position
         )
-        recall.__doc__ = module.__doc__
-        return recall
+        self.globals = globals or {}
+        self.globals.update(**_globals)
+        self._visitor = FindReplace(self.globals, argparse.ArgumentParser(prog=self.name))
 
-    def _exec_cell(self, cell, node, module, prev=None):
-        node = AssignmentIgnore().visit(node)
-        super()._exec_cell(cell, node, module, prev=prev)
+    def exec_module(self, module):
+        self._visitor = FindReplace(self.globals, self._visitor.parser)
+        module.__dict__.update(**self.globals)
+        return super().exec_module(module)
 
-    def set_notebook(self, module):
-        if not hasattr(module, "_notebook"):
-            super().set_notebook(module)
+    def visit(self, node):
+        return super().visit(self._visitor.visit(node))
 
-
-def literal_eval_or_string(object):
-    try:
-        return ast.literal_eval(object)
-    except:
-        return str(object)
+    @classmethod
+    def load(cls, object, **globals):
+        return parameterize(super().load(object), **globals)
 
 
-def module_to_argparse(object):
-    import argparse
+"""    with Parameterize(): 
+        reload(foo)
 
-    parser = argparse.ArgumentParser(
-        prog=object.__loader__.path, description=inspect.getdoc(object)
-    )
-    for key, parameter in vars(object).items():
-        if key[0] != "_":
-            parser.add_argument(
-                "--%s" % key,
-                type=literal_eval_or_string,
-                default=parameter,
-                help="{} {}".format(type(parameter), parameter),
-            )
-    return parser
+    with Parameterize(a=1234123): 
+        reload(foo)
+
+    with Parameterize(a="🤘"): 
+        reload(foo)
+"""
+
+"""    import foo
+"""
 
 
-def vars_to_sig(**vars):
-    """Create a signature for a dictionary of names."""
-    from inspect import Parameter, Signature
+def parameterize(object, **globals):
+    with Parameterize(**globals):
+        if isinstance(object, str):
+            object = module_from_spec(find_spec(object))
 
-    return Signature([Parameter(str, Parameter.KEYWORD_ONLY, default=vars[str]) for str in vars])
+    object.__loader__ = Parameterize(object.__loader__.name, object.__loader__.path, **globals)
+
+    def call(**parameters):
+        nonlocal object, globals
+        object = copy_(object)
+        keywords = {}
+        keywords.update(**globals), keywords.update(**parameters)
+        with _installed_safely(object):
+            Parameterize(object.__name__, object.__file__, **keywords).exec_module(object)
+        return object
+
+    object.__loader__.get_code(object.__name__)
+    call.__doc__ = object.__doc__ or object.__loader__._visitor.parser.format_help()
+    call.__signature__ = object.__loader__._visitor.signature
+    return call
 
 
-if __name__ == "__main__":
-    f = Parameterize(exceptions=BaseException).from_filename(
-        "parameterize.ipynb", "importnb.notebooks"
-    )
-    m = f(a_variable_to_parameterize=10)
+"""    f = parameterize('foo', a=20)
+"""
 
 """# Developer
 """
 
-
-class Main(Parameterize):
-    __init__ = partialmethod(Parameterize.__init__, "__main__")
-
-    def exec_module(self, module, **globals):
-        globals.update(vars(self.parser.parse_args()))
-        super().exec_module(module, **globals)
-
-
-def main():
-    Main().from_filename(sys.argv.pop(1))()
-
-
 if __name__ == "__main__":
-    if sys.argv[0] == globals().get("__file__", None):
-        main()
-    else:
-        from importnb.utils.export import export
+    f = Parameterize().load("parameterize.ipynb")
+    from importnb.utils.export import export
 
-        export("parameterize.ipynb", "../parameterize.py")
-        module = Execute(shell=True).from_filename("parameterize.ipynb")
-        __import__("doctest").testmod(module, verbose=2)
+    export("parameterize.ipynb", "../parameterize.py")
+    # m = f.__loader__(a_variable_to_parameterize=10)

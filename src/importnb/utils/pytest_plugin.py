@@ -2,21 +2,15 @@
 import pytest
 
 try:
-    from .. import Interactive
+    from .. import Notebook
 except:
-    from importnb import Interactive
+    from importnb import Notebook
+from pathlib import Path
 
-loader = Interactive
+loader = Notebook
 
 
 def pytest_addoption(parser):
-    """
-    Adds the --nbval option flag for py.test.
-    Adds an optional flag to pass a config file with regex
-    expressions to sanitise the outputs
-    Only will work if the --nbval flag is present
-    This is called by the pytest API
-    """
     group = parser.getgroup("general")
     group.addoption(
         "--shell", action="store_false", help="Load notebooks with a shared transformer."
@@ -25,7 +19,7 @@ def pytest_addoption(parser):
 
 
 def pytest_collect_file(parent, path):
-    if path.ext in (".ipynb", ".py"):
+    if "".join(Path(str(path)).suffixes) in (".ipynb",):
         if not parent.session.isinitpath(path):
             for pat in parent.config.getini("python_files"):
                 if path.fnmatch(pat.rstrip(".py") + path.ext):
@@ -40,7 +34,7 @@ class PytestModule(pytest.Module):
         global loader
         with loader(
             self.parent.config.option.main and "__main__" or None,
-            shell=self.parent.config.option.shell,
+            _shell=self.parent.config.option.shell,
         ):
             return super().collect()
 

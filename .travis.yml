@@ -13,8 +13,10 @@ install:
 - python -m pip install dist/importnb-*.tar.gz --ignore-installed --no-deps
 script:
 - tox
+- importnb-install
+- ipython -m readme
 deploy:
-  provider: pypi
+- provider: pypi
   user: docfast
   skip_cleanup: true
   password:
@@ -23,4 +25,10 @@ deploy:
     tags: true
     distributions: sdist bdist_wheel
     repo: deathbeds/importnb
+    python: '3.6'
+
+- provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+  on:
     python: '3.6'

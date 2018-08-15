@@ -178,8 +178,3 @@ if MAIN:
     from importnb.utils.export import export
 
     export("helpers.ipynb", "../helpers.py")
-
-"""## Comments
-
-This will likely be placed in `importnb`.
-"""

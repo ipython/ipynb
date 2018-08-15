@@ -15,7 +15,7 @@ def load_config():
     try:
         with location.open() as file:
             config = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
+    except (FileNotFoundError, getattr(json, "JSONDecodeError", ValueError)):
         config = {}
 
     if "InteractiveShellApp" not in config:

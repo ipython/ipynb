@@ -17,17 +17,21 @@ __importnb__ imports notebooks as modules.  Notebooks are reusable as tests, sou
 
 # `importnb` for testing
 
-After `importnb` is install, [pytest](https://pytest.readthedocs.io/) will discover and import notebooks as tests.
+After `importnb` is installed, [pytest](https://pytest.readthedocs.io/) will discover and import notebooks as tests.
 
     pytest readme.ipynb
-    
-> Notebooks are often used as informal tests, now they can be formally tested with [pytest plugins](https://docs.pytest.org/en/latest/plugins.html)
+
+[`importnb`]() imports notebooks as python modules, it does not compare outputs like [`nbval`]()
 
 `importnb` can run unittests and doctests against notebook modules. 
 
     ipython -m importnb.test readme
     
 > `importnb` interprets the first markdown cell as a docstring.  This is a nice place to put [doctests](https://docs.python.org/3/library/doctest.html) to improve the reusability of a notebook.
+
+> Notebooks are often used as informal tests, now they can be formally tested with [pytest plugins](https://docs.pytest.org/en/latest/plugins.html)
+
+
 
 ---
 
@@ -84,19 +88,7 @@ The context manager is required to `reload` a module.
 
 ```python
     from importlib import reload
-    with Notebook():
-        reload(readme)
-```
-
-### Partial loading
-
-The [`importnb.loader.Notebook`](src/notebooks/loader.ipynb#Partial-Loader) will __import__ a notebook even if there is an exception by supplying the `exceptions` option.  The __exception__ is found on `module._exception`.
-
-
-```python
-    with Notebook(exceptions=BaseException):
-        try: from . import readme
-        except: import readme
+    with Notebook(): __name__ == '__main__' and reload(readme)
 ```
 
 ### Lazy imports
@@ -105,7 +97,7 @@ The `lazy` option will delay the evaluation of a module until one of its attribu
 
 
 ```python
-    with Notebook(lazy=True):
+    with Notebook(_lazy=True):
         import readme
 ```
 
@@ -128,16 +120,6 @@ will find the first file matching `*2018*6?01?A?Blog?Post`.  Importing `Untitled
 
     import __314519
 
-## Capture Outputs
-
-`importnb` can capture the `stdout`, `stderr`, and `display` in the context manager.  The arguments are similar to `IPython.util.capture.capture_output`.
-
-
-```python
-    with Notebook(stdout=True, stderr=True, display=True) as output:
-        import readme
-```
-
 ### Docstring
 
 The first markdown cell will become the module docstring.
@@ -149,7 +131,7 @@ The first markdown cell will become the module docstring.
 ```
 
     __importnb__ imports notebooks as modules.  Notebooks are reusable as tests, source code, importable modules, and command line utilities.
-
+    
 
 Meaning non-code blocks can be executeb by [doctest]().
 
@@ -177,25 +159,19 @@ In `readme`, `foo` is a parameter because it may be evaluated with ast.literal_v
 
 
 ```python
-    from importnb import Parameterize
-    f = Parameterize().from_filename(readme.__file__)
-    
+    if __name__ == '__main__':
+        from importnb import Parameterize
+        f = Parameterize.load(readme.__file__)
 ```
 
 The parameterized module is a callable that evaluates with different literal statements.
 
 
 ```python
-    assert callable(f)
-    f.__signature__
+    if __name__ == '__main__': 
+        assert callable(f)
+        f.__signature__
 ```
-
-
-
-
-    <Signature (*, foo=42)>
-
-
 
     assert f().foo == 42
     assert f(foo='importnb').foo == 'importnb'
@@ -244,6 +220,12 @@ In the command line context, `__file__ == sys.arv[0] and __name__ == '__main__'`
     
 > See the [deploy step in the travis build](https://github.com/deathbeds/importnb/blob/docs/.travis.yml#L19).
 
+##### Parameterizable IPython commands
+
+Installing the IPython extension allows notebooks to be computed from the command.  The notebooks are parameterizable from the command line.
+
+    ipython -m readme -- --help
+
 ### py.test
 
 `importnb` installs a pytest plugin when it is setup.  Any notebook obeying the py.test discovery conventions can be used in to pytest.  _This is great because notebooks are generally your first test._
@@ -271,9 +253,7 @@ To package notebooks add `recursive-include package_name *.ipynb`
             print(foo, __import__('sys').argv)
         else:
             from subprocess import call
-            from importnb.capture import capture_output
-            with capture_output() as out:  __import__('pytest').main("src".split())
-            print('plugins'+out.stdout.split('plugins', 1)[-1])
+            !ipython -m pytest
             """Formatting"""
             from pathlib import Path
             from importnb.utils.export import export
@@ -285,14 +265,54 @@ To package notebooks add `recursive-include package_name *.ipynb`
             
 ```
 
+    ============================= test session starts =============================
+    platform win32 -- Python 3.6.5, pytest-3.5.1, py-1.5.3, pluggy-0.6.0 -- C:\Anaconda3\python.exe
+    cachedir: .pytest_cache
+    rootdir: C:\Users\deathbeds\importnb, inifile: tox.ini
+    plugins: testmon-0.9.12, remotedata-0.2.1, openfiles-0.3.0, localserver-0.4.1, doctestplus-0.1.3, arraydiff-0.2, hypothesis-3.66.16, importnb-0.5.0
+    collecting ... collected 24 items
+    
+    src/importnb/completer.py::importnb.completer PASSED                     [  4%]
+    src/importnb/foobar.py::importnb.foobar PASSED                           [  8%]
+    src/importnb/loader.py::importnb.loader PASSED                           [ 12%]
+    src/importnb/loader.py::importnb.loader.FinderContextManager PASSED      [ 16%]
+    src/importnb/loader.py::importnb.loader.NotebookBaseLoader PASSED        [ 20%]
+    src/importnb/utils/export.py::importnb.utils.export PASSED               [ 25%]
+    src/importnb/utils/relative.py::importnb.utils.relative PASSED           [ 29%]
+    tests/test_importnb.ipynb::test_basic PASSED                             [ 33%]
+    tests/test_importnb.ipynb::test_package PASSED                           [ 37%]
+    tests/test_importnb.ipynb::test_reload PASSED                            [ 41%]
+    tests/test_importnb.ipynb::test_docstrings PASSED                        [ 45%]
+    tests/test_importnb.ipynb::test_docstring_opts PASSED                    [ 50%]
+    tests/test_importnb.ipynb::test_from_file PASSED                         [ 54%]
+    tests/test_importnb.ipynb::test_lazy PASSED                              [ 58%]
+    tests/test_importnb.ipynb::test_module_source PASSED                     [ 62%]
+    tests/test_importnb.ipynb::test_object_source PASSED                     [ 66%]
+    tests/test_importnb.ipynb::test_with_shell PASSED                        [ 70%]
+    tests/test_importnb.ipynb::test_python_file PASSED                       [ 75%]
+    tests/test_importnb.ipynb::test_cli PASSED                               [ 79%]
+    tests/test_importnb.ipynb::test_parameterize PASSED                      [ 83%]
+    tests/test_importnb.ipynb::test_minified_json PASSED                     [ 87%]
+    tests/test_importnb.ipynb::test_fuzzy_finder PASSED                      [ 91%]
+    tests/test_importnb.ipynb::test_remote PASSED                            [ 95%]
+    tests/test_importnb.ipynb::test_helpers PASSED                           [100%]
+    
+    ========================= 24 passed in 10.36 seconds ==========================
+    
+
 
 ```python
     if __name__ == '__main__':
         try:
             from IPython.display import display, Image
+            from IPython.utils.capture import capture_output
             from IPython import get_ipython
             with capture_output(): 
                 get_ipython().system("cd docs && pyreverse importnb -opng -pimportnb")
             display(Image(url='docs/classes_importnb.png', ))
         except: ...
 ```
+
+
+<img src="docs/classes_importnb.png"/>
+

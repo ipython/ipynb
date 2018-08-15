@@ -1,190 +1,106 @@
 # coding: utf-8
-"""# The [Import Loader](https://docs.python.org/3/reference/import.html#loaders)
+"""# `loader`
 
-`importnb` uses context manager to import Notebooks as Python packages and modules.  `importnb.Notebook` simplest context manager.  It will find and load any notebook as a module.
+Combine the __import__ finder with the loader.
 
-    >>> m = Notebook().from_filename('loader.ipynb', 'importnb.notebooks')
-    >>> assert m and m.Notebook
- 
-     
-### `importnb.Partial` 
-
-    >>> with Notebook(exceptions=BaseException): 
-    ...     from importnb.notebooks import loader
-    >>> assert loader._exception is None
-    
-## There is a [lazy importer]()
-
-The Lazy importer will delay the module execution until it is used the first time.  It is a useful approach for delaying visualization or data loading.
-
-    >>> with Notebook(lazy=True): 
-    ...     from importnb.notebooks import loader
-    
-## Loading from resources
-
-Not all notebooks may be loaded as modules throught the standard python import finder.  `from_resource`, or the uncomfortably named `Notebook.from_filename` attributes, support [`importlib_resources`]() style imports and raw file imports.
-
-    >>> from importnb.loader import from_resource
-    >>> assert from_resource(Notebook(), 'loader.ipynb', 'importnb.notebooks')
-    >>> assert Notebook().from_filename('loader.ipynb', 'importnb.notebooks')
-    >>> assert Notebook().from_filename(m.__file__)
-    
-
-## Capturing stdin, stdout, and display objects
-
-    >>> with Notebook(stdout=True, stderr=True, display=True, globals=dict(show=True)):
-    ...     from importnb.notebooks import loader
-    >>> assert loader._capture
-
-## Assigning globals
-
-    >>> nb = Notebook(stdout=True, globals={'show': True}).from_filename('loader.ipynb', 'importnb.notebooks')
-    >>> assert nb._capture.stdout
+    >>> with Notebook():
+    ...      from importnb.notebooks import loader
 """
 
-if globals().get("show", None):
-    print("Catch me if you can")
-
-from .capture import capture_output
-from .finder import BaseFinder, FileModuleSpec, FuzzySpec
+from .finder import get_loader_details, FuzzySpec, FuzzyFinder
 from .extensions import load_ipython_extension, unload_ipython_extension
-from .shell import ShellMixin, dedent
-from .decoder import loads
+from .decoder import LineCacheNotebookDecoder
+from .docstrings import update_docstring
 
-import ast, sys, json
-from copy import copy
+import sys, ast, json, inspect, os
+from importlib import reload
 from importlib.machinery import SourceFileLoader, ModuleSpec
 from importlib.util import spec_from_loader
-from importlib._bootstrap import _installed_safely
+from importlib._bootstrap import _new_module, _installed_safely
+
+from functools import partial
 
 try:
-    from importlib._bootstrap_external import decode_source
+    from importlib._bootstrap_external import decode_source, FileFinder
     from importlib.util import module_from_spec
+    from importlib._bootstrap import _init_module_attrs
+    from importlib.util import LazyLoader
 except:
     # python 3.4
     from importlib._bootstrap import _SpecMethods
     from importlib.util import decode_source
+    from importlib.machinery import FileFinder
 
     def module_from_spec(spec):
         return _SpecMethods(spec).create()
-
-
-from importlib import reload
-from contextlib import contextmanager, ExitStack
-from pathlib import Path
-
-try:
-    from importlib.resources import path
-except:
-    from importlib_resources import path
-
-from json.decoder import JSONObject, JSONDecoder, WHITESPACE, WHITESPACE_STR
-
-__all__ = "Notebook", "reload"
-
-
-class ImportNbException(BaseException):
-    """ImportNbException allows all exceptions to be raised, a null except statement always passes."""
-
-
-"""## Converting cells to code
-
-These functions are attached to the loaders.
-"""
-
-"""## Loading from resources
-"""
-
-
-def from_resource(loader, file=None, resource=None, exec=True, **globals):
-    """Load a python module or notebook from a file location.
-
-    from_filename is not reloadable because it is not in the sys.modules.
-
-    This still needs some work for packages.
-    
-    file: A file name to a notebook 
-    resource: A dotted path to a module containing the notebook file.
-    
-    >> assert from_resource(Notebook(), 'loader.ipynb', 'importnb.notebooks')
-    """
-    with ExitStack() as stack:
-        if resource is not None:
-            file = Path(stack.enter_context(path(resource, file)))
-        else:
-            file = Path(file or loader.path)
-
-        name = (getattr(loader, "name", False) == "__main__" and "__main__") or file.stem
-        name = name.replace(".", "_")
-
-        if file.suffixes[-1] == ".ipynb":
-            if any(map(str(file).startswith, ("http:", "https:"))):
-                file = str(file)
-                if "://" not in file:
-                    file = file.replace(":/", "://")
-
-            loader = loader(name, file)
-        else:
-            loader = SourceFileLoader(name, str(file))
-
-        lazy = getattr(loader, "lazy", False)
-        if lazy:
-            try:
-                from importlib.util import LazyLoader
-
-                loader = LazyLoader(loader)
-            except:
-                ImportWarning("""LazyLoading is only available in > Python 3.5""")
-
-        spec = FileModuleSpec(name, loader, origin=loader.path)
-        module = module_from_spec(spec)
-        if exec:
-            stack.enter_context(_installed_safely(module))
-            module.__loader__.exec_module(module, **globals)
-
-    return module
-
-
-"""# The Notebook Loader
-"""
-
-
-def assign_line_numbers(cell, node):
-    return ast.fix_missing_locations(ast.increment_lineno(node, cell["metadata"].get("lineno", 1)))
-
-
-from importlib._bootstrap import _new_module
-
-try:
-    from importlib._bootstrap import _init_module_attrs
-except:
-    # python 3.4
-    from importlib._bootstrap import _SpecMethods
 
     def _init_module_attrs(spec, module):
         return _SpecMethods(spec).init_module_attrs(module)
 
 
-class NotebookLoader(SourceFileLoader, BaseFinder):
-    """The simplest implementation of a Notebook Source File Loader.
-    >>> with NotebookLoader():
-    ...    from importnb.notebooks import loader
-    >>> assert loader.__file__.endswith('.ipynb')
+from pathlib import Path
+from inspect import signature
+from contextlib import contextmanager, ExitStack
+from functools import partialmethod
+
+__all__ = "Notebook", "reload"
+
+decoder = LineCacheNotebookDecoder()
+
+
+class FinderContextManager:
+    """
+    FinderContextManager is the base class for the notebook loader.  It provides
+    a context manager that replaces `FileFinder` in the `sys.path_hooks` to include 
+    an instance of the class in the python findering system.
+
+    >>> with FinderContextManager() as f:
+    ...      id, ((loader_cls, _), *_) = get_loader_details()
+    ...      assert issubclass(loader_cls, FinderContextManager)
+    >>> id, ((loader_cls, _), *_) = get_loader_details()
+    >>> loader_cls = inspect.unwrap(loader_cls)
+    >>> assert not (isinstance(loader_cls, type) and issubclass(loader_cls, FinderContextManager))
     """
 
-    extensions = (".ipynb",)
-    __slots__ = "name", "path", "finder", "lazy"
+    extensions = tuple()
+    _position = 0
 
-    def __init__(self, fullname=None, path=None, *, fuzzy=True, lazy=False, extensions=None):
-        super().__init__(fullname, path)
-        BaseFinder.__init__(self, fuzzy=fuzzy, lazy=lazy, extensions=extensions)
+    def __enter__(self):
+        id, details = get_loader_details()
+        details.insert(self._position, (self.loader_cls(), self.extensions))
+        sys.path_hooks[id] = self.finder_cls.path_hook(*details)
+        sys.path_importer_cache.clear()
+        return self
 
-    def format(self, str):
-        """The default transformer dedents the code cell to make indented code 
-        valid Python.
-        """
-        return dedent(str)
+    def __exit__(self, *excepts):
+        id, details = get_loader_details()
+        details.pop(self._position)
+        sys.path_hooks[id] = self.finder_cls.path_hook(*details)
+        sys.path_importer_cache.clear()
 
+    def loader_cls(self):
+        return type(self)
+
+    @property
+    def finder_cls(self):
+        return FileFinder
+
+    @staticmethod
+    def _unwrap_loader(loader):
+        loader = inspect.unwrap(loader)
+        try:
+            loader = inspect.getclosurevars(loader).nonlocals.get("loader", loader)
+        finally:
+            return loader
+
+
+"""## The basic loader
+
+The loader uses the import systems `get_source`, `get_data`, and `create_module` methods to import notebook files.
+"""
+
+
+class ImportLibMixin:
     def create_module(self, spec):
         module = _new_module(spec.name)
         _init_module_attrs(spec, module)
@@ -194,140 +110,186 @@ class NotebookLoader(SourceFileLoader, BaseFinder):
             module.__name__ = self.name
         return module
 
-    def visit(self, node):
-        """A method that allows a NodeTransformer to modify code."""
-        return node
+    def get_data(self, path):
+        return LineCacheNotebookDecoder(code=self.format).decode(
+            decode_source(super().get_data(self.path)), self.path
+        )
 
-    from_filename = from_resource
-
-    def __call__(self, fullname=None, path=None):
-        """The PathFinder calls this when looking for objects 
-        on the path."""
-        self = copy(self)
-        return SourceFileLoader.__init__(self, str(self.name or fullname), str(path)) or self
-
-    def parse_cells(self, nb, **kwargs):
-        for i, cell in enumerate(nb["cells"]):
-            node = None
-            if cell["cell_type"] == "markdown":
-                node = self.parse_markdown_cell(cell, **kwargs)
-            if cell["cell_type"] == "code":
-                node = self.parse_code_cell(cell, **kwargs)
-            if node is not None:
-                yield cell, assign_line_numbers(cell, self.visit(node))
-
-    def parse_markdown_cell(self, cell, **kwargs):
-        return ast.Module(body=[ast.Expr(ast.Str(s="".join(cell["source"])))])
-
-    def parse_code_cell(self, cell, **kwargs):
-        return ast.parse(self.format("".join(cell["source"])))
-
-    def nb_to_ast(self, nb):
-        module = ast.Module(body=[])
-        for i, (cell, node) in enumerate(self.parse_cells(nb)):
-            module.body.extend(node.body)
-        return module
-
-    def source_to_code(self, object, path):
-        """Notebook uses source_to_code to get notebooks, while Interactive
-        objects use get_notebook.
-        """
-        source = decode_source(object)
-        if path.endswith(".py") or path.endswith(".pyi"):
-            source = '''{[{"source": "''' + json.dumps(source) + """, "cell_type": "code"}]}"""
-        if path.endswith(".ipynb"):
-            nb = loads(source)
-        module = self.nb_to_ast(nb)
-        return compile(module, path or "<importnb>", "exec")
+    get_source = get_data
 
 
-"""## An advanced `exec_module` decorator.
-"""
-
-
-def advanced_exec_module(exec_module):
-    """Decorate `SourceFileLoader.exec_module` objects with abilities to:
-    * Capture output in Python and IPython
-    * Prepopulate a model namespace.
-    * Allow exceptions while notebooks are loading.
-    
-    >>> assert advanced_exec_module(SourceFileLoader.exec_module)
+class NotebookBaseLoader(ImportLibMixin, SourceFileLoader, FinderContextManager):
+    """The simplest implementation of a Notebook Source File Loader.
+    >>> with NotebookBaseLoader():
+    ...    from importnb.notebooks import loader
+    >>> assert loader.__file__.endswith('.ipynb')
     """
 
-    def _exec_module(loader, module, **globals):
-        module._exception = None
-        module.__dict__.update(getattr(loader, "globals", {}))
-        module.__dict__.update(globals)
-        with capture_output(
-            stdout=loader.stdout, stderr=loader.stderr, display=loader.display
-        ) as out:
-            module._capture = out
-            try:
-                exec_module(loader, module)
-            except loader.exceptions as Exception:
-                module._exception = Exception
-
-    return _exec_module
-
-
-"""# The Advanced Notebook loader
-"""
-
-
-class Notebook(ShellMixin, NotebookLoader):
-    """The Notebook loader is an advanced loader for IPython notebooks:
-    
-    * Capture stdout, stderr, and display objects.
-    * Partially evaluate notebook with known exceptions.
-    * Supply extra global values into notebooks.
-    
-    >>> assert Notebook().from_filename('loader.ipynb', 'importnb.notebooks')
-    """
-
-    EXTENSION_SUFFIXES = (".ipynb",)
-
-    __slots__ = (
-        "stdout",
-        "stderr",
-        "display",
-        "lazy",
-        "exceptions",
-        "globals",
-        "dir",
-        "shell",
-        "finder",
-    )
+    extensions = (".ipynb",)
+    __slots__ = "_lazy", "_fuzzy", "_markdown_docstring", "_position"
 
     def __init__(
         self,
         fullname=None,
         path=None,
         *,
-        stdout=False,
-        stderr=False,
-        display=False,
-        lazy=False,
-        globals=None,
-        exceptions=ImportNbException,
-        dir=None,
-        shell=False,
-        fuzzy=True,
-        extensions=None
+        _lazy=False,
+        _fuzzy=True,
+        _position=0,
+        _markdown_docstring=True
     ):
-        super().__init__(fullname, path, fuzzy=fuzzy, extensions=None)
-        self.stdout = stdout
-        self.stderr = stderr
-        self.display = display
-        self.lazy = lazy
-        self.globals = {} if globals is None else globals
-        self.exceptions = exceptions
-        self.dir = dir
-        self.shell = shell
+        super().__init__(fullname, path)
+        self._lazy = _lazy
+        self._fuzzy = _fuzzy
+        self._markdown_docstring = _markdown_docstring
+        self._position = _position
 
-    exec_module = advanced_exec_module(NotebookLoader.exec_module)
+    def format(self, str):
+        return dedent(str)
+
+    def loader_cls(self):
+        """Create a lazy loader source file loader."""
+        loader = super().loader_cls()
+        if self._lazy and (sys.version_info.major, sys.version_info.minor) != (3, 4):
+            loader = LazyLoader.factory(loader)
+        return partial(loader, **{object: getattr(self, object) for object in self.__slots__})
+
+    @property
+    def finder_cls(self):
+        """Permit fuzzy finding of files with special characters."""
+        return self._fuzzy and FuzzyFinder or super().finder_cls
+
+
+class FileModuleSpec(ModuleSpec):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._set_fileattr = True
+
+
+"""## notebooks most be loadable from files.
+"""
+
+
+class FromFileMixin:
+    """FromFileMixin adds a classmethod to load a notebooks from files.
+    """
+
+    @classmethod
+    def load(cls, filename, dir=None, shell=True, main=False, **kwargs):
+        """Import a notebook as a module from a filename.
+        
+        dir: The directory to load the file from.
+        shell: Use the existing IPython shell.
+        main: Load the module in the __main__ context.
+        
+        > assert Notebook.load('loader.ipynb')
+        """
+        name = main and "__main__" or Path(filename).stem
+        loader = cls(name, str(filename), _shell=shell, **kwargs)
+        module = module_from_spec(FileModuleSpec(name, loader, origin=loader.path))
+        cwd = str(Path(loader.path).parent)
+        try:
+            with ExitStack() as stack:
+                sys.path.append(cwd)
+                loader.name != "__main__" and stack.enter_context(_installed_safely(module))
+                loader.exec_module(module)
+        finally:
+            sys.path.pop()
+
+        return module
+
+
+"""* Sometimes folks may want to use the current IPython shell to manage the code and input transformations.
+"""
+
+try:
+    from IPython.core.inputsplitter import IPythonInputSplitter
+
+    dedent = IPythonInputSplitter(line_input_checker=False).transform_cell
+except:
+    from textwrap import dedent
+
+
+class ShellMixin:
+    """ShellMixin allows the current IPython ast and input transformers to be used
+    while loading the module."""
+
+    def _get_ipython(self):
+        try:
+            return __import__("IPython").get_ipython()
+        except:
+            ...
+
+    def format(self, str):
+        shell = self._get_ipython()
+        return (
+            shell.input_transformer_manager.transform_cell if self._shell and shell else dedent
+        )(str)
+
+    def visit(self, node):
+        shell = self._get_ipython()
+        if self._shell and shell:
+            for visitor in shell.ast_transformers:
+                node = visitor.visit(node)
+        return node
+
+
+"""## The `Notebook` finder & loader
+"""
+
+
+class Notebook(ShellMixin, FromFileMixin, NotebookBaseLoader):
+    """Notebook is a user friendly file finder and module loader for notebook source code.
+    
+    > Remember, restart and run all or it didn't happen.
+    
+    Notebook provides several useful options.
+    
+    * Lazy module loading.  A module is executed the first time it is used in a script.
+    """
+
+    __slots__ = NotebookBaseLoader.__slots__ + ("_shell", "_main")
+
+    def __init__(
+        self,
+        fullname=None,
+        path=None,
+        _lazy=False,
+        _position=0,
+        _shell=False,
+        _fuzzy=True,
+        _markdown_docstring=True,
+        _main=False,
+    ):
+        self._main = bool(_main) or fullname == "__main__"
+        self._shell = _shell
+        super().__init__(
+            self._main and "__main__" or fullname,
+            path,
+            _lazy=_lazy,
+            _fuzzy=_fuzzy,
+            _position=_position,
+            _markdown_docstring=_markdown_docstring,
+        )
+
+    def source_to_code(self, nodes, path, *, _optimize=-1):
+        """* Convert the current source to ast 
+        * Apply ast transformers.
+        * Compile the code."""
+        if not isinstance(nodes, ast.Module):
+            nodes = ast.parse(nodes)
+        if self._markdown_docstring:
+            nodes = update_docstring(nodes)
+        return super().source_to_code(
+            ast.fix_missing_locations(self.visit(nodes)), path, _optimize=_optimize
+        )
 
 
 """# Developer
+"""
+
+"""    Notebook.load('loader.ipynb')
+    
 """
 
 if __name__ == "__main__":
@@ -336,10 +298,4 @@ if __name__ == "__main__":
     except:
         from .utils.export import export
     export("loader.ipynb", "../loader.py")
-    m = Notebook().from_filename("loader.ipynb")
-    print(__import__("doctest").testmod(__import__(__name__), verbose=2))
-
-"""# More Information
-
-The `importnb.loader` module recreates basic Python importing abilities.  Have a look at [`execute.ipynb`](execute.ipynb) for more advanced usages.
-"""
+    print(__import__("doctest").testmod(Notebook.load("loader.ipynb"), verbose=2))

@@ -1,5 +1,5 @@
 # coding: utf-8
-"""# Jupyter magic extensions
+"""# `importnb` Jupyter magic extensions
 """
 
 """    %importnb --stdout --stderr --display --shell
@@ -7,6 +7,8 @@
 
 import argparse
 from importlib import import_module
+from functools import partial
+import pkg_resources, inspect
 
 
 def get_module_object(str):
@@ -15,9 +17,6 @@ def get_module_object(str):
 
 
 parser = argparse.ArgumentParser(description="""Define the importnb loader properties.""")
-parser.add_argument("--stdout", action="store_false")
-parser.add_argument("--stderr", action="store_false")
-parser.add_argument("--display", action="store_false")
 parser.add_argument("--cls", type=get_module_object, default="importnb:Notebook")
 parser.add_argument("--fuzzy", action="store_true")
 
@@ -37,7 +36,7 @@ class ImportNbExtensionBase:
         self.loaders = []
         # A default loader to install
         if loader:
-            self.loaders.append(loader().__enter__(-1))
+            self.loaders.append(loader(_position=-1).__enter__())
 
 
 if __IPYTHON__:
@@ -59,7 +58,7 @@ if __IPYTHON__:
             self.loaders.append(details.pop("cls")(**details))
 
             if cell is None:
-                self.loaders[-1].__enter__(0)
+                self.loaders[-1].__enter__()
                 return
 
             with self.loaders.pop(-1):
@@ -83,10 +82,23 @@ manager = None
 
 
 def load_ipython_extension(ip=None):
-    global manager
-    from .execute import Interactive
+    global manager, module
+    from .loader import Notebook
 
-    manager = ImportNbExtension(ip, Interactive)
+    frame = inspect.getouterframes(inspect.currentframe())[-2]
+    if (
+        getattr(frame, "function", frame[3])
+        == pkg_resources.load_entry_point("ipython", "console_scripts", "ipython").__name__
+    ):
+        from .parameterize import Parameterize as Notebook
+    else:
+        Notebook = partial(Notebook, _shell=True)
+
+    Notebook = partial(Notebook, _position=-1)
+    # Auto loading only works in IPython and
+    # we only read need it when there are parameters.
+    manager = ImportNbExtension(ip, Notebook)
+
     if ip:
         ip.register_magics(manager)
         from .utils.relative import load_ipython_extension
@@ -109,13 +121,6 @@ def unload_ipython_extension(ip=None):
 
 """# Developer
 """
-
-if __name__ == "__main__":
-    from importnb.utils.export import export
-
-    export("extensions.ipynb", "../extensions.py")
-    # m = Notebook(shell=True).from_filename('extensions.ipynb')
-    # print(__import__('doctest').testmod(m, verbose=2))
 
 if __name__ == "__main__":
     from importnb.utils.export import export
