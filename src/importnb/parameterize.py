@@ -18,6 +18,7 @@ from importlib._bootstrap import _installed_safely
 
 
 class FindReplace(ast.NodeTransformer):
+
     def __init__(self, globals, parser):
         self.globals = globals
         self.parser = parser
@@ -46,7 +47,7 @@ class FindReplace(ast.NodeTransformer):
                     ns, self.argv = self.parser.parse_known_args(self.argv)
                     if target in self.globals:
                         node = ast.Expr(ast.Str("Skipped"))
-                    elif getattr(ns, target) != parameter:
+                    elif (getattr(ns, target) != parameter):
                         node.value = ast.parse(str(getattr(ns, target))).body[0].value
         return node
 
@@ -83,10 +84,17 @@ class Parameterize(Notebook):
         _markdown_docstring=True,
         _position=0,
         globals=None,
+        _main=False,
         **_globals
     ):
         super().__init__(
-            fullname, path, _lazy=_lazy, _fuzzy=_fuzzy, _shell=_shell, _position=_position
+            fullname,
+            path,
+            _lazy=_lazy,
+            _fuzzy=_fuzzy,
+            _shell=_shell,
+            _position=_position,
+            _main=_main,
         )
         self.globals = globals or {}
         self.globals.update(**_globals)
