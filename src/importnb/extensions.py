@@ -92,7 +92,7 @@ def load_ipython_extension(ip=None):
     ):
         from .parameterize import Parameterize as Notebook
     else:
-        Notebook = partial(Notebook, _shell=True)
+        ...
 
     Notebook = partial(Notebook, _position=-1)
     # Auto loading only works in IPython and
