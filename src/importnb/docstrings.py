@@ -16,7 +16,7 @@ def markdown_docstring(nodes, node):
     if (
         len(nodes) > 1
         and str_expr(nodes[-1])
-        and isinstance(node, (ast.ClassDef, ast.FunctionDef))
+        and isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
         and not str_expr(node.body[0])
     ):
         node.body.insert(0, nodes.pop())
