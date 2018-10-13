@@ -7,8 +7,8 @@ The fuzzy importer could be confusing and perhaps a completer could help.
     >>> ip = __import__("IPython").get_ipython(); load_ipython_extension(ip)
     >>> assert ip.complete('importnb.__pleter', 'import importnb.__pleter')[1]
     >>> assert ip.complete('__find__', 'import __find__')[1]
-    >>> assert ip.complete('req', '\timport req')[1]
-    >>> assert ip.complete('_______________plet__', 'from importnb import _______________plet__')[1]\
+    >>> assert ip.complete('IPy', '\timport IPy')[1]
+    >>> assert ip.complete('_______________plet__', 'from importnb import _______________plet__')[1]
 """
 
 from .finder import fuzzy_file_search

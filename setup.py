@@ -46,15 +46,13 @@ setup_args = dict(
     license="BSD-3-Clause",
     setup_requires=[
         'pytest-runner',
-        'twine>=1.11.0',
-        'setuptools>=38.6.',
     ] + ([] if sys.version_info.minor == 4 else ['wheel>=0.31.0']),
     tests_require=['pytest', 'nbformat'],
     install_requires=install_requires,
     include_package_data=True,
     packages=setuptools.find_packages(where="src"),
     package_dir={"": "src"},
-    classifiers=(
+    classifiers=[
         "Development Status :: 4 - Beta",
         "Framework :: IPython",
         "Framework :: Jupyter",
@@ -67,7 +65,7 @@ setup_args = dict(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3 :: Only',),
+        'Programming Language :: Python :: 3 :: Only',],
     zip_safe=False,
     cmdclass={'test': PyTest,},
     entry_points = {
