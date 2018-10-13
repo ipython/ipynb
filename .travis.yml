@@ -1,11 +1,20 @@
 language: python
-cache: pip
 python:
-- '3.4'
-- '3.5'
-- '3.6'
-- 3.6-dev
-- 3.7-dev
+    - 3.4
+    - 3.6
+    - 3.5
+sudo: false
+
+cache: pip
+
+matrix:
+  include:
+      - { python: "3.6-dev", dist: xenial, sudo: true }
+      - { python: "3.7", dist: xenial, sudo: true }
+      - { python: "3.7-dev", dist: xenial, sudo: true }
+      - { python: "nightly", dist: xenial, sudo: true }
+  allow_failures:
+      - python: nightly
 install:
 - python setup.py sdist
 - python setup.py bdist_wheel
