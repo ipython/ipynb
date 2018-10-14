@@ -34,7 +34,7 @@ class PytestModule(pytest.Module):
         global loader
         with loader(
             self.parent.config.option.main and "__main__" or None,
-            _shell=self.parent.config.option.shell,
+            shell=self.parent.config.option.shell,
         ):
             return super().collect()
 
