@@ -7,10 +7,16 @@ Combine the __import__ finder with the loader.
     ...      from importnb.notebooks import loader
 """
 
-from .finder import get_loader_details, FuzzySpec, FuzzyFinder
-from .extensions import load_ipython_extension, unload_ipython_extension
-from .decoder import LineCacheNotebookDecoder
-from .docstrings import update_docstring
+try:
+    from .finder import get_loader_details, FuzzySpec, FuzzyFinder
+    from .extensions import load_ipython_extension, unload_ipython_extension
+    from .decoder import LineCacheNotebookDecoder
+    from .docstrings import update_docstring
+except:
+    from finder import get_loader_details, FuzzySpec, FuzzyFinder
+    from extensions import load_ipython_extension, unload_ipython_extension
+    from decoder import LineCacheNotebookDecoder
+    from docstrings import update_docstring
 
 import sys, ast, json, inspect, os
 from importlib import reload
@@ -133,16 +139,16 @@ class NotebookBaseLoader(ImportLibMixin, SourceFileLoader, FinderContextManager)
         fullname=None,
         path=None,
         *,
-        _lazy=False,
-        _fuzzy=True,
-        _position=0,
-        _markdown_docstring=True
+        lazy=False,
+        fuzzy=True,
+        position=0,
+        markdown_docstring=True
     ):
         super().__init__(fullname, path)
-        self._lazy = _lazy
-        self._fuzzy = _fuzzy
-        self._markdown_docstring = _markdown_docstring
-        self._position = _position
+        self._lazy = lazy
+        self._fuzzy = fuzzy
+        self._markdown_docstring = markdown_docstring
+        self._position = position
 
     def format(self, str):
         return dedent(str)
@@ -152,7 +158,10 @@ class NotebookBaseLoader(ImportLibMixin, SourceFileLoader, FinderContextManager)
         loader = super().loader_cls()
         if self._lazy and (sys.version_info.major, sys.version_info.minor) != (3, 4):
             loader = LazyLoader.factory(loader)
-        return partial(loader, **{object: getattr(self, object) for object in self.__slots__})
+        # Strip the leading underscore from slots
+        return partial(
+            loader, **{object.lstrip("_"): getattr(self, object) for object in self.__slots__}
+        )
 
     @property
     def finder_cls(self):
@@ -185,7 +194,7 @@ class FromFileMixin:
         > assert Notebook.load('loader.ipynb')
         """
         name = main and "__main__" or Path(filename).stem
-        loader = cls(name, str(filename), _shell=shell, **kwargs)
+        loader = cls(name, str(filename), shell=shell, **kwargs)
         module = module_from_spec(FileModuleSpec(name, loader, origin=loader.path))
         cwd = str(Path(loader.path).parent)
         try:
@@ -254,22 +263,22 @@ class Notebook(ShellMixin, FromFileMixin, NotebookBaseLoader):
         self,
         fullname=None,
         path=None,
-        _lazy=False,
-        _position=0,
-        _shell=False,
-        _fuzzy=True,
-        _markdown_docstring=True,
-        _main=False,
+        lazy=False,
+        position=0,
+        shell=False,
+        fuzzy=True,
+        markdown_docstring=True,
+        main=False,
     ):
-        self._main = bool(_main) or fullname == "__main__"
-        self._shell = _shell
+        self._main = bool(main) or fullname == "__main__"
+        self._shell = shell
         super().__init__(
             self._main and "__main__" or fullname,
             path,
-            _lazy=_lazy,
-            _fuzzy=_fuzzy,
-            _position=_position,
-            _markdown_docstring=_markdown_docstring,
+            lazy=lazy,
+            fuzzy=fuzzy,
+            position=position,
+            markdown_docstring=markdown_docstring,
         )
 
     def source_to_code(self, nodes, path, *, _optimize=-1):

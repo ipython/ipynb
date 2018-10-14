@@ -36,7 +36,7 @@ class ImportNbExtensionBase:
         self.loaders = []
         # A default loader to install
         if loader:
-            self.loaders.append(loader(_position=-1).__enter__())
+            self.loaders.append(loader(position=-1).__enter__())
 
 
 if __IPYTHON__:
@@ -94,7 +94,7 @@ def load_ipython_extension(ip=None):
     else:
         ...
 
-    Notebook = partial(Notebook, _position=-1)
+    Notebook = partial(Notebook, position=-1)
     # Auto loading only works in IPython and
     # we only read need it when there are parameters.
     manager = ImportNbExtension(ip, Notebook)
