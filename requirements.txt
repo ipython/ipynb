@@ -2,4 +2,4 @@ pytest
 tox
 pylint
 graphviz
-IPython
+notebook
