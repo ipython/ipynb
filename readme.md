@@ -97,7 +97,7 @@ The `lazy` option will delay the evaluation of a module until one of its attribu
 
 
 ```python
-    with Notebook(_lazy=True):
+    with Notebook(lazy=True):
         import readme
 ```
 
@@ -266,38 +266,50 @@ To package notebooks add `recursive-include package_name *.ipynb`
 ```
 
     ============================= test session starts =============================
-    platform win32 -- Python 3.6.5, pytest-3.5.1, py-1.5.3, pluggy-0.6.0 -- C:\Anaconda3\python.exe
+    platform win32 -- Python 3.7.0, pytest-3.8.2, py-1.6.0, pluggy-0.7.1 -- C:\Anaconda3\envs\py37\python.exe
     cachedir: .pytest_cache
     rootdir: C:\Users\deathbeds\importnb, inifile: tox.ini
-    plugins: testmon-0.9.12, remotedata-0.2.1, openfiles-0.3.0, localserver-0.4.1, doctestplus-0.1.3, arraydiff-0.2, hypothesis-3.66.16, importnb-0.5.0
-    collecting ... collected 24 items
+    plugins: importnb-0.4.2
+    collecting ... collected 25 items
     
     src/importnb/completer.py::importnb.completer PASSED                     [  4%]
     src/importnb/foobar.py::importnb.foobar PASSED                           [  8%]
     src/importnb/loader.py::importnb.loader PASSED                           [ 12%]
     src/importnb/loader.py::importnb.loader.FinderContextManager PASSED      [ 16%]
     src/importnb/loader.py::importnb.loader.NotebookBaseLoader PASSED        [ 20%]
-    src/importnb/utils/export.py::importnb.utils.export PASSED               [ 25%]
-    src/importnb/utils/relative.py::importnb.utils.relative PASSED           [ 29%]
-    tests/test_importnb.ipynb::test_basic PASSED                             [ 33%]
-    tests/test_importnb.ipynb::test_package PASSED                           [ 37%]
-    tests/test_importnb.ipynb::test_reload PASSED                            [ 41%]
-    tests/test_importnb.ipynb::test_docstrings PASSED                        [ 45%]
-    tests/test_importnb.ipynb::test_docstring_opts PASSED                    [ 50%]
-    tests/test_importnb.ipynb::test_from_file PASSED                         [ 54%]
-    tests/test_importnb.ipynb::test_lazy PASSED                              [ 58%]
-    tests/test_importnb.ipynb::test_module_source PASSED                     [ 62%]
-    tests/test_importnb.ipynb::test_object_source PASSED                     [ 66%]
-    tests/test_importnb.ipynb::test_with_shell PASSED                        [ 70%]
-    tests/test_importnb.ipynb::test_python_file PASSED                       [ 75%]
-    tests/test_importnb.ipynb::test_cli PASSED                               [ 79%]
-    tests/test_importnb.ipynb::test_parameterize PASSED                      [ 83%]
-    tests/test_importnb.ipynb::test_minified_json PASSED                     [ 87%]
-    tests/test_importnb.ipynb::test_fuzzy_finder PASSED                      [ 91%]
-    tests/test_importnb.ipynb::test_remote PASSED                            [ 95%]
+    src/importnb/utils/export.py::importnb.utils.export PASSED               [ 24%]
+    src/importnb/utils/relative.py::importnb.utils.relative PASSED           [ 28%]
+    tests/test_importnb.ipynb::test_basic PASSED                             [ 32%]
+    tests/test_importnb.ipynb::test_package PASSED                           [ 36%]
+    tests/test_importnb.ipynb::test_reload PASSED                            [ 40%]
+    tests/test_importnb.ipynb::test_docstrings PASSED                        [ 44%]
+    tests/test_importnb.ipynb::test_docstring_opts PASSED                    [ 48%]
+    tests/test_importnb.ipynb::test_from_file PASSED                         [ 52%]
+    tests/test_importnb.ipynb::test_lazy PASSED                              [ 56%]
+    tests/test_importnb.ipynb::test_module_source PASSED                     [ 60%]
+    tests/test_importnb.ipynb::test_main PASSED                              [ 64%]
+    tests/test_importnb.ipynb::test_object_source PASSED                     [ 68%]
+    tests/test_importnb.ipynb::test_with_shell PASSED                        [ 72%]
+    tests/test_importnb.ipynb::test_python_file PASSED                       [ 76%]
+    tests/test_importnb.ipynb::test_cli PASSED                               [ 80%]
+    tests/test_importnb.ipynb::test_parameterize PASSED                      [ 84%]
+    tests/test_importnb.ipynb::test_minified_json PASSED                     [ 88%]
+    tests/test_importnb.ipynb::test_fuzzy_finder PASSED                      [ 92%]
+    tests/test_importnb.ipynb::test_remote PASSED                            [ 96%]
     tests/test_importnb.ipynb::test_helpers PASSED                           [100%]
     
-    ========================= 24 passed in 10.36 seconds ==========================
+    ============================== warnings summary ===============================
+    C:\Anaconda3\envs\py37\lib\site-packages\IPython\core\completer.py:1949: PendingDeprecationWarning: `Completer.complete` is pending deprecation since IPython 6.0 and will be replaced by `Completer.completions`.
+      PendingDeprecationWarning)
+    C:\Anaconda3\envs\py37\lib\site-packages\IPython\core\completer.py:1949: PendingDeprecationWarning: `Completer.complete` is pending deprecation since IPython 6.0 and will be replaced by `Completer.completions`.
+      PendingDeprecationWarning)
+    C:\Anaconda3\envs\py37\lib\site-packages\IPython\core\completer.py:1949: PendingDeprecationWarning: `Completer.complete` is pending deprecation since IPython 6.0 and will be replaced by `Completer.completions`.
+      PendingDeprecationWarning)
+    C:\Anaconda3\envs\py37\lib\site-packages\IPython\core\completer.py:1949: PendingDeprecationWarning: `Completer.complete` is pending deprecation since IPython 6.0 and will be replaced by `Completer.completions`.
+      PendingDeprecationWarning)
+    
+    -- Docs: https://docs.pytest.org/en/latest/warnings.html
+    ==================== 25 passed, 4 warnings in 4.52 seconds ====================
     
 
 
