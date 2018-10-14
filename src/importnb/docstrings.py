@@ -1,5 +1,7 @@
 # coding: utf-8
 """# Special handling of markdown cells as docstrings.
+
+Modify the Python `ast` to assign docstrings to functions when they are preceded by a Markdown cell.
 """
 
 import ast

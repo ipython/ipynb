@@ -12,7 +12,6 @@ import ast
 
 
 class RelativeImport(ast.NodeTransformer):
-
     def visit_Try(self, node):
         return node
 

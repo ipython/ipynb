@@ -1,6 +1,8 @@
 # coding: utf-8
 """# `loader`
 
+`loader` is the main module for `importnb`.  It combines with the `finder` to use the Python import system to import notebooks.
+
 Combine the __import__ finder with the loader.
 
     >>> with Notebook():

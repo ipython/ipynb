@@ -1,7 +1,9 @@
 # coding: utf-8
 """# Constants to discover where a statement is executed from
 
-I hate the `__name__ == '__main__'`, it throws people off.  Like Y the F R U doing that.
+> _These operators are experimental._
+
+I hate `__name__ == '__main__'`, it throws people off.  Like Y the F R U doing that.
 
 This notebook creates exports three objects that will tell if:
 
