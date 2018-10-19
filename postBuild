@@ -1,3 +1,2 @@
 jupyter labextension install jupyterlab-toc
-ipython profile create default
 importnb-install
