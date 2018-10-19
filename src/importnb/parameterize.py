@@ -4,7 +4,10 @@
 The parameterize loader allows notebooks to be used as functions and command line tools.  A `Parameterize` loader will convert an literal ast assigments to keyword arguments for the module.
 """
 
-from .loader import Notebook, module_from_spec
+try:
+    from .loader import Notebook, module_from_spec
+except:
+    from loader import Notebook, module_from_spec
 import argparse, ast, inspect
 from functools import partial
 from copy import deepcopy
@@ -78,7 +81,6 @@ class Parameterize(Notebook):
         path=None,
         *,
         lazy=False,
-        shell=False,
         fuzzy=True,
         markdown_docstring=True,
         position=0,
@@ -86,9 +88,7 @@ class Parameterize(Notebook):
         main=False,
         **_globals
     ):
-        super().__init__(
-            fullname, path, lazy=lazy, fuzzy=fuzzy, shell=shell, position=position, main=main
-        )
+        super().__init__(fullname, path, lazy=lazy, fuzzy=fuzzy, position=position, main=main)
         self.globals = globals or {}
         self.globals.update(**_globals)
         self._visitor = FindReplace(self.globals, argparse.ArgumentParser(prog=self.name))

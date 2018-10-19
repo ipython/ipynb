@@ -1,8 +1,6 @@
 # coding: utf-8
 """# `loader`
 
-`loader` is the main module for `importnb`.  It combines with the `finder` to use the Python import system to import notebooks.
-
 Combine the __import__ finder with the loader.
 
     >>> with Notebook():
@@ -119,6 +117,7 @@ class ImportLibMixin:
         return module
 
     def get_data(self, path):
+        """Needs to return the string source for the module."""
         return LineCacheNotebookDecoder(code=self.format).decode(
             decode_source(super().get_data(self.path)), self.path
         )
@@ -186,17 +185,16 @@ class FromFileMixin:
     """
 
     @classmethod
-    def load(cls, filename, dir=None, shell=True, main=False, **kwargs):
+    def load(cls, filename, dir=None, main=False, **kwargs):
         """Import a notebook as a module from a filename.
         
         dir: The directory to load the file from.
-        shell: Use the existing IPython shell.
         main: Load the module in the __main__ context.
         
         > assert Notebook.load('loader.ipynb')
         """
         name = main and "__main__" or Path(filename).stem
-        loader = cls(name, str(filename), shell=shell, **kwargs)
+        loader = cls(name, str(filename), **kwargs)
         module = module_from_spec(FileModuleSpec(name, loader, origin=loader.path))
         cwd = str(Path(loader.path).parent)
         try:
@@ -213,6 +211,9 @@ class FromFileMixin:
 """* Sometimes folks may want to use the current IPython shell to manage the code and input transformations.
 """
 
+"""Use the `IPythonInputSplitter` to dedent and process magic functions.
+"""
+
 try:
     from IPython.core.inputsplitter import IPythonInputSplitter
 
@@ -221,27 +222,11 @@ except:
     from textwrap import dedent
 
 
-class ShellMixin:
-    """ShellMixin allows the current IPython ast and input transformers to be used
-    while loading the module."""
-
-    def _get_ipython(self):
-        try:
-            return __import__("IPython").get_ipython()
-        except:
-            ...
-
+class TransformerMixin:
     def format(self, str):
-        shell = self._get_ipython()
-        return (
-            shell.input_transformer_manager.transform_cell if self._shell and shell else dedent
-        )(str)
+        return dedent(str)
 
     def visit(self, node):
-        shell = self._get_ipython()
-        if self._shell and shell:
-            for visitor in shell.ast_transformers:
-                node = visitor.visit(node)
         return node
 
 
@@ -249,7 +234,7 @@ class ShellMixin:
 """
 
 
-class Notebook(ShellMixin, FromFileMixin, NotebookBaseLoader):
+class Notebook(TransformerMixin, FromFileMixin, NotebookBaseLoader):
     """Notebook is a user friendly file finder and module loader for notebook source code.
     
     > Remember, restart and run all or it didn't happen.
@@ -259,7 +244,7 @@ class Notebook(ShellMixin, FromFileMixin, NotebookBaseLoader):
     * Lazy module loading.  A module is executed the first time it is used in a script.
     """
 
-    __slots__ = NotebookBaseLoader.__slots__ + ("_shell", "_main")
+    __slots__ = NotebookBaseLoader.__slots__ + ("_main",)
 
     def __init__(
         self,
@@ -267,13 +252,11 @@ class Notebook(ShellMixin, FromFileMixin, NotebookBaseLoader):
         path=None,
         lazy=False,
         position=0,
-        shell=False,
         fuzzy=True,
         markdown_docstring=True,
         main=False,
     ):
         self._main = bool(main) or fullname == "__main__"
-        self._shell = shell
         super().__init__(
             self._main and "__main__" or fullname,
             path,
