@@ -93,8 +93,6 @@ class LineCacheNotebookDecoder(JSONDecoder):
         return "".join(lines)
 
 
-decoder = LineCacheNotebookDecoder()
-
 if __name__ == "__main__":
     try:
         from utils.export import export

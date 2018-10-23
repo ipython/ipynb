@@ -81,18 +81,23 @@ else:
 manager = None
 
 
+def IPYTHON_MAIN():
+    """Decide if the Ipython command line is running code."""
+    import pkg_resources
+
+    runner_frame = inspect.getouterframes(inspect.currentframe())[-2]
+    return (
+        getattr(runner_frame, "function", None)
+        == pkg_resources.load_entry_point("ipython", "console_scripts", "ipython").__name__
+    )
+
+
 def load_ipython_extension(ip=None):
     global manager, module
-    from .loader import Notebook
-
-    frame = inspect.getouterframes(inspect.currentframe())[-2]
-    if (
-        getattr(frame, "function", frame[3])
-        == pkg_resources.load_entry_point("ipython", "console_scripts", "ipython").__name__
-    ):
+    if IPYTHON_MAIN():
         from .parameterize import Parameterize as Notebook
     else:
-        ...
+        from .loader import Notebook
 
     Notebook = partial(Notebook, position=-1)
     # Auto loading only works in IPython and
@@ -105,9 +110,6 @@ def load_ipython_extension(ip=None):
 
         load_ipython_extension(ip)
         from .completer import load_ipython_extension
-
-        load_ipython_extension(ip)
-        from .helpers import load_ipython_extension
 
         load_ipython_extension(ip)
 
@@ -125,6 +127,6 @@ def unload_ipython_extension(ip=None):
 if __name__ == "__main__":
     from importnb.utils.export import export
 
-    export("extensions.ipynb", "../extensions.py")
+    export("ipython_extension.ipynb", "../ipython_extension.py")
     # m = Notebook(shell=True).from_filename('extensions.ipynb')
     # print(__import__('doctest').testmod(m, verbose=2))

@@ -52,11 +52,9 @@ def urlopen(path):
 
 
 class RemoteMixin:
-    def get_data(self, path):
+    def decode(self):
         global cache
-        return LineCacheNotebookDecoder(code=self.format).decode(
-            decode_source(cache.pop(path, urlopen(path)).read()), self.path
-        )
+        return decode_source(cache.pop(self.path, urlopen(self.path)).read())
 
     def __enter__(self):
         super().__enter__()

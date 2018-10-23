@@ -9,13 +9,13 @@ Combine the __import__ finder with the loader.
 
 try:
     from .finder import get_loader_details, FuzzySpec, FuzzyFinder
-    from .extensions import load_ipython_extension, unload_ipython_extension
-    from .decoder import LineCacheNotebookDecoder
+    from .ipython_extension import load_ipython_extension, unload_ipython_extension
+    from .decoder import LineCacheNotebookDecoder, quote
     from .docstrings import update_docstring
 except:
     from finder import get_loader_details, FuzzySpec, FuzzyFinder
-    from extensions import load_ipython_extension, unload_ipython_extension
-    from decoder import LineCacheNotebookDecoder
+    from ipython_extension import load_ipython_extension, unload_ipython_extension
+    from decoder import LineCacheNotebookDecoder, quote
     from docstrings import update_docstring
 
 import sys, ast, json, inspect, os
@@ -48,10 +48,16 @@ from pathlib import Path
 from inspect import signature
 from contextlib import contextmanager, ExitStack
 from functools import partialmethod
+import textwrap
+
+try:
+    from IPython.core.inputsplitter import IPythonInputSplitter
+
+    dedent = IPythonInputSplitter(line_input_checker=False).transform_cell
+except:
+    from textwrap import dedent
 
 __all__ = "Notebook", "reload"
-
-decoder = LineCacheNotebookDecoder()
 
 
 class FinderContextManager:
@@ -71,33 +77,24 @@ class FinderContextManager:
     extensions = tuple()
     _position = 0
 
+    finder = FileFinder
+
+    @property
+    def loader(self):
+        return type(self)
+
     def __enter__(self):
         id, details = get_loader_details()
-        details.insert(self._position, (self.loader_cls(), self.extensions))
-        sys.path_hooks[id] = self.finder_cls.path_hook(*details)
+        details.insert(self._position, (self.loader, self.extensions))
+        sys.path_hooks[id] = self.finder.path_hook(*details)
         sys.path_importer_cache.clear()
         return self
 
     def __exit__(self, *excepts):
         id, details = get_loader_details()
         details.pop(self._position)
-        sys.path_hooks[id] = self.finder_cls.path_hook(*details)
+        sys.path_hooks[id] = self.finder.path_hook(*details)
         sys.path_importer_cache.clear()
-
-    def loader_cls(self):
-        return type(self)
-
-    @property
-    def finder_cls(self):
-        return FileFinder
-
-    @staticmethod
-    def _unwrap_loader(loader):
-        loader = inspect.unwrap(loader)
-        try:
-            loader = inspect.getclosurevars(loader).nonlocals.get("loader", loader)
-        finally:
-            return loader
 
 
 """## The basic loader
@@ -106,7 +103,7 @@ The loader uses the import systems `get_source`, `get_data`, and `create_module`
 """
 
 
-class ImportLibMixin:
+class ImportLibMixin(SourceFileLoader):
     def create_module(self, spec):
         module = _new_module(spec.name)
         _init_module_attrs(spec, module)
@@ -116,16 +113,19 @@ class ImportLibMixin:
             module.__name__ = self.name
         return module
 
+    def decode(self):
+        return decode_source(super().get_data(self.path))
+
     def get_data(self, path):
         """Needs to return the string source for the module."""
-        return LineCacheNotebookDecoder(code=self.format).decode(
-            decode_source(super().get_data(self.path)), self.path
-        )
+        return LineCacheNotebookDecoder(
+            code=self.code, raw=self.raw, markdown=self.markdown
+        ).decode(self.decode(), self.path)
 
     get_source = get_data
 
 
-class NotebookBaseLoader(ImportLibMixin, SourceFileLoader, FinderContextManager):
+class NotebookBaseLoader(ImportLibMixin, FinderContextManager):
     """The simplest implementation of a Notebook Source File Loader.
     >>> with NotebookBaseLoader():
     ...    from importnb.notebooks import loader
@@ -151,12 +151,10 @@ class NotebookBaseLoader(ImportLibMixin, SourceFileLoader, FinderContextManager)
         self._markdown_docstring = markdown_docstring
         self._position = position
 
-    def format(self, str):
-        return dedent(str)
-
-    def loader_cls(self):
+    @property
+    def loader(self):
         """Create a lazy loader source file loader."""
-        loader = super().loader_cls()
+        loader = super().loader
         if self._lazy and (sys.version_info.major, sys.version_info.minor) != (3, 4):
             loader = LazyLoader.factory(loader)
         # Strip the leading underscore from slots
@@ -165,9 +163,9 @@ class NotebookBaseLoader(ImportLibMixin, SourceFileLoader, FinderContextManager)
         )
 
     @property
-    def finder_cls(self):
+    def finder(self):
         """Permit fuzzy finding of files with special characters."""
-        return self._fuzzy and FuzzyFinder or super().finder_cls
+        return self._fuzzy and FuzzyFinder or super().finder
 
 
 class FileModuleSpec(ModuleSpec):
@@ -214,17 +212,16 @@ class FromFileMixin:
 """Use the `IPythonInputSplitter` to dedent and process magic functions.
 """
 
-try:
-    from IPython.core.inputsplitter import IPythonInputSplitter
-
-    dedent = IPythonInputSplitter(line_input_checker=False).transform_cell
-except:
-    from textwrap import dedent
-
 
 class TransformerMixin:
-    def format(self, str):
+    def code(self, str):
         return dedent(str)
+
+    def markdown(self, str):
+        return quote(str)
+
+    def raw(self, str):
+        return textwrap.indent(str, "# ")
 
     def visit(self, node):
         return node

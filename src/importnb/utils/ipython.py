@@ -33,16 +33,19 @@ def load_config():
     return config, location
 
 
+import sys
+
+
 def install(project="importnb"):
     config, location = load_config()
-
+    projects = sys.argv[1:] or [project]
     if not installed(project):
-        config["InteractiveShellApp"]["extensions"].append(project)
+        config["InteractiveShellApp"]["extensions"].extend(projects)
 
     with location.open("w") as file:
         json.dump(config, file)
 
-    print("""<3 {}""".format(project))
+    print("""<3 {}""".format(projects))
 
 
 def installed(project):
@@ -52,14 +55,14 @@ def installed(project):
 
 def uninstall(project="importnb"):
     config, location = load_config()
-
+    projects = sys.argv[1:] or [project]
     config["InteractiveShellApp"]["extensions"] = [
-        ext for ext in config["InteractiveShellApp"]["extensions"] if ext != project
+        ext for ext in config["InteractiveShellApp"]["extensions"] if ext not in projects
     ]
 
     with location.open("w") as file:
         json.dump(config, file)
-    print("""</3 {}.""".format(project))
+    print("""</3 {}.""".format(projects))
 
 
 if __name__ == "__main__":
