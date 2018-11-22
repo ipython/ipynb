@@ -18,11 +18,11 @@ except:
     from decoder import LineCacheNotebookDecoder, quote
     from docstrings import update_docstring
 
-import sys, ast, json, inspect, os
+import sys, ast, json, inspect, os, types
 from importlib import reload
 from importlib.machinery import SourceFileLoader, ModuleSpec
 from importlib.util import spec_from_loader
-from importlib._bootstrap import _new_module, _installed_safely
+from importlib._bootstrap import _installed_safely
 
 from functools import partial
 
@@ -103,9 +103,20 @@ The loader uses the import systems `get_source`, `get_data`, and `create_module`
 """
 
 
+class ModuleType(types.ModuleType, getattr(os, "PathLike", object)):
+    """ModuleType combines a module with a PathLike access to simplify access."""
+
+    def __fspath__(self):
+        return self.__file__
+
+
 class ImportLibMixin(SourceFileLoader):
+    """ImportLibMixin is a SourceFileLoader for loading source code from JSON (e.g. notebooks).
+    
+    `get_data` assures consistent line numbers between the file s representatio and source."""
+
     def create_module(self, spec):
-        module = _new_module(spec.name)
+        module = ModuleType(spec.name)
         _init_module_attrs(spec, module)
         if isinstance(spec, FuzzySpec):
             sys.modules[spec.alias] = module
