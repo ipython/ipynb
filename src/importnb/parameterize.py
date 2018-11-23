@@ -36,12 +36,18 @@ class FindReplace(ast.NodeTransformer):
                 return node
 
             if target[0].lower():
-                try:
-                    self.parser.add_argument(
-                        "--%s" % target,
-                        default=parameter,
-                        help="{} : {} = {}".format(target, type(parameter).__name__, parameter),
+                extras = {}
+                if isinstance(parameter, bool):
+                    extras.update(
+                        action="store_" + ["true", "false"][parameter],
+                        help="{} = {}".format(target, not parameter),
                     )
+                else:
+                    extras.update(
+                        help="{} : {} = {}".format(target, type(parameter).__name__, parameter)
+                    )
+                try:
+                    self.parser.add_argument("--%s" % target, default=parameter, **extras)
                 except argparse.ArgumentError:
                     ...
                 self.parameters.append(Parameter(target, Parameter.KEYWORD_ONLY, default=parameter))
