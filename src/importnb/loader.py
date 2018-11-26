@@ -22,7 +22,7 @@ import sys, ast, json, inspect, os, types
 from importlib import reload
 from importlib.machinery import SourceFileLoader, ModuleSpec
 from importlib.util import spec_from_loader
-from importlib._bootstrap import _installed_safely
+from importlib._bootstrap import _installed_safely, _requires_builtin
 
 from functools import partial
 
@@ -132,6 +132,14 @@ class ImportLibMixin(SourceFileLoader):
         return LineCacheNotebookDecoder(
             code=self.code, raw=self.raw, markdown=self.markdown
         ).decode(self.decode(), self.path)
+
+    @classmethod
+    @_requires_builtin
+    def is_package(cls, fullname):
+        """Return False as built-in modules are never packages."""
+        if "." not in fullname:
+            return True
+        return super().is_package(fullname)
 
     get_source = get_data
 

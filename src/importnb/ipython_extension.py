@@ -99,16 +99,13 @@ def load_ipython_extension(ip=None):
     else:
         from .loader import Notebook
 
-    Notebook = partial(Notebook, position=-1)
     # Auto loading only works in IPython and
     # we only read need it when there are parameters.
     manager = ImportNbExtension(ip, Notebook)
 
     if ip:
         ip.register_magics(manager)
-        from .utils.relative import load_ipython_extension
-
-        load_ipython_extension(ip)
+        ip.user_ns.update(__path__=[str(__import__("pathlib").Path().absolute())])
         from .completer import load_ipython_extension
 
         load_ipython_extension(ip)
