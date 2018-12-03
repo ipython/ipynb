@@ -21,13 +21,7 @@ After `importnb` is installed, [pytest](https://pytest.readthedocs.io/) will dis
 
     pytest readme.ipynb
 
-[`importnb`]() imports notebooks as python modules, it does not compare outputs like [`nbval`]()
-
-`importnb` can run unittests and doctests against notebook modules. 
-
-    ipython -m importnb.test readme
-    
-> `importnb` interprets the first markdown cell as a docstring.  This is a nice place to put [doctests](https://docs.python.org/3/library/doctest.html) to improve the reusability of a notebook.
+[`importnb`](https://github.com/deathbeds/importnb) imports notebooks as python modules, it does not compare outputs like [`nbval`](https://github.com/computationalmodelling/nbval).  These two `pytest` extensions complement each other well.
 
 > Notebooks are often used as informal tests, now they can be formally tested with [pytest plugins](https://docs.pytest.org/en/latest/plugins.html)
 
@@ -80,6 +74,8 @@ It is suggested to execute `importnb-install` to make sure that notebooks for ea
     assert readme.foo is 42
     assert readme.__file__.endswith('.ipynb')
 ```
+
+[`importnb` readme](readme.ipynb)
 
 ### Modules may be reloaded 
 
