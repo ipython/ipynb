@@ -33,11 +33,11 @@ def validate_nb(nb):
     """
     if nb['nbformat'] != 4:
         return False
-
+    is_google_colab = (nb.get('metadata', {}).get('colab', {})) != {}
     language_name = (nb.get('metadata', {})
         .get('kernelspec', {})
         .get('language', '').lower())
-    return language_name == 'python'
+    return language_name == 'python' or is_google_colab == True
 
 
 def filter_ast(module_ast):
