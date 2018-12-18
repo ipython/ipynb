@@ -53,6 +53,7 @@ if __IPYTHON__:
         def importnb(self, line, cell=None):
             if line.strip() == "pop":
                 return self.pop()
+                module.__package__
 
             details = vars(parser.parse_args(line.split()))
             self.loaders.append(details.pop("cls")(**details))

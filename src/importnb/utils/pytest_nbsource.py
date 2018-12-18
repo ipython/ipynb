@@ -32,7 +32,7 @@ def pytest_collect_file(parent, path):
 
 class NotebookFile(pytest.File):
     def collect(self):
-        nb = __import__("json").load(self.fspath.open())
+        nb = __import__("json").load(self.fspath.open(encoding='utf-8'))
         if self.parent.config.option.nbsource:
             yield AggregateNotebookTests(
                 testing.assert_execution_order.__name__, self, nb, testing.assert_execution_order

@@ -287,7 +287,7 @@ class Notebook(TransformerMixin, FromFileMixin, NotebookBaseLoader):
         * Apply ast transformers.
         * Compile the code."""
         if not isinstance(nodes, ast.Module):
-            nodes = ast.parse(nodes)
+            nodes = ast.parse(nodes, self.path)
         if self._markdown_docstring:
             nodes = update_docstring(nodes)
         return super().source_to_code(
