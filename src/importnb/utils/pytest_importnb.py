@@ -69,7 +69,7 @@ class AlternativeModule(pytest.Module):
         ).load(str(self.fspath))
 
     def collect(self):
-        if self.parent.config.option.monotonic:
+        if self.parent.config.option.monotonic and self.fspath.ext == ".ipynb":
             yield from MonotonicExecution.collect(self)
         yield from super().collect()
         if self.parent.config.option.doctestmodules:
