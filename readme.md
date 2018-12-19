@@ -28,9 +28,9 @@ After `importnb` is installed, [pytest](https://pytest.readthedocs.io/) will dis
 
     pytest index.ipynb --doctest-modules
     
-It is recommended to use `importnb` with [__--nbval__](https://github.com/computationalmodelling/nbval) and the __--monotonic__ flag that checks if has notebook has be restarted and re-run.
+It is recommended to use `importnb` with [__--nbval__](https://github.com/computationalmodelling/nbval).
 
-    pytest index.ipynb --nbval --monotonic
+    pytest index.ipynb --nbval
 
 ---
 
@@ -266,41 +266,6 @@ To package notebooks add `recursive-include package_name *.ipynb`
             !jupyter nbconvert --to markdown --stdout index.ipynb > readme.md
             
 ```
-
-    ============================= test session starts =============================
-    platform win32 -- Python 3.6.6, pytest-3.5.1, py-1.5.3, pluggy-0.6.0 -- C:\Anaconda3\python.exe
-    cachedir: .pytest_cache
-    rootdir: C:\Users\deathbeds\importnb, inifile: tox.ini
-    plugins: xonsh-0.8.1, doctestplus-0.1.3, cov-2.6.0, nbval-0.9.1, hypothesis-3.66.16, pidgin-0.3.0, importnb-0.5.2
-    collecting ... collected 21 items
-    
-    src/importnb/completer.py::importnb.completer PASSED                     [  4%]
-    src/importnb/loader.py::importnb.loader PASSED                           [  9%]
-    src/importnb/loader.py::importnb.loader.FinderContextManager PASSED      [ 14%]
-    src/importnb/loader.py::importnb.loader.NotebookBaseLoader PASSED        [ 19%]
-    src/importnb/utils/export.py::importnb.utils.export PASSED               [ 23%]
-    tests/test_importnb.ipynb::test_basic PASSED                             [ 28%]
-    tests/test_importnb.ipynb::test_package PASSED                           [ 33%]
-    tests/test_importnb.ipynb::test_reload PASSED                            [ 38%]
-    tests/test_importnb.ipynb::test_docstrings PASSED                        [ 42%]
-    tests/test_importnb.ipynb::test_docstring_opts PASSED                    [ 47%]
-    tests/test_importnb.ipynb::test_from_file PASSED                         [ 52%]
-    tests/test_importnb.ipynb::test_lazy PASSED                              [ 57%]
-    tests/test_importnb.ipynb::test_module_source PASSED                     [ 61%]
-    tests/test_importnb.ipynb::test_main PASSED                              [ 66%]
-    tests/test_importnb.ipynb::test_object_source PASSED                     [ 71%]
-    tests/test_importnb.ipynb::test_python_file PASSED                       [ 76%]
-    tests/test_importnb.ipynb::test_cli PASSED                               [ 80%]
-    tests/test_importnb.ipynb::test_parameterize PASSED                      [ 85%]
-    tests/test_importnb.ipynb::test_minified_json PASSED                     [ 90%]
-    tests/test_importnb.ipynb::test_fuzzy_finder PASSED                      [ 95%]
-    tests/test_importnb.ipynb::test_remote PASSED                            [100%]
-    
-    ========================= 21 passed in 11.74 seconds ==========================
-    
-
-    [NbConvertApp] Converting notebook index.ipynb to markdown
-    
 
 
 ```python
