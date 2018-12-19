@@ -70,8 +70,7 @@ setup_args = dict(
     cmdclass={'test': PyTest,},
     entry_points = {
         'pytest11': [
-            'pytest-importnb = importnb.utils.pytest_importnb',
-            'nbsource = importnb.utils.pytest_nbsource',
+            'importnb = importnb.utils.pytest_importnb',
         ],
         'console_scripts': [
             'importnb-install = importnb.utils.ipython:install',

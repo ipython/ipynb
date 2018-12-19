@@ -51,9 +51,17 @@ from functools import partialmethod
 import textwrap
 
 try:
+    import IPython
     from IPython.core.inputsplitter import IPythonInputSplitter
 
-    dedent = IPythonInputSplitter(line_input_checker=False).transform_cell
+    dedent = IPythonInputSplitter(
+        line_input_checker=False,
+        physical_line_transforms=[
+            IPython.core.inputsplitter.leading_indent(),
+            IPython.core.inputsplitter.ipy_prompt(),
+            IPython.core.inputsplitter.cellmagic(end_on_blank_line=False),
+        ],
+    ).transform_cell
 except:
     from textwrap import dedent
 

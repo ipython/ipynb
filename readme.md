@@ -22,11 +22,15 @@ After `importnb` is installed, [pytest](https://pytest.readthedocs.io/) will dis
 
     pytest index.ipynb
 
-[`importnb`](https://github.com/deathbeds/importnb) imports notebooks as python modules, it does not compare outputs like [`nbval`](https://github.com/computationalmodelling/nbval).  These two `pytest` extensions complement each other well.
+[`importnb`](https://github.com/deathbeds/importnb) imports notebooks as python modules, it does not compare outputs like [`nbval`](https://github.com/computationalmodelling/nbval).  
 
-> Notebooks are often used as informal tests, now they can be formally tested with [pytest plugins](https://docs.pytest.org/en/latest/plugins.html)
+[`importnb`](https://github.com/deathbeds/importnb) now captures `doctest`s in every __Markdown__ cell & block string expression.  The docstrings are tested with the [__--doctest-modules__ flag](https://doc.pytest.org/en/latest/doctest.html).
 
+    pytest index.ipynb --doctest-modules
+    
+It is recommended to use `importnb` with [__--nbval__](https://github.com/computationalmodelling/nbval) and the __--monotonic__ flag that checks if has notebook has be restarted and re-run.
 
+    pytest index.ipynb --nbval --monotonic
 
 ---
 
@@ -35,6 +39,7 @@ After `importnb` is installed, [pytest](https://pytest.readthedocs.io/) will dis
 `importnb` can run notebooks as command line scripts.  Any literal variable in the notebook, may be applied as a parameter from the command line.
 
     ipython -m importnb -- index.ipynb --foo "A new value"
+   
 
 ---
 
@@ -98,52 +103,6 @@ The `lazy` option will delay the evaluation of a module until one of its attribu
         import readme
 ```
 
-
-    Traceback (most recent call last):
-    
-
-      File "C:\Anaconda3\lib\site-packages\IPython\core\interactiveshell.py", line 3265, in run_code
-        exec(code_obj, self.user_global_ns, self.user_ns)
-    
-
-      File "<ipython-input-6-a80fb0c23008>", line 2, in <module>
-        import readme
-    
-
-      File "<frozen importlib._bootstrap>", line 971, in _find_and_load
-    
-
-      File "<frozen importlib._bootstrap>", line 955, in _find_and_load_unlocked
-    
-
-      File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
-    
-
-      File "c:\users\deathbeds\pidgin\pidgin\loader.ipynb", line 71, in exec_module
-        super().exec_module(module)
-    
-
-      File "<frozen importlib._bootstrap_external>", line 674, in exec_module
-    
-
-      File "<frozen importlib._bootstrap_external>", line 781, in get_code
-    
-
-      File "c:\users\deathbeds\importnb\src\importnb\loader.py", line 290, in source_to_code
-        nodes = ast.parse(nodes)
-    
-
-      File "C:\Anaconda3\lib\ast.py", line 35, in parse
-        return compile(source, filename, mode, PyCF_ONLY_AST)
-    
-
-      File "<unknown>", line 2
-        """__importnb__ imports notebooks as modules.  Notebooks are reusable as tests, source code, importable modules, and command line utilities.
-        ^
-    IndentationError: unexpected indent
-    
-
-
 ### Fuzzy File Names
 
 
@@ -154,52 +113,6 @@ The `lazy` option will delay the evaluation of a module until one of its attribu
             
         assert __a_me.__file__ == readme.__file__
 ```
-
-
-    Traceback (most recent call last):
-    
-
-      File "C:\Anaconda3\lib\site-packages\IPython\core\interactiveshell.py", line 3265, in run_code
-        exec(code_obj, self.user_global_ns, self.user_ns)
-    
-
-      File "<ipython-input-7-15cace34bba8>", line 3, in <module>
-        import __a_me
-    
-
-      File "<frozen importlib._bootstrap>", line 971, in _find_and_load
-    
-
-      File "<frozen importlib._bootstrap>", line 955, in _find_and_load_unlocked
-    
-
-      File "<frozen importlib._bootstrap>", line 665, in _load_unlocked
-    
-
-      File "c:\users\deathbeds\pidgin\pidgin\loader.ipynb", line 71, in exec_module
-        super().exec_module(module)
-    
-
-      File "<frozen importlib._bootstrap_external>", line 674, in exec_module
-    
-
-      File "<frozen importlib._bootstrap_external>", line 781, in get_code
-    
-
-      File "c:\users\deathbeds\importnb\src\importnb\loader.py", line 290, in source_to_code
-        nodes = ast.parse(nodes)
-    
-
-      File "C:\Anaconda3\lib\ast.py", line 35, in parse
-        return compile(source, filename, mode, PyCF_ONLY_AST)
-    
-
-      File "<unknown>", line 2
-        """__importnb__ imports notebooks as modules.  Notebooks are reusable as tests, source code, importable modules, and command line utilities.
-        ^
-    IndentationError: unexpected indent
-    
-
 
 Python does not provide a way to import file names starting with numbers of contains special characters.  `importnb` installs a fuzzy import logic to import files containing these edge cases.
 
@@ -219,18 +132,8 @@ The first markdown cell will become the module docstring.
         print(readme.__doc__.splitlines()[0])
 ```
 
-
-    ---------------------------------------------------------------------------
-
-    NameError                                 Traceback (most recent call last)
-
-    <ipython-input-8-1bd926f9e7a3> in <module>
-          1 if __name__ == '__main__':
-    ----> 2     print(readme.__doc__.splitlines()[0])
+    __importnb__ imports notebooks as modules.  Notebooks are reusable as tests, source code, importable modules, and command line utilities.
     
-
-    NameError: name 'readme' is not defined
-
 
 Meaning non-code blocks can be executeb by [doctest]().
 
@@ -364,6 +267,41 @@ To package notebooks add `recursive-include package_name *.ipynb`
             
 ```
 
+    ============================= test session starts =============================
+    platform win32 -- Python 3.6.6, pytest-3.5.1, py-1.5.3, pluggy-0.6.0 -- C:\Anaconda3\python.exe
+    cachedir: .pytest_cache
+    rootdir: C:\Users\deathbeds\importnb, inifile: tox.ini
+    plugins: xonsh-0.8.1, doctestplus-0.1.3, cov-2.6.0, nbval-0.9.1, hypothesis-3.66.16, pidgin-0.3.0, importnb-0.5.2
+    collecting ... collected 21 items
+    
+    src/importnb/completer.py::importnb.completer PASSED                     [  4%]
+    src/importnb/loader.py::importnb.loader PASSED                           [  9%]
+    src/importnb/loader.py::importnb.loader.FinderContextManager PASSED      [ 14%]
+    src/importnb/loader.py::importnb.loader.NotebookBaseLoader PASSED        [ 19%]
+    src/importnb/utils/export.py::importnb.utils.export PASSED               [ 23%]
+    tests/test_importnb.ipynb::test_basic PASSED                             [ 28%]
+    tests/test_importnb.ipynb::test_package PASSED                           [ 33%]
+    tests/test_importnb.ipynb::test_reload PASSED                            [ 38%]
+    tests/test_importnb.ipynb::test_docstrings PASSED                        [ 42%]
+    tests/test_importnb.ipynb::test_docstring_opts PASSED                    [ 47%]
+    tests/test_importnb.ipynb::test_from_file PASSED                         [ 52%]
+    tests/test_importnb.ipynb::test_lazy PASSED                              [ 57%]
+    tests/test_importnb.ipynb::test_module_source PASSED                     [ 61%]
+    tests/test_importnb.ipynb::test_main PASSED                              [ 66%]
+    tests/test_importnb.ipynb::test_object_source PASSED                     [ 71%]
+    tests/test_importnb.ipynb::test_python_file PASSED                       [ 76%]
+    tests/test_importnb.ipynb::test_cli PASSED                               [ 80%]
+    tests/test_importnb.ipynb::test_parameterize PASSED                      [ 85%]
+    tests/test_importnb.ipynb::test_minified_json PASSED                     [ 90%]
+    tests/test_importnb.ipynb::test_fuzzy_finder PASSED                      [ 95%]
+    tests/test_importnb.ipynb::test_remote PASSED                            [100%]
+    
+    ========================= 21 passed in 11.74 seconds ==========================
+    
+
+    [NbConvertApp] Converting notebook index.ipynb to markdown
+    
+
 
 ```python
     if __name__ == '__main__':
@@ -375,4 +313,13 @@ To package notebooks add `recursive-include package_name *.ipynb`
                 get_ipython().system("cd docs && pyreverse importnb -opng -pimportnb")
             display(Image(url='docs/classes_importnb.png', ))
         except: ...
+```
+
+
+<img src="docs/classes_importnb.png"/>
+
+
+
+```python
+
 ```
