@@ -35,11 +35,17 @@
     
 """
 
-from .loader import Notebook, FileModuleSpec
-from .decoder import LineCacheNotebookDecoder
-from importlib.util import decode_source
+import importlib.machinery
+import importlib.util
+import inspect
 import sys
-import importlib.util, importlib.machinery, inspect, sys, types, urllib.error, urllib.request
+import types
+import urllib.error
+import urllib.request
+from importlib.util import decode_source
+
+from .decoder import LineCacheNotebookDecoder
+from .loader import FileModuleSpec, Notebook
 
 cache = {}
 

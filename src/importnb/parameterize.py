@@ -8,15 +8,16 @@ try:
     from .loader import Notebook, module_from_spec
 except:
     from loader import Notebook, module_from_spec
-import argparse, ast, inspect
-from functools import partial
-from copy import deepcopy
-from inspect import Signature, Parameter
-from pathlib import Path
-from functools import partialmethod
-from inspect import signature
+import argparse
+import ast
+import inspect
 import sys
+from copy import deepcopy
+from functools import partial, partialmethod
 from importlib.util import find_spec, spec_from_loader
+from inspect import Parameter, Signature, signature
+from pathlib import Path
+
 _38 = sys.version_info.major == 3 and sys.version_info.minor == 8
 
 if _38:
@@ -49,13 +50,19 @@ class FindReplace(ast.NodeTransformer):
                     )
                 else:
                     extras.update(
-                        help="{} : {} = {}".format(target, type(parameter).__name__, parameter)
+                        help="{} : {} = {}".format(
+                            target, type(parameter).__name__, parameter
+                        )
                     )
                 try:
-                    self.parser.add_argument("--%s" % target, default=parameter, **extras)
+                    self.parser.add_argument(
+                        "--%s" % target, default=parameter, **extras
+                    )
                 except argparse.ArgumentError:
                     ...
-                self.parameters.append(Parameter(target, Parameter.KEYWORD_ONLY, default=parameter))
+                self.parameters.append(
+                    Parameter(target, Parameter.KEYWORD_ONLY, default=parameter)
+                )
                 if ("-h" not in self.argv) and ("--help" not in self.argv):
                     ns, self.argv = self.parser.parse_known_args(self.argv)
                     if target in self.globals:
@@ -99,10 +106,14 @@ class Parameterize(Notebook):
         main=False,
         **_globals
     ):
-        super().__init__(fullname, path, lazy=lazy, fuzzy=fuzzy, position=position, main=main)
+        super().__init__(
+            fullname, path, lazy=lazy, fuzzy=fuzzy, position=position, main=main
+        )
         self.globals = globals or {}
         self.globals.update(**_globals)
-        self._visitor = FindReplace(self.globals, argparse.ArgumentParser(prog=self.name))
+        self._visitor = FindReplace(
+            self.globals, argparse.ArgumentParser(prog=self.name)
+        )
 
     def exec_module(self, module):
         self._visitor = FindReplace(self.globals, self._visitor.parser)
@@ -136,7 +147,9 @@ def parameterize(object, **globals):
         if isinstance(object, str):
             object = module_from_spec(find_spec(object))
 
-    object.__loader__ = Parameterize(object.__loader__.name, object.__loader__.path, **globals)
+    object.__loader__ = Parameterize(
+        object.__loader__.name, object.__loader__.path, **globals
+    )
 
     def call(**parameters):
         nonlocal object, globals
@@ -144,10 +157,14 @@ def parameterize(object, **globals):
         keywords = {}
         keywords.update(**globals), keywords.update(**parameters)
         if _38:
-            Parameterize(object.__name__, object.__file__, **keywords).exec_module(object)
+            Parameterize(object.__name__, object.__file__, **keywords).exec_module(
+                object
+            )
         else:
             with _installed_safely(object):
-                Parameterize(object.__name__, object.__file__, **keywords).exec_module(object)
+                Parameterize(object.__name__, object.__file__, **keywords).exec_module(
+                    object
+                )
         return object
 
     object.__loader__.get_code(object.__name__)

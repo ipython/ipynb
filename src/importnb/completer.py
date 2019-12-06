@@ -11,10 +11,12 @@ The fuzzy importer could be confusing and perhaps a completer could help.
     >>> assert ip.complete('_______________plet__', 'from importnb import _______________plet__')[1]
 """
 
-from .finder import fuzzy_file_search
+import string
 from fnmatch import fnmatch
 from pathlib import Path
-import string
+
+from .finder import fuzzy_file_search
+
 
 """To provide the most reliable fuzzy imports `fuzzify_string` replaces the imported with one that complies with the fuzzy finder.
 """
@@ -80,7 +82,9 @@ def fuzzy_complete_event(self, event):
         package = event.line.split(" import ", 1)[0].lstrip().lstrip("from").lstrip()
         if " import" in event.line:
             symbol = (package + "." + symbol).lstrip(".")
-            return [object.lstrip(package).lstrip(".") for object in predict_fuzzy(symbol)]
+            return [
+                object.lstrip(package).lstrip(".") for object in predict_fuzzy(symbol)
+            ]
 
     return predict_fuzzy(symbol)
 
@@ -90,10 +94,16 @@ def fuzzy_complete_event(self, event):
 
 
 def load_ipython_extension(ip):
-    ip.set_hook("complete_command", fuzzy_complete_event, str_key="aimport", priority=25)
+    ip.set_hook(
+        "complete_command", fuzzy_complete_event, str_key="aimport", priority=25
+    )
     ip.set_hook("complete_command", fuzzy_complete_event, str_key="import", priority=25)
-    ip.set_hook("complete_command", fuzzy_complete_event, str_key="%reload_ext", priority=25)
-    ip.set_hook("complete_command", fuzzy_complete_event, str_key="%load_ext", priority=25)
+    ip.set_hook(
+        "complete_command", fuzzy_complete_event, str_key="%reload_ext", priority=25
+    )
+    ip.set_hook(
+        "complete_command", fuzzy_complete_event, str_key="%load_ext", priority=25
+    )
     ip.set_hook("complete_command", fuzzy_complete_event, str_key="from", priority=25)
 
 

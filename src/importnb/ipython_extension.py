@@ -6,9 +6,11 @@
 """
 
 import argparse
-from importlib import import_module
+import inspect
 from functools import partial
-import pkg_resources, inspect
+from importlib import import_module
+
+import pkg_resources
 
 
 def get_module_object(str):
@@ -16,13 +18,21 @@ def get_module_object(str):
     return getattr(import_module(module), object)
 
 
-parser = argparse.ArgumentParser(description="""Define the importnb loader properties.""")
+parser = argparse.ArgumentParser(
+    description="""Define the importnb loader properties."""
+)
 parser.add_argument("--cls", type=get_module_object, default="importnb:Notebook")
 parser.add_argument("--fuzzy", action="store_true")
 
 try:
     from IPython.core import magic_arguments
-    from IPython.core.magic import Magics, magics_class, line_magic, cell_magic, line_cell_magic
+    from IPython.core.magic import (
+        Magics,
+        magics_class,
+        line_magic,
+        cell_magic,
+        line_cell_magic,
+    )
 
     __IPYTHON__ = True
 except:
@@ -89,7 +99,9 @@ def IPYTHON_MAIN():
     runner_frame = inspect.getouterframes(inspect.currentframe())[-2]
     return (
         getattr(runner_frame, "function", None)
-        == pkg_resources.load_entry_point("ipython", "console_scripts", "ipython").__name__
+        == pkg_resources.load_entry_point(
+            "ipython", "console_scripts", "ipython"
+        ).__name__
     )
 
 
