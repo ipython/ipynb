@@ -2,9 +2,6 @@
 """# `loader`
 
 Combine the __import__ finder with the loader.
-
-    >>> with Notebook():
-    ...      from importnb.notebooks import loader
 """
 
 try:
@@ -19,10 +16,16 @@ except:
     from docstrings import update_docstring 
 
 import sys, ast, json, inspect, os, types
+_38 = sys.version_info.major==3 and sys.version_info.minor==8
 from importlib import reload
 from importlib.machinery import SourceFileLoader, ModuleSpec
 from importlib.util import spec_from_loader
-from importlib._bootstrap import _installed_safely, _requires_builtin
+if _38:
+    from importlib._bootstrap import _load_unlocked, _requires_builtin
+else:
+    from importlib._bootstrap import _installed_safely, _requires_builtin
+
+
 
 from functools import partial
 try:  
@@ -137,9 +140,6 @@ class ImportLibMixin(SourceFileLoader):
 
 class NotebookBaseLoader(ImportLibMixin, FinderContextManager):
     """The simplest implementation of a Notebook Source File Loader.
-    >>> with NotebookBaseLoader():
-    ...    from importnb.notebooks import loader
-    >>> assert loader.__file__.endswith('.ipynb')
     """
     extensions = '.ipynb',        
     __slots__ = '_lazy', '_fuzzy', '_markdown_docstring', '_position'
@@ -191,13 +191,18 @@ class FromFileMixin:
         """
         name = main and '__main__' or Path(filename).stem
         loader = cls(name, str(filename), **kwargs)
-        module = module_from_spec(FileModuleSpec(name, loader, origin=loader.path))     
+        spec = FileModuleSpec(name, loader, origin=loader.path)
+        module = module_from_spec(spec)
         cwd = str(Path(loader.path).parent)
         try:
-            with ExitStack() as stack:
+
+            if _38:
                 sys.path.append(cwd)
-                loader.name != '__main__' and stack.enter_context(_installed_safely(module))
-                loader.exec_module(module)
+                module = _load_unlocked(spec)
+            else:
+                with ExitStack() as stack:
+                    loader.name != '__main__' and stack.enter_context(_installed_safely(module))
+                    loader.exec_module(module)
         finally: sys.path.pop()
                     
         return module

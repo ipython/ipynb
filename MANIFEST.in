@@ -1,2 +1,1 @@
 include LICENSE readme.md changelog.ipynb
-recursive-include src/importnb *.ipynb
