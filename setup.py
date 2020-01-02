@@ -50,8 +50,8 @@ setup_args = dict(
     tests_require=['pytest', 'nbformat'],
     install_requires=install_requires,
     include_package_data=True,
-    packages=setuptools.find_packages(where="src") + ['ipynb'],
-    package_dir={"": "src"},
+    packages="importnb ipynb".split(),
+    package_dir={"importnb": "src/importnb", "ipynb": "ipynb"},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Framework :: IPython",
