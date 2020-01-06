@@ -51,7 +51,7 @@ setup_args = dict(
     install_requires=install_requires,
     include_package_data=True,
     packages="importnb ipynb".split(),
-    package_dir={"importnb": "src/importnb", "ipynb": "ipynb"},
+    package_dir={"importnb": "src/importnb"},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Framework :: IPython",
