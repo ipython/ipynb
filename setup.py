@@ -4,7 +4,7 @@ setup(
     name='ipynb',
     version='0.5.1',
     description='Package / Module importer for importing code from Jupyter Notebook files (.ipynb)',
-    url='http://github.com/yuvipanda/ipynb',
+    url='http://github.com/ipython/ipynb',
     author='Yuvi Panda',
     author_email='yuvipanda@gmail.com',
     license='BSD',
