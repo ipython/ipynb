@@ -34,10 +34,11 @@ def validate_nb(nb):
     if nb['nbformat'] != 4:
         return False
 
-    language_name = (nb.get('metadata', {})
-        .get('kernelspec', {})
-        .get('language', '').lower())
-    return language_name == 'python'
+    kernelspec = nb.get('metadata', {}).get('kernelspec', {})
+    lang_name1 = kernelspec.get('language', '').lower()
+    lang_name2 = kernelspec.get('name', '').lower()
+    language_names = [lang_name1, lang_name2]
+    return any(x in language_names for x in ['python3', 'python'])
 
 
 def filter_ast(module_ast):
