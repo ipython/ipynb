@@ -85,11 +85,10 @@ Relative imports
 If you want to import notebooks from other notebooks relatively, you can easily
 do that with the following:
 
-```
-import ipynb.fs
-from .full.notebook1 import foo
-from .defs.notebook2 import bar
-```
+.. code-block:: python
+    import ipynb.fs
+    from .full.notebook1 import foo
+    from .defs.notebook2 import bar
 
 This will do the imports from other notebooks relative to the path of the notebook
 in which the importing is happening. The `import ipynb.fs` is boilerplate that is
