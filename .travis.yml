@@ -1,18 +1,43 @@
 language: python
-python:
-    - "3.6-dev"
-    - 3.5
-    - 3.4
-install:
-    - pip install pytest pytest-cov --upgrade
-    - pip install codecov --upgrade
-    - pip install pylint --upgrade
-    - pip install -e . 
-script:
-    - py.test --cov=./
-    - pylint ipynb
-after_success:
-    - codecov
+sudo: false
+cache: pip
 matrix:
-    allow_failures:
-        - python: 3.6-dev
+  include:
+      - { python: "3.6-dev", dist: xenial, sudo: true }
+      - { python: "3.7", dist: xenial, sudo: true }
+      - { python: "3.7-dev", dist: xenial, sudo: true }
+      - { python: "nightly", dist: xenial, sudo: true }
+install:
+- pip install pytest pytest-cov --upgrade
+- pip install codecov --upgrade
+- pip install pylint --upgrade
+- python setup.py sdist
+- python setup.py bdist_wheel
+- pip install -r requirements.txt
+- python -m pip install dist/importnb-*.tar.gz --ignore-installed --no-deps
+
+script:
+- tox
+- importnb-install
+- ipython -m readme
+- jupyter nbconvert --to notebook --inplace readme.ipynb
+- pylint ipynb
+after_success:
+- codecov
+deploy:
+# - provider: pypi
+#   user: docfast
+#   skip_cleanup: true
+#   password:
+#     secure: s9hSRaBCXVpCm2W0moHHAJrzceFWnbIZoZ2j8BhqwbwTicxqIvi8pN7XQWokZt5ymLUDn6OfZ7yap81LXN8XcRWPFTVGJXOuzCrJJuvn06kWx3/x7FZ+hNKCVrsL3wyXXwKTcj8gMUahArYFuseReoAKhcbyH2/yL4n6HXkgcXGWrFXcISVnbR5D+WOlTt3WzEOlh55BoMLUcmAbN8Wa32z8cSQyFcW6kz9DqwcpRy//vCYh4SC/GJZZc5bXX6ByqloxyHmb7MlONCoDEfm7O9fHho8cv9IEZXiZmgy+f0l/ugmGKFBIEp6hhxThD8opw3zQBwl1FHVMJcwqLi+ODmY6lB9xYgtO652wxNZuCkKCArUL/LqBspRTBruex/K2/XjLusln8lrDSExsDvFKWksRrMODW1YccUQK9nhMBrFH18kveIbwr5E41ZfbrWD8I8wn0jHnwiJ/zaYbtPpm0egiY0YfGTVAEQoWN5iV5u5zoDWZA8LiFwTYnywLogGhVbUPX+CkjC7dBm7hWUrkihS99F6nPaP+B4E5HWubp64qsJSko8V+cufrnsqGomG/StozKJhw4+5Zhb9xuWNk0nqhq3Jdi/m0BAsgPLjIriovCcuTqpYC0ojCtpjO+7qExk91N55vGKUIeUkkQAu8gAhQ29jXwxa1HEqy8YO+WUI=
+#   on:
+#     tags: true
+#     distributions: sdist bdist_wheel
+#     repo: deathbeds/importnb
+#     python: '3.6'
+
+# - provider: pages
+#   skip-cleanup: true
+#   github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+#   on:
+#     python: '3.6'

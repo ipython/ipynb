@@ -1,0 +1,2 @@
+jupyter labextension install jupyterlab-toc
+importnb-install
